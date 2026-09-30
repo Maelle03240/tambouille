@@ -159,11 +159,11 @@ export function HomeScreen() {
           type="button"
           onClick={() => (online ? setAdding(true) : toast("Pas de réseau : l'ajout revient avec la connexion."))}
           className={cx(
-            "fixed right-5 bottom-[calc(96px+env(safe-area-inset-bottom))] z-30 flex h-[60px] items-center gap-2.5 rounded-full px-[26px] font-heading text-[19px] shadow-lg",
+            "fixed right-5 bottom-[calc(92px+env(safe-area-inset-bottom))] z-30 flex h-12 items-center gap-2 rounded-full px-5 font-heading text-base shadow-lg",
             online ? "bg-accent-600 text-neutral-100" : "bg-neutral-300 text-neutral-700",
           )}
         >
-          <IconPlus /> Ajouter
+          <IconPlus size={18} /> Ajouter
         </button>
       )}
       <AddSheet open={adding} onClose={() => setAdding(false)} />

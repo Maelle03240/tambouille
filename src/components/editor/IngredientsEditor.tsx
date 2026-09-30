@@ -221,9 +221,6 @@ export function IngredientsEditor({
       >
         <IconPlus size={18} /> Ajouter un ingrédient
       </button>
-      <p className="text-[13px] text-neutral-700">
-        Astuce : colle toute la liste d&apos;un coup ; « Pâte : » sur une ligne crée un groupe.
-      </p>
     </div>
   );
 }

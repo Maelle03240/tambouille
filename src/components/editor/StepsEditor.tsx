@@ -170,8 +170,7 @@ export function StepsEditor({
   return (
     <div className="flex flex-col gap-3">
       <p className="text-[13px] text-neutral-700">
-        Écris <strong>{"{beurre}"}</strong> pour afficher la quantité de beurre (elle suivra les portions) et{" "}
-        <strong>{"{8 min}"}</strong> pour un minuteur. Les pastilles sous le champ le font pour toi.
+        <strong>{"{beurre}"}</strong> = quantité · <strong>{"{8 min}"}</strong> = minuteur
       </p>
       {steps.map((s, i) => (
         <StepField

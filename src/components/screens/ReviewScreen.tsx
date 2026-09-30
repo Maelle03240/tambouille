@@ -50,9 +50,6 @@ export function ReviewScreen() {
       <header className="pt-safe mx-auto max-w-3xl px-5">
         <OfflineBanner className="mb-2" />
         <h1 className="pt-3 pb-1 font-heading text-[36px] leading-[1.1]">À revoir</h1>
-        <p className="pb-3 text-[15px] text-pretty text-neutral-700">
-          Marquées en cuisinant, après un import, ou avec une info manquante (temps, kcal).
-        </p>
         <div className="flex gap-2 pb-4">
           {[false, true].map((d) => (
             <button

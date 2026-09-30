@@ -6,8 +6,8 @@
 import { useRouter } from "next/navigation";
 import { useRef, type ReactNode } from "react";
 import { useApp } from "@/components/app/AppProvider";
-import { IconBraces, IconCamera, IconImage, IconText } from "@/components/ui/icons";
-import { Button, Sheet } from "@/components/ui/primitives";
+import { IconBraces, IconCamera, IconImage, IconPencil, IconText } from "@/components/ui/icons";
+import { Sheet } from "@/components/ui/primitives";
 import { setPendingImport } from "@/lib/import/pending";
 
 function Option({
@@ -66,15 +66,10 @@ export function AddSheet({ open, onClose }: { open: boolean; onClose: () => void
     <Sheet open={open} onClose={onClose} title="Ajouter une recette">
       {!online ? (
         <p className="rounded-field bg-neutral-200 px-4 py-3">
-          Pas de réseau : l&apos;ajout de recettes revient dès que la connexion est de retour.
+          Pas de réseau.
         </p>
       ) : (
         <>
-          <p className="-mt-2 mb-1 text-[15px] text-neutral-700">
-            {aiOff
-              ? "La lecture automatique n'est pas configurée : saisis à la main ou colle du JSON."
-              : "L'IA la met en forme, tu vérifies avant d'enregistrer."}
-          </p>
           <Option
             icon={<IconCamera />}
             iconClass="bg-accent-300 text-accent-900"
@@ -99,14 +94,21 @@ export function AddSheet({ open, onClose }: { open: boolean; onClose: () => void
             onClick={() => go("texte")}
             disabled={aiOff}
           />
-          <div className="mt-1 mb-2 grid grid-cols-2 gap-2">
-            <Button variant="ghost" onClick={() => go("manuel")}>
-              Écrire à la main
-            </Button>
-            <Button variant="ghost" onClick={() => go("json")}>
-              <IconBraces size={18} /> Coller du JSON
-            </Button>
-          </div>
+          <Option
+            icon={<IconBraces />}
+            iconClass="bg-[oklch(0.87_0.07_260)] text-[oklch(0.3_0.07_260)]"
+            title="Coller du JSON"
+            subtitle="Une recette mise en forme par Claude"
+            onClick={() => go("json")}
+          />
+          <Option
+            icon={<IconPencil />}
+            iconClass="bg-neutral-300 text-neutral-900"
+            title="Écrire à la main"
+            subtitle="Fiche vide, sans IA"
+            onClick={() => go("manuel")}
+          />
+          <div className="h-2" />
           <input ref={photoInput} type="file" accept="image/*" capture="environment" hidden onChange={onFile("photo")} />
           <input ref={captureInput} type="file" accept="image/*" hidden onChange={onFile("capture")} />
         </>

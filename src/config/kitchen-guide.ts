@@ -148,7 +148,6 @@ export const KITCHEN_GUIDE: GuideSection[] = [
             use: "Ventilation sans chauffe (souvent un flocon ou un ventilateur seul) : décongèle doucement.",
           },
         ],
-        note: "Les pictogrammes varient selon les marques : en cas de doute, la notice du four fait foi.",
       },
       {
         kind: "table",

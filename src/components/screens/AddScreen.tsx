@@ -123,7 +123,6 @@ export function AddScreen() {
           )}
           <Spinner className="size-8 text-accent-600" />
           <p className="font-heading text-2xl">{phase.label}</p>
-          <p className="text-neutral-700">Quelques secondes : l&apos;IA met la recette en forme.</p>
         </div>
       )}
 
@@ -142,7 +141,6 @@ export function AddScreen() {
       {phase.kind === "input" && phase.mode === "texte" && (
         <>
           <h1 className="font-heading text-[28px] leading-tight">Coller du texte ou un lien</h1>
-          <p className="text-neutral-700">Le texte d&apos;une recette (message, notes…) ou le lien d&apos;une page web.</p>
           <TextArea autoFocus value={text} onChange={(e) => setText(e.target.value)} rows={10} placeholder="Colle ici…" />
           <Button variant="primary" size="lg" onClick={readText} disabled={!text.trim()}>
             Lire la recette
@@ -153,10 +151,6 @@ export function AddScreen() {
       {phase.kind === "input" && phase.mode === "json" && (
         <>
           <h1 className="font-heading text-[28px] leading-tight">Coller du JSON</h1>
-          <p className="text-neutral-700">
-            Pour une recette déjà mise en forme ailleurs (par exemple dans une conversation avec Claude). Copie les consignes,
-            colle-les dans la conversation avec ta recette, puis colle ici la réponse.
-          </p>
           <Button
             onClick={async () => {
               try {

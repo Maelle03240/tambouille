@@ -1,6 +1,6 @@
 /**
  * Alarme de fin de minuteur : sonnerie forte qui boucle jusqu'à l'arrêt,
- * + vibration quand l'appareil le permet (pas sur iPhone).
+ * + vibration (Android) ou petits retours haptiques (iPhone, iOS 18+).
  *
  * Pourquoi c'est fait ainsi (iPhone) :
  * - le son doit être « débloqué » pendant un vrai geste (fin de toucher /
@@ -29,6 +29,30 @@ const SOUND = {
 };
 
 let audio: HTMLAudioElement | null = null;
+
+/**
+ * Retour haptique sur iPhone (iOS 18+) : Safari n'a pas navigator.vibrate,
+ * mais basculer un interrupteur <input switch> fait vibrer légèrement.
+ * Sans effet ailleurs.
+ */
+function iosHaptic() {
+  try {
+    const label = document.createElement("label");
+    const input = document.createElement("input");
+    input.type = "checkbox";
+    input.setAttribute("switch", "");
+    label.style.display = "none";
+    label.appendChild(input);
+    document.body.appendChild(label);
+    label.click();
+    label.remove();
+  } catch {}
+}
+
+function buzz() {
+  if (navigator.vibrate) navigator.vibrate([500, 200, 500]);
+  else [0, 150, 300, 700, 850, 1000].forEach((ms) => setTimeout(iosHaptic, ms));
+}
 let unlocked = false;
 let stopTimer: ReturnType<typeof setTimeout> | null = null;
 let vibrateLoop: ReturnType<typeof setInterval> | null = null;
@@ -113,10 +137,8 @@ export function startAlarm() {
     void a.play().catch(() => {});
   } catch {}
   try {
-    if (navigator.vibrate) {
-      navigator.vibrate([500, 200, 500]);
-      vibrateLoop = setInterval(() => navigator.vibrate?.([500, 200, 500]), 1400);
-    }
+    buzz();
+    vibrateLoop = setInterval(buzz, 1400);
   } catch {}
   if (stopTimer) clearTimeout(stopTimer);
   stopTimer = setTimeout(stopAlarm, SOUND.maxDurationMs);
@@ -132,11 +154,4 @@ export function stopAlarm() {
     if (audio) audio.currentTime = 0;
     navigator.vibrate?.(0);
   } catch {}
-}
-
-/** Pour le bouton « Tester l'alarme » : sonne 3 secondes. */
-export function testAlarm() {
-  unlockAudio();
-  startAlarm();
-  setTimeout(stopAlarm, 3000);
 }

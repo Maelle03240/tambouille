@@ -189,7 +189,7 @@ export function RecipeEditor({
         </div>
 
         <div id="field-moments" className="scroll-mt-24">
-          <span className="text-[13px] font-bold text-neutral-700">Moments (plusieurs possibles)</span>
+          <span className="text-[13px] font-bold text-neutral-700">Moments</span>
           <div className="mt-1.5 flex flex-wrap gap-2">
             {MOMENTS.map((m) => {
               const on = (draft.moments ?? []).includes(m.id);
@@ -261,7 +261,6 @@ export function RecipeEditor({
 
         <section className="flex flex-col gap-2.5">
           <SectionTitle>Par portion</SectionTitle>
-          <p className="-mt-1 text-[13px] text-neutral-700">Valeurs estimées, à corriger si tu as mieux.</p>
           <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3">
             {(
               [
@@ -329,7 +328,6 @@ export function RecipeEditor({
               );
             })}
           </div>
-          <p className="text-[13px] text-neutral-700">« Riche en protéines » et « Rapide » se mettent tout seuls.</p>
         </section>
 
         <section className="flex flex-col gap-2.5">
