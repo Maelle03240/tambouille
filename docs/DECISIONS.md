@@ -27,3 +27,9 @@ Format : date — décision — pourquoi.
 - **Export JSON** de toutes les recettes dans Réglages (sauvegarde simple).
 
 **Reste à faire en V1** : importer 10 vraies recettes, tester sur iPhone (§11 de la spec), liaison automatique des `custom_ingredients` (table prête, bibliothèque en V2).
+
+## 2026-09-30 — Base Supabase créée
+
+- Projet **tambouille** (organisation « Perso », région Paris `eu-west-3`, plan gratuit), id `diaekldfjimgyinxybeg`. Migrations 0001 et 0002 appliquées.
+- `my_role()` déplacée dans un schéma `private` et `handle_new_user()` non appelable par l'API (conseils de sécurité Supabase : 0 alerte).
+- L'ancien projet « Maelle03240's Project » (en pause) n'a pas été touché.

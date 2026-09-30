@@ -16,7 +16,7 @@ Ouvre http://localhost:3000. Sans configuration, l'appli tourne en **mode local*
 ### 1. Supabase — base de données et comptes
 
 1. Crée un compte sur https://supabase.com puis un projet (région Europe, par ex. Paris ou Francfort).
-2. **SQL Editor → New query** : colle tout le contenu de [`supabase/migrations/0001_init.sql`](supabase/migrations/0001_init.sql) puis **Run**.
+2. **SQL Editor → New query** : colle le contenu des fichiers de [`supabase/migrations/`](supabase/migrations/) dans l'ordre (0001, 0002…) puis **Run**. *(Déjà fait pour le projet « tambouille ».)*
 3. **Authentication → Sign In / Providers** : laisse *Email* activé et **désactive « Allow new users to sign up »** (personne ne peut créer de compte à ta place).
 4. **Authentication → Users → Add user → Create new user** : ton e-mail + un mot de passe, coche *Auto Confirm User*. **Le premier compte créé devient administrateur.** Les comptes suivants (famille) sont en lecture seule ; pour en passer un en « peut modifier », dans le SQL Editor :
    ```sql
