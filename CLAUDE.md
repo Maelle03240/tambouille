@@ -22,6 +22,8 @@ Elle parle français : interface, textes, commentaires et messages de commit en 
 | Logo / icônes | `public/icons/*` (source : `docs/Logo@1x.png`) |
 | Catégories = type de plat (libellé, couleur) | `src/config/categories.ts` — ne jamais renommer un `id` stocké |
 | Moments de repas (petit-déj, goûter…) | `src/config/moments.ts` |
+| Contenu de la page Astuces (mesures, four…) | `src/config/kitchen-guide.ts` |
+| Son de l'alarme des minuteurs | `SOUND` dans `src/components/cook/alarm.ts` |
 | Tags | `src/config/tags.ts` (+ calcul auto dans `src/lib/recipes/tags.ts`) |
 | Onglets du bas, style du mode cuisine (1a/1b), étape qui suit le défilement, unités, rayons | `src/config/ui.ts` |
 | Seuil « deux colonnes » (iPad/paysage) | `@custom-variant wide` dans `src/app/globals.css` |

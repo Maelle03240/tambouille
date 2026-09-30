@@ -20,7 +20,7 @@ import { useWakeLock } from "@/components/cook/useWakeLock";
 import { CheckableIngredients } from "@/components/recipe/IngredientList";
 import { ReviewNoteSheet } from "@/components/recipe/ReviewNoteSheet";
 import { StepText, stepPlainText } from "@/components/recipe/StepText";
-import { IconBack, IconBookmark, IconCheck, IconChevronDown, IconMinus, IconPlus } from "@/components/ui/icons";
+import { IconBack, IconBookmark, IconCheck, IconChevronDown, IconMinus, IconPlus, IconSun } from "@/components/ui/icons";
 import { EmptyState, Spinner, cx } from "@/components/ui/primitives";
 import { getCategory } from "@/config/categories";
 import { UI } from "@/config/ui";
@@ -57,7 +57,7 @@ export function CookScreen() {
 }
 
 function Cook({ recipe }: { recipe: Recipe }) {
-  useWakeLock();
+  const screenLock = useWakeLock();
   const { canEdit, online, toast } = useApp();
   const base = recipe.yieldQuantity || 1;
   const s = useCookSession(recipe.id, base, recipe.steps.length);
@@ -148,7 +148,7 @@ function Cook({ recipe }: { recipe: Recipe }) {
   );
 
   return (
-    <div className="min-h-dvh wide:flex wide:h-dvh wide:flex-col wide:overflow-hidden" onPointerDownCapture={unlockAudio}>
+    <div className="min-h-dvh wide:flex wide:h-dvh wide:flex-col wide:overflow-hidden" onClickCapture={unlockAudio} onTouchEndCapture={unlockAudio}>
       {/* En-tête */}
       <header className="pt-safe sticky top-0 z-20 bg-bg/95 px-3 pb-1.5 backdrop-blur-sm wide:static wide:flex-none wide:px-6 wide:pb-4">
         <OfflineBanner className="mb-1 wide:hidden" />
@@ -165,6 +165,7 @@ function Cook({ recipe }: { recipe: Recipe }) {
             <h1 className="font-heading text-[34px] leading-[1.1]">{recipe.title}</h1>
           </div>
           <OfflineBanner compact className="hidden wide:flex" />
+          <ScreenLockBadge status={screenLock} />
           {reviewButton}
         </div>
       </header>
@@ -225,6 +226,9 @@ function Cook({ recipe }: { recipe: Recipe }) {
                 checked={s.checked}
                 onToggle={s.toggleChecked}
               />
+              <Link href="/astuces" className="mt-2 flex h-11 items-center justify-center rounded-full text-sm font-bold text-accent-700">
+                Mesures, four, cuissons →
+              </Link>
             </div>
           </div>
         </aside>
@@ -333,5 +337,23 @@ function Cook({ recipe }: { recipe: Recipe }) {
         onAdded={() => setReviewAdded(true)}
       />
     </div>
+  );
+}
+
+/** Témoin « écran maintenu allumé » (pour vérifier sur l'iPhone). */
+function ScreenLockBadge({ status }: { status: ReturnType<typeof useWakeLock> }) {
+  if (status === "pending") return null;
+  const on = status === "active";
+  return (
+    <span
+      title={on ? "L'écran reste allumé" : "L'écran peut se mettre en veille (non supporté ici)"}
+      className={cx(
+        "ml-auto flex h-11 flex-none items-center gap-1 rounded-full px-3 text-xs font-bold wide:ml-0",
+        on ? "bg-leaf-200 text-leaf-800" : "bg-accent-100 text-accent-800",
+      )}
+    >
+      <IconSun size={16} stroke={2.4} />
+      {on ? "Écran allumé" : "Veille possible"}
+    </span>
   );
 }

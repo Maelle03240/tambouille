@@ -3,7 +3,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { UI } from "@/config/ui";
 import { useOpenReviewCount } from "@/lib/data/hooks";
-import { IconBook, IconBookmark, IconCalendar, IconCart, IconSettings } from "@/components/ui/icons";
+import { IconBook, IconBookmark, IconCalendar, IconCart, IconLightbulb, IconSettings } from "@/components/ui/icons";
 import { cx } from "@/components/ui/primitives";
 
 /** Onglets disponibles ; lesquels s'affichent est réglé dans config/ui.ts. */
@@ -11,6 +11,7 @@ const TAB_DEFS = {
   recettes: { href: "/", label: "Recettes", Icon: IconBook },
   menu: { href: "/menu", label: "Menu", Icon: IconCalendar },
   courses: { href: "/courses", label: "Courses", Icon: IconCart },
+  astuces: { href: "/astuces", label: "Astuces", Icon: IconLightbulb },
   "a-revoir": { href: "/a-revoir", label: "À revoir", Icon: IconBookmark },
   reglages: { href: "/reglages", label: "Réglages", Icon: IconSettings },
 } as const;

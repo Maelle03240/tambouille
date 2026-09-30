@@ -5,6 +5,7 @@ import { useState } from "react";
 import { useApp } from "@/components/app/AppProvider";
 import { OfflineBanner } from "@/components/app/OfflineBanner";
 import { TabBar } from "@/components/app/TabBar";
+import { testAlarm } from "@/components/cook/alarm";
 import { Button, Field, NumberInput, SectionTitle, Spinner } from "@/components/ui/primitives";
 import { BRAND } from "@/config/brand";
 import { exportAll, saveSettings } from "@/lib/data/actions";
@@ -83,6 +84,15 @@ export function SettingsScreen() {
             Synchroniser maintenant
           </Button>
         )}
+
+        <section className="flex flex-col gap-3">
+          <SectionTitle>Alarme des minuteurs</SectionTitle>
+          <p className="text-[15px] text-neutral-700">
+            Sur iPhone, le son suit le <strong>volume média</strong> (boutons sur le côté, appli ouverte). L&apos;appli doit
+            rester ouverte à l&apos;écran pendant le minuteur : le mode cuisine garde l&apos;écran allumé pour ça.
+          </p>
+          <Button onClick={testAlarm}>Tester l&apos;alarme (3 s)</Button>
+        </section>
 
         <section className="flex flex-col gap-3">
           <SectionTitle>Tags automatiques</SectionTitle>

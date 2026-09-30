@@ -44,3 +44,9 @@ Format : date — décision — pourquoi.
 - Import IA : l'article devant un ingrédient cité est retiré (« la {farine} » → « {farine} », affiché « 250 g de farine »).
 - `NEXT_PUBLIC_FORCE_LOCAL=1` force le mode local même avec Supabase configuré (tests ; config « tambouille-local » dans `.claude/launch.json`).
 - Connexion : gardée (une seule fois par appareil, la session est mémorisée) — protège les recettes et le quota Gemini.
+
+## 2026-09-30 — Alarme, écran allumé, page Astuces
+
+- **Alarme des minuteurs** refaite : sonnerie forte générée (sans fichier), jouée par un élément `<audio>` en boucle jusqu'à l'arrêt (3 min max). Déblocage du son à la fin de chaque toucher (exigence iOS), `navigator.audioSession.type = "playback"` pour ignorer le bouton silencieux. Bouton « Tester l'alarme » dans Réglages. Limite connue : l'appli doit rester ouverte à l'écran (pas de son si elle est en arrière-plan ou l'écran verrouillé).
+- **Écran allumé** : témoin dans le mode cuisine (« Écran allumé » / « Veille possible ») ; le verrou est redemandé s'il est relâché par le système.
+- **Page « Astuces »** (prévue en V3 dans la spec, avancée car autonome et utile en cuisine) : mesures et équivalences, symboles du four, thermostat, cuissons, air fryer, remplacements. Onglet dédié + lien depuis le mode cuisine. Contenu dans `src/config/kitchen-guide.ts`.
