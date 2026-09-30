@@ -111,6 +111,19 @@ function findIngredient(token: string, ingredients: Pick<Ingredient, "id" | "nam
   return contains.length === 1 ? contains[0] : undefined;
 }
 
+/**
+ * Retire l'article devant un jeton d'ingrédient : « ajoutez les {œufs} » →
+ * « ajoutez {œufs} » (qui s'affichera « ajoutez 4 œufs »). Les durées
+ * ({8 min}) ne sont pas concernées.
+ */
+export function stripArticlesBeforeTokens(text: string): string {
+  return text.replace(/\b(le|la|les|du|des|l['’])\s*(?=\{(?!\d)[^{}]+\}(?!\}))/gi, (m, _a, offset: number) => {
+    const next = text.slice(offset + m.length);
+    const inner = next.match(/^\{([^{}]+)\}/)?.[1] ?? "";
+    return parseDuration(inner) != null ? m : "";
+  });
+}
+
 export function tokensToMarkers(
   text: string,
   ingredients: Pick<Ingredient, "id" | "name">[],

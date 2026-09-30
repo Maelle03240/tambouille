@@ -11,7 +11,7 @@ import { z } from "zod";
 import { CATEGORY_IDS } from "@/config/categories";
 import { newId } from "@/lib/ids";
 import { emptyRecipe } from "./factory";
-import { tokensToMarkers, timersIn } from "./markers";
+import { stripArticlesBeforeTokens, tokensToMarkers, timersIn } from "./markers";
 import { normalizeUnit, parseIngredientLine } from "./quantities";
 import type { Ingredient, Recipe, SourceType, Step } from "./types";
 
@@ -130,7 +130,7 @@ export function importToRecipe(data: ImportData, sourceType: SourceType): { reci
 
   const steps: Step[] = data.steps.map((s, i) => {
     const source = typeof s === "string" ? s : s.text;
-    const { text } = tokensToMarkers(source.trim(), ingredients);
+    const { text } = tokensToMarkers(stripArticlesBeforeTokens(source.trim()), ingredients);
     return { id: newId(), position: i, text, timerMinutes: timersIn(text)[0] ?? null };
   });
 

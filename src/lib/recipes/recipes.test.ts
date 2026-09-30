@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { importToRecipe, parseImportJson } from "./import-format";
-import { formatDuration, markersToTokens, parseDuration, parseStepText, tokensToMarkers } from "./markers";
+import { formatDuration, markersToTokens, parseDuration, parseStepText, stripArticlesBeforeTokens, tokensToMarkers } from "./markers";
 import { displayQuantity, formatIngredient, parseIngredientLine, parseNumber, withDe } from "./quantities";
 
 describe("parseNumber", () => {
@@ -92,6 +92,11 @@ describe("marqueurs d'étapes", () => {
 
   it("ne retouche pas un marqueur existant", () => {
     expect(tokensToMarkers("{{ing:a}} {5 min}", ings).text).toBe("{{ing:a}} {{timer:5}}");
+  });
+
+  it("retire l'article devant un ingrédient, pas devant une durée", () => {
+    expect(stripArticlesBeforeTokens("Mettre la {farine}, les {œufs} et du {beurre} dans l'{huile}, laisser la {10 min}."))
+      .toBe("Mettre {farine}, {œufs} et {beurre} dans {huile}, laisser la {10 min}.");
   });
 
   it("découpe", () => {
