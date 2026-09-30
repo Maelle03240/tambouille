@@ -22,12 +22,25 @@ export interface MetaEntry {
   value: unknown;
 }
 
-export type MetaKey = "lastSyncAt" | "profile" | "settings" | "features";
+export type MetaKey = "lastSyncAt" | "profile" | "settings" | "features" | "shopping";
+
+/** Sélection de la liste de courses (sur cet appareil seulement). */
+export interface ShoppingState {
+  /** Recettes ajoutées à la main (fiche → « Ajouter aux courses »). */
+  extras: { recipeId: string; servings: number }[];
+  /** Quantités modifiées, par recette. */
+  servings: Record<string, number>;
+  /** Recettes du menu retirées de la liste. */
+  excluded: string[];
+  /** Articles cochés (clé d'article). */
+  checked: string[];
+}
 export type MetaValue = {
   lastSyncAt: string;
   profile: Profile;
   settings: UserSettings;
   features: { ai: boolean; illustrations: boolean };
+  shopping: ShoppingState;
 };
 
 class CarnetDB extends Dexie {

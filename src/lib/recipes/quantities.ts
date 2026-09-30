@@ -133,9 +133,15 @@ export interface DisplayQuantity {
  * Aux portions d'origine (factor = 1), la quantité de la recette est
  * affichée telle quelle : on n'arrondit que ce qu'on a recalculé.
  */
-export function displayQuantity(quantity: number | null, unit: string, factor = 1): DisplayQuantity {
+export function displayQuantity(
+  quantity: number | null,
+  unit: string,
+  factor = 1,
+  /** round : arrondir même sans mise à l'échelle (totaux de la liste de courses). */
+  opts: { round?: boolean } = {},
+): DisplayQuantity {
   if (quantity == null || !isFinite(quantity)) return { amount: "", value: null, unit };
-  const exact = factor === 1;
+  const exact = factor === 1 && !opts.round;
   let v = quantity * factor;
   let u = unit;
   const round = (rounded: number) => (exact ? Number(v.toFixed(2)) : rounded);

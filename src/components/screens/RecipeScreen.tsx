@@ -7,13 +7,13 @@ import { OfflineBanner } from "@/components/app/OfflineBanner";
 import { IngredientList } from "@/components/recipe/IngredientList";
 import { ReviewNoteSheet } from "@/components/recipe/ReviewNoteSheet";
 import { StepText } from "@/components/recipe/StepText";
-import { IconBack, IconBookmark, IconPencil } from "@/components/ui/icons";
+import { IconBack, IconBookmark, IconCart, IconPencil } from "@/components/ui/icons";
 import { EmptyState, SectionTitle, Spinner, cx } from "@/components/ui/primitives";
 import { categoryColors, getCategory } from "@/config/categories";
 import { RATINGS, PROTEIN_SOURCES } from "@/config/ui";
 import { tagLabel } from "@/config/tags";
 import { momentLabel } from "@/config/moments";
-import { patchRecipe } from "@/lib/data/actions";
+import { addToShopping, patchRecipe } from "@/lib/data/actions";
 import { useRecipe, useSettings } from "@/lib/data/hooks";
 import { useSearchId } from "@/lib/hooks/useSearchId";
 import { formatDuration } from "@/lib/recipes/markers";
@@ -119,6 +119,16 @@ export function RecipeScreen() {
             className="flex h-10 items-center gap-1.5 rounded-full border-[1.5px] border-divider px-4 text-sm font-bold text-neutral-800"
           >
             <IconBookmark size={15} /> À revoir
+          </button>
+          <button
+            type="button"
+            onClick={async () => {
+              await addToShopping(recipe);
+              toast("Ajoutée aux courses");
+            }}
+            className="flex h-10 items-center gap-1.5 rounded-full border-[1.5px] border-divider px-4 text-sm font-bold text-neutral-800"
+          >
+            <IconCart size={15} /> Courses
           </button>
           {canEdit && (
             <Link

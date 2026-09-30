@@ -4,7 +4,7 @@
  * jour automatique quand le cache change (useLiveQuery).
  */
 import { useLiveQuery } from "dexie-react-hooks";
-import { DEFAULT_SETTINGS } from "./actions";
+import { DEFAULT_SETTINGS, EMPTY_SHOPPING } from "./actions";
 import { db, getMeta } from "./db";
 
 export function useRecipes() {
@@ -47,4 +47,8 @@ export function useTemplates() {
 
 export function usePantry() {
   return useLiveQuery(() => db.pantry.orderBy("name").toArray(), []);
+}
+
+export function useShopping() {
+  return useLiveQuery(async () => ({ ...EMPTY_SHOPPING, ...((await getMeta("shopping")) ?? {}) }), []);
 }

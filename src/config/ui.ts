@@ -26,18 +26,8 @@ export const UI = {
 /** Unités de rendement proposées dans l'éditeur (le champ reste libre). */
 export const YIELD_UNITS = ["personnes", "parts", "cookies", "crêpes", "pièces", "verres", "pots", "tranches"];
 
-/** Rayons de supermarché (liste de courses V2, déjà renseignés à l'import). */
-export const AISLES = [
-  "Fruits & légumes",
-  "Boucherie & poisson",
-  "Crèmerie",
-  "Épicerie",
-  "Épicerie sucrée",
-  "Boulangerie",
-  "Surgelés",
-  "Boissons",
-  "Autre",
-] as const;
+/** Rayons : voir src/config/aisles.ts (ordre, couleurs, mots-clés). */
+export { AISLES } from "./aisles";
 
 export const PROTEIN_SOURCES = [
   { id: "viande", label: "Viande" },

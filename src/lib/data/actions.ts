@@ -9,7 +9,7 @@ import { PLANNING_DEFAULTS } from "@/config/planning";
 import type { MealPlanEntry, MealTemplate, PantryBasic } from "@/lib/planning/types";
 import type { Recipe, ReviewItem, UserSettings } from "@/lib/recipes/types";
 import { getRepository } from ".";
-import { db, getMeta, setMeta } from "./db";
+import { db, getMeta, setMeta, type ShoppingState } from "./db";
 
 export class OfflineError extends Error {
   constructor() {
@@ -193,6 +193,25 @@ export async function removePantryBasic(id: string) {
   requireOnline();
   await getRepository().deletePantryBasic(id);
   await db.pantry.delete(id);
+}
+
+/* ───────────── Liste de courses (locale) ───────────── */
+
+export const EMPTY_SHOPPING: ShoppingState = { extras: [], servings: {}, excluded: [], checked: [] };
+
+export async function updateShopping(fn: (s: ShoppingState) => ShoppingState) {
+  const cur = { ...EMPTY_SHOPPING, ...((await getMeta("shopping")) ?? {}) };
+  await setMeta("shopping", fn(cur));
+}
+
+export async function addToShopping(recipe: Recipe) {
+  await updateShopping((s) => ({
+    ...s,
+    extras: s.extras.some((e) => e.recipeId === recipe.id)
+      ? s.extras
+      : [...s.extras, { recipeId: recipe.id, servings: recipe.yieldQuantity || 1 }],
+    excluded: s.excluded.filter((id) => id !== recipe.id),
+  }));
 }
 
 /** Sauvegarde complète en JSON (réglages → « Exporter mes recettes »). */

@@ -9,7 +9,8 @@ import { Button, Field, NumberInput, SectionTitle, Spinner } from "@/components/
 import { BRAND } from "@/config/brand";
 import { exportAll, saveSettings } from "@/lib/data/actions";
 import { getMeta } from "@/lib/data/db";
-import { useSettings } from "@/lib/data/hooks";
+import { useOpenReviewCount, useSettings } from "@/lib/data/hooks";
+import Link from "next/link";
 
 const ROLE_LABELS = { admin: "Administratrice", editor: "Peut modifier", reader: "Lecture seule" };
 
@@ -25,6 +26,7 @@ function Row({ label, value }: { label: string; value: React.ReactNode }) {
 export function SettingsScreen() {
   const app = useApp();
   const settings = useSettings();
+  const reviewCount = useOpenReviewCount();
   // undefined = pas modifié : on affiche la valeur enregistrée
   const [thresholdDraft, setThreshold] = useState<number | null | undefined>(undefined);
   const threshold = thresholdDraft === undefined ? settings.proteinRichThresholdG : thresholdDraft;
@@ -74,6 +76,9 @@ export function SettingsScreen() {
             }
           />
         </section>
+        <Link href="/a-revoir" className="flex h-14 items-center justify-between rounded-[28px] bg-surface px-5 font-bold">
+          À revoir <span className="text-accent-700">{reviewCount}</span>
+        </Link>
         {app.syncError && <p className="rounded-field bg-accent-100 px-4 py-3 text-accent-800">{app.syncError}</p>}
 
         {app.mode === "supabase" && (
