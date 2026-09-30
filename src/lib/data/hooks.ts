@@ -34,3 +34,17 @@ export function useSettings() {
 export function useProfile() {
   return useLiveQuery(() => getMeta("profile"), []);
 }
+
+/* ───────────── Planning (V2) ───────────── */
+
+export function useMealPlans(from: string, to: string) {
+  return useLiveQuery(() => db.mealPlans.where("day").between(from, to, true, true).toArray(), [from, to]);
+}
+
+export function useTemplates() {
+  return useLiveQuery(() => db.templates.toArray(), []);
+}
+
+export function usePantry() {
+  return useLiveQuery(() => db.pantry.orderBy("name").toArray(), []);
+}

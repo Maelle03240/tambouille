@@ -6,6 +6,7 @@
  * L'interface n'appelle jamais ces fonctions directement : elle passe par
  * actions.ts (écritures) et hooks.ts (lectures depuis le cache).
  */
+import type { MealPlanEntry, MealTemplate, PantryBasic } from "@/lib/planning/types";
 import type { Profile, Recipe, ReviewItem, UserSettings } from "@/lib/recipes/types";
 
 export interface Session {
@@ -19,6 +20,9 @@ export interface Snapshot {
   reviewItems: ReviewItem[];
   profile: Profile | null;
   settings: UserSettings | null;
+  mealPlans: MealPlanEntry[];
+  templates: MealTemplate[];
+  pantry: PantryBasic[];
 }
 
 export interface Repository {
@@ -39,4 +43,12 @@ export interface Repository {
   deleteReviewItems(ids: string[]): Promise<void>;
 
   saveSettings(settings: UserSettings): Promise<void>;
+
+  /* V2 — planning, modèles, basiques (propres à chaque personne) */
+  upsertMealPlans(entries: MealPlanEntry[]): Promise<void>;
+  deleteMealPlans(entries: Pick<MealPlanEntry, "day" | "meal">[]): Promise<void>;
+  saveTemplate(t: MealTemplate): Promise<void>;
+  deleteTemplate(id: string): Promise<void>;
+  savePantryBasic(b: PantryBasic): Promise<void>;
+  deletePantryBasic(id: string): Promise<void>;
 }

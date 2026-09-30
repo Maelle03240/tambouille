@@ -2,6 +2,8 @@
  * Correspondance colonnes SQL (snake_case) ⇄ modèle appli (camelCase).
  * SEUL endroit à modifier quand on ajoute/renomme une colonne.
  */
+import { PLANNING_DEFAULTS } from "@/config/planning";
+import { entryKey, type MealPlanEntry, type MealTemplate, type PantryBasic } from "@/lib/planning/types";
 import type { Ingredient, Profile, Recipe, ReviewItem, Step, UserSettings } from "@/lib/recipes/types";
 import { ingredientIdsIn } from "@/lib/recipes/markers";
 
@@ -150,6 +152,7 @@ export function settingsFromRow(s: Row): UserSettings {
     autoIllustrations: s.auto_illustrations ?? false,
     proteinRichThresholdG: s.protein_rich_threshold_g ?? 20,
     dailyTargets: s.daily_targets ?? { kcal: null, proteinMinG: null },
+    planning: { ...PLANNING_DEFAULTS, ...(s.planning ?? {}) },
   };
 }
 
@@ -158,5 +161,29 @@ export function settingsToRow(s: UserSettings): Row {
     auto_illustrations: s.autoIllustrations,
     protein_rich_threshold_g: s.proteinRichThresholdG,
     daily_targets: s.dailyTargets,
+    planning: s.planning,
   };
+}
+
+export function mealPlanFromRow(m: Row): MealPlanEntry {
+  return {
+    key: entryKey(m.day, m.meal),
+    day: m.day,
+    meal: m.meal,
+    recipeId: m.recipe_id,
+    portions: Number(m.portions ?? 1),
+    locked: m.locked ?? false,
+  };
+}
+
+export function mealPlanToRow(e: MealPlanEntry, ownerId: string): Row {
+  return { owner_id: ownerId, day: e.day, meal: e.meal, recipe_id: e.recipeId, portions: e.portions, locked: e.locked };
+}
+
+export function templateFromRow(t: Row): MealTemplate {
+  return { id: t.id, name: t.name, kind: t.kind, meals: t.meals ?? [] };
+}
+
+export function pantryFromRow(p: Row): PantryBasic {
+  return { id: p.id, name: p.name };
 }

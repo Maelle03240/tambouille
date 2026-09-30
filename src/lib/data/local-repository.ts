@@ -27,6 +27,9 @@ export class LocalRepository implements Repository {
       reviewItems: await db.reviewItems.toArray(),
       profile: { id: "local", displayName: "Moi", role: "admin" },
       settings: (await getMeta("settings")) ?? null,
+      mealPlans: await db.mealPlans.toArray(),
+      templates: await db.templates.toArray(),
+      pantry: await db.pantry.toArray(),
     };
   }
 
@@ -35,4 +38,10 @@ export class LocalRepository implements Repository {
   async upsertReviewItems() {}
   async deleteReviewItems() {}
   async saveSettings() {}
+  async upsertMealPlans() {}
+  async deleteMealPlans() {}
+  async saveTemplate() {}
+  async deleteTemplate() {}
+  async savePantryBasic() {}
+  async deletePantryBasic() {}
 }

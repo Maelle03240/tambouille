@@ -4,6 +4,7 @@
  * src/lib/data/supabase-mapping.ts.
  */
 import type { CategoryId } from "@/config/categories";
+import type { PlanningSettings } from "@/lib/planning/types";
 
 export type ProteinSource = "viande" | "poisson" | "oeuf" | "laitier" | "vegetal" | "poudre";
 export type Rating = "reussie" | "a-refaire" | "ratee";
@@ -95,6 +96,8 @@ export interface UserSettings {
     carbsG?: [number, number] | null;
     fiberG?: [number, number] | null;
   };
+  /** Planning (V2) : repas planifiés et objectif prioritaire. */
+  planning: PlanningSettings;
 }
 
 export interface Profile {

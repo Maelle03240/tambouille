@@ -7,6 +7,7 @@
  * précédentes (Dexie migre tout seul).
  */
 import Dexie, { type Table } from "dexie";
+import type { MealPlanEntry, MealTemplate, PantryBasic } from "@/lib/planning/types";
 import type { Profile, Recipe, ReviewItem, UserSettings } from "@/lib/recipes/types";
 
 export interface OutboxOp {
@@ -34,6 +35,9 @@ class CarnetDB extends Dexie {
   reviewItems!: Table<ReviewItem, string>;
   outbox!: Table<OutboxOp, number>;
   meta!: Table<MetaEntry, string>;
+  mealPlans!: Table<MealPlanEntry, string>;
+  templates!: Table<MealTemplate, string>;
+  pantry!: Table<PantryBasic, string>;
 
   constructor() {
     super("carnet-tambouille");
@@ -42,6 +46,12 @@ class CarnetDB extends Dexie {
       reviewItems: "id, recipeId, done",
       outbox: "++seq",
       meta: "key",
+    });
+    // V2 : planning, modèles, basiques
+    this.version(2).stores({
+      mealPlans: "key, day",
+      templates: "id",
+      pantry: "id, name",
     });
   }
 }

@@ -5,6 +5,8 @@
 import { newId } from "@/lib/ids";
 import { timersIn } from "@/lib/recipes/markers";
 import { AUTO_REVIEW_RULES, autoReviewNotes } from "@/lib/recipes/review";
+import { PLANNING_DEFAULTS } from "@/config/planning";
+import type { MealPlanEntry, MealTemplate, PantryBasic } from "@/lib/planning/types";
 import type { Recipe, ReviewItem, UserSettings } from "@/lib/recipes/types";
 import { getRepository } from ".";
 import { db, getMeta, setMeta } from "./db";
@@ -139,6 +141,7 @@ export const DEFAULT_SETTINGS: UserSettings = {
   autoIllustrations: false,
   proteinRichThresholdG: 20,
   dailyTargets: { kcal: null, proteinMinG: null },
+  planning: PLANNING_DEFAULTS,
 };
 
 export async function saveSettings(settings: UserSettings) {
@@ -149,6 +152,47 @@ export async function saveSettings(settings: UserSettings) {
 
 export async function loadSettings(): Promise<UserSettings> {
   return { ...DEFAULT_SETTINGS, ...((await getMeta("settings")) ?? {}) };
+}
+
+/* ───────────── Planning (V2) ───────────── */
+
+export async function savePlanEntries(entries: MealPlanEntry[]) {
+  requireOnline();
+  await getRepository().upsertMealPlans(entries);
+  await db.mealPlans.bulkPut(entries);
+}
+
+export async function removePlanEntries(entries: MealPlanEntry[]) {
+  requireOnline();
+  await getRepository().deleteMealPlans(entries);
+  await db.mealPlans.bulkDelete(entries.map((e) => e.key));
+}
+
+export async function saveTemplate(t: MealTemplate) {
+  requireOnline();
+  await getRepository().saveTemplate(t);
+  await db.templates.put(t);
+}
+
+export async function deleteTemplate(id: string) {
+  requireOnline();
+  await getRepository().deleteTemplate(id);
+  await db.templates.delete(id);
+}
+
+export async function addPantryBasic(name: string) {
+  requireOnline();
+  const clean = name.trim().toLowerCase();
+  if (!clean || (await db.pantry.where("name").equals(clean).count())) return;
+  const b: PantryBasic = { id: newId(), name: clean };
+  await getRepository().savePantryBasic(b);
+  await db.pantry.put(b);
+}
+
+export async function removePantryBasic(id: string) {
+  requireOnline();
+  await getRepository().deletePantryBasic(id);
+  await db.pantry.delete(id);
 }
 
 /** Sauvegarde complète en JSON (réglages → « Exporter mes recettes »). */

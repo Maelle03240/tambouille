@@ -19,8 +19,8 @@ export const UI = {
 
   // Le seuil « deux colonnes » (iPad / paysage) est dans globals.css (@custom-variant wide).
 
-  /** Onglets de la barre du bas. Ajouter « menu » / « courses » en V2. */
-  tabs: ["recettes", "astuces", "a-revoir", "reglages"] as const,
+  /** Onglets de la barre du bas (possibles : recettes, menu, courses, astuces, a-revoir, reglages). */
+  tabs: ["recettes", "menu", "courses", "astuces", "reglages"] as ("recettes" | "menu" | "courses" | "astuces" | "a-revoir" | "reglages")[],
 };
 
 /** Unités de rendement proposées dans l'éditeur (le champ reste libre). */

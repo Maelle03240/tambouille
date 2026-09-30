@@ -205,3 +205,42 @@ export const IconLightbulb = make(
   </>,
   "IconLightbulb",
 );
+export const IconLock = make(
+  <>
+    <rect width="18" height="11" x="3" y="11" rx="2" />
+    <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+  </>,
+  "IconLock",
+);
+export const IconUnlock = make(
+  <>
+    <rect width="18" height="11" x="3" y="11" rx="2" />
+    <path d="M7 11V7a5 5 0 0 1 9.9-1" />
+  </>,
+  "IconUnlock",
+);
+export const IconShuffle = make(
+  <>
+    <path d="m18 14 4 4-4 4" />
+    <path d="m18 2 4 4-4 4" />
+    <path d="M2 18h1.4c1.3 0 2.5-.6 3.3-1.7l6.1-8.6c.7-1.1 2-1.7 3.3-1.7H22" />
+    <path d="M2 6h1.4c1.3 0 2.5.6 3.3 1.7l.9 1.2" />
+    <path d="M22 18h-5.9c-1.3 0-2.6-.7-3.3-1.8l-.5-.8" />
+  </>,
+  "IconShuffle",
+);
+export const IconCopy = make(
+  <>
+    <rect width="14" height="14" x="8" y="8" rx="2" />
+    <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
+  </>,
+  "IconCopy",
+);
+export const IconShare = make(
+  <>
+    <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
+    <polyline points="16 6 12 2 8 6" />
+    <line x1="12" x2="12" y1="2" y2="15" />
+  </>,
+  "IconShare",
+);
