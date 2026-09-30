@@ -11,6 +11,7 @@ import { useApp } from "@/components/app/AppProvider";
 import { IconTrash } from "@/components/ui/icons";
 import { Button, Chip, Field, NumberInput, SectionTitle, Sheet, Spinner, TextArea, TextInput, cx } from "@/components/ui/primitives";
 import { CATEGORIES, categoryColors } from "@/config/categories";
+import { MOMENTS } from "@/config/moments";
 import { TAGS } from "@/config/tags";
 import { PROTEIN_SOURCES, RATINGS, YIELD_UNITS } from "@/config/ui";
 import { deleteRecipe, saveRecipe } from "@/lib/data/actions";
@@ -185,6 +186,24 @@ export function RecipeEditor({
               })}
             </div>
           </DoubtBox>
+        </div>
+
+        <div id="field-moments" className="scroll-mt-24">
+          <span className="text-[13px] font-bold text-neutral-700">Moments (plusieurs possibles)</span>
+          <div className="mt-1.5 flex flex-wrap gap-2">
+            {MOMENTS.map((m) => {
+              const on = (draft.moments ?? []).includes(m.id);
+              return (
+                <Chip
+                  key={m.id}
+                  selected={on}
+                  onClick={() => set("moments", on ? draft.moments.filter((x) => x !== m.id) : [...(draft.moments ?? []), m.id])}
+                >
+                  {m.label}
+                </Chip>
+              );
+            })}
+          </div>
         </div>
 
         <div className="grid grid-cols-2 gap-2.5">

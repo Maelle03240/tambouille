@@ -8,6 +8,7 @@ export function emptyRecipe(): Recipe {
     ownerId: null,
     title: "",
     category: null,
+    moments: [],
     tags: ["a-tester"],
     yieldQuantity: 4,
     yieldUnit: "personnes",

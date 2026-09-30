@@ -108,6 +108,9 @@ export function useCookSession(recipeId: string, baseServings: number, stepCount
     [stepCount],
   );
 
+  /** Étape en cours choisie par le défilement (sans logique « c'est fait »). */
+  const followStep = useCallback((i: number) => setCurrent(i), []);
+
   const startTimer = useCallback((key: string, stepIndex: number, minutes: number, seconds: number) => {
     setNow(Date.now());
     setTimers((all) => ({
@@ -169,6 +172,7 @@ export function useCookSession(recipeId: string, baseServings: number, stepCount
     toggleChecked,
     current,
     tapStep,
+    followStep,
     timers,
     now,
     ringing,

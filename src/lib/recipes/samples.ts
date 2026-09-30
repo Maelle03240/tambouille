@@ -8,6 +8,7 @@ import type { ImportData } from "./import-format";
 export const SAMPLE_RECIPE: ImportData = {
   title: "Salade César",
   category: "entree",
+  moments: ["dejeuner", "diner"],
   tags: [],
   yield_quantity: 4,
   yield_unit: "personnes",

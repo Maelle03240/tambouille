@@ -15,6 +15,7 @@ import { unlockAudio } from "@/components/cook/alarm";
 import { STEP_STYLES } from "@/components/cook/stepStyles";
 import { TimerDial, TimerPill, TimersBar, type DialMode } from "@/components/cook/Timers";
 import { remainingSec, useCookSession } from "@/components/cook/useCookSession";
+import { useFollowScroll } from "@/components/cook/useFollowScroll";
 import { useWakeLock } from "@/components/cook/useWakeLock";
 import { CheckableIngredients } from "@/components/recipe/IngredientList";
 import { ReviewNoteSheet } from "@/components/recipe/ReviewNoteSheet";
@@ -73,20 +74,32 @@ function Cook({ recipe }: { recipe: Recipe }) {
     ? { key: ringingTimer.key, stepIndex: ringingTimer.stepIndex, minutes: ringingTimer.minutes }
     : openedDial;
 
-  // Faire défiler jusqu'à l'étape en cours (pas à l'ouverture sur l'étape 1 :
-  // on laisse voir le titre et les portions)
-  const { current } = s;
-  const firstScroll = useRef(true);
-  useEffect(() => {
-    const first = firstScroll.current;
-    firstScroll.current = false;
-    if (first && current === 0) return;
-    const el = document.querySelector(`[data-step="${current}"]`);
-    el?.scrollIntoView({ behavior: first ? "auto" : "smooth", block: "center" });
-  }, [current]);
-
   const timerList = useMemo(() => Object.values(s.timers).sort((a, b) => a.stepIndex - b.stepIndex), [s.timers]);
   const allDone = recipe.steps.length > 0 && s.current >= recipe.steps.length;
+
+  // L'étape en cours suit le défilement…
+  const stepsColumn = useRef<HTMLElement>(null);
+  const follow = useFollowScroll({ container: stepsColumn, enabled: !allDone, onStep: s.followStep });
+
+  const scrollToStep = follow.scrollToStep;
+
+  // …et toucher une étape la fait passer (et défiler) : l'étape touchée si
+  // elle n'était pas en cours, sinon la suivante (« c'est fait »).
+  function onTapStep(i: number) {
+    const next = i === s.current ? i + 1 : i;
+    s.tapStep(i);
+    if (next < recipe.steps.length) scrollToStep(next);
+  }
+
+  // Reprise d'une cuisson en cours : on revient sur l'étape où on en était
+  // (pas à l'ouverture sur l'étape 1 : on laisse voir le titre et les portions)
+  const restored = useRef(false);
+  useEffect(() => {
+    if (restored.current) return;
+    restored.current = true;
+    if (s.current > 0 && s.current < recipe.steps.length) scrollToStep(s.current, false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const step = servingsStep(base);
   const total = totalMinutes(recipe);
   const kicker = [
@@ -217,7 +230,7 @@ function Cook({ recipe }: { recipe: Recipe }) {
         </aside>
 
         {/* Colonne étapes */}
-        <main className="wide:no-scrollbar wide:overflow-y-auto wide:px-4 wide:pt-1">
+        <main ref={stepsColumn} className="wide:no-scrollbar wide:overflow-y-auto wide:px-4 wide:pt-1">
           <h2 className="px-1.5 pb-2.5 font-heading text-[22px] wide:hidden">Étapes</h2>
           <ol className="flex max-w-[720px] flex-col gap-2 wide:gap-2.5">
             {recipe.steps.map((st, i) => {
@@ -225,7 +238,7 @@ function Cook({ recipe }: { recipe: Recipe }) {
               const L = look[state];
               let timerIdx = 0;
               return (
-                <li key={st.id} data-step={i} onClick={() => s.tapStep(i)} className={L.card}>
+                <li key={st.id} data-step={i} onClick={() => onTapStep(i)} className={L.card}>
                   <div className={L.num}>{state === "done" ? <IconCheck size={18} stroke={3.5} /> : i + 1}</div>
                   <div className="flex min-w-0 flex-1 flex-col gap-1.5">
                     {state === "current" && <div className={L.label}>En cours · touchez quand c&apos;est fait</div>}
@@ -276,7 +289,7 @@ function Cook({ recipe }: { recipe: Recipe }) {
               </div>
             </div>
           )}
-          <div className="h-40" />
+          <div className="h-[55dvh]" />
         </main>
       </div>
 

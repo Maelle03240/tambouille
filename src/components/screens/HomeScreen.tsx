@@ -10,6 +10,7 @@ import { RecipeCard } from "@/components/recipe/RecipeCard";
 import { IconBookmark, IconPlus, IconSearch } from "@/components/ui/icons";
 import { Button, Chip, EmptyState, Spinner, cx } from "@/components/ui/primitives";
 import { CATEGORIES, categoryColors } from "@/config/categories";
+import { MOMENTS } from "@/config/moments";
 import { TAGS } from "@/config/tags";
 import { saveRecipe } from "@/lib/data/actions";
 import { useOpenReviewCount, useRecipes, useSettings } from "@/lib/data/hooks";
@@ -27,14 +28,16 @@ export function HomeScreen() {
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState<string | null>(null);
   const [tags, setTags] = useState<string[]>([]);
+  const [moments, setMoments] = useState<string[]>([]);
   const [adding, setAdding] = useState(false);
 
   const list = useMemo(
-    () => filterRecipes(recipes ?? [], { query, category, tags }, settings),
-    [recipes, query, category, tags, settings],
+    () => filterRecipes(recipes ?? [], { query, category, moments, tags }, settings),
+    [recipes, query, category, moments, tags, settings],
   );
 
   const toggleTag = (id: string) => setTags((t) => (t.includes(id) ? t.filter((x) => x !== id) : [...t, id]));
+  const toggleMoment = (id: string) => setMoments((m) => (m.includes(id) ? m.filter((x) => x !== id) : [...m, id]));
 
   async function addSample() {
     try {
@@ -93,6 +96,21 @@ export function HomeScreen() {
         })}
       </div>
       <div className="no-scrollbar mx-auto flex max-w-5xl gap-1.5 overflow-x-auto px-5 pb-4">
+        {MOMENTS.map((m) => (
+          <button
+            key={m.id}
+            type="button"
+            onClick={() => toggleMoment(m.id)}
+            aria-pressed={moments.includes(m.id)}
+            className={cx(
+              "h-9 flex-none rounded-full border-[1.5px] px-3.5 text-sm font-bold whitespace-nowrap",
+              moments.includes(m.id) ? "border-leaf-700 bg-leaf-700 text-neutral-100" : "border-leaf-400 bg-leaf-100 text-leaf-800",
+            )}
+          >
+            {m.label}
+          </button>
+        ))}
+        <span className="w-px flex-none bg-divider" aria-hidden />
         {FILTER_TAGS.map((t) => (
           <button
             key={t.id}

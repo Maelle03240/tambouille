@@ -20,9 +20,10 @@ Elle parle français : interface, textes, commentaires et messages de commit en 
 | Polices | `src/app/layout.tsx` (next/font) |
 | Nom, sous-titre, couleur de barre | `src/config/brand.ts` |
 | Logo / icônes | `public/icons/*` (source : `docs/Logo@1x.png`) |
-| Catégories (libellé, couleur) | `src/config/categories.ts` — ne jamais renommer un `id` stocké |
+| Catégories = type de plat (libellé, couleur) | `src/config/categories.ts` — ne jamais renommer un `id` stocké |
+| Moments de repas (petit-déj, goûter…) | `src/config/moments.ts` |
 | Tags | `src/config/tags.ts` (+ calcul auto dans `src/lib/recipes/tags.ts`) |
-| Onglets du bas, style du mode cuisine (1a/1b), unités, rayons | `src/config/ui.ts` |
+| Onglets du bas, style du mode cuisine (1a/1b), étape qui suit le défilement, unités, rayons | `src/config/ui.ts` |
 | Seuil « deux colonnes » (iPad/paysage) | `@custom-variant wide` dans `src/app/globals.css` |
 | Arrondis des quantités, lecture « 200 g de farine » | `src/lib/recipes/quantities.ts` (+ tests) |
 | Points « à revoir » automatiques | `src/lib/recipes/review.ts` (`AUTO_REVIEW_RULES`) |

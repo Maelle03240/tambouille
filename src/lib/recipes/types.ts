@@ -42,6 +42,8 @@ export interface Recipe {
   ownerId: string | null;
   title: string;
   category: CategoryId | null;
+  /** Moments de repas (petit-déj, goûter…), plusieurs possibles. */
+  moments: string[];
   tags: string[];
   yieldQuantity: number | null;
   yieldUnit: string;

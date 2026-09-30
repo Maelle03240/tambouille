@@ -5,12 +5,14 @@
  */
 import { AISLES } from "@/config/ui";
 import { CATEGORIES } from "@/config/categories";
+import { MOMENTS } from "@/config/moments";
 
 export const PARSE_INSTRUCTIONS = `Tu lis une recette de cuisine (photo de livre, fiche manuscrite, capture d'écran, texte ou page web) et tu la renvoies en JSON strict, en français.
 
 Règles :
 - Recopie fidèlement ; ne complète pas ce qui manque (mets null). Traduis en français si besoin.
-- category : une de ${CATEGORIES.map((c) => `"${c.id}"`).join(", ")} (les soupes vont dans "entree").
+- category : le TYPE de plat, un de ${CATEGORIES.map((c) => `"${c.id}"`).join(", ")} (les soupes vont dans "entree" ; gâteaux, biscuits et crêpes sucrées dans "dessert").
+- moments : QUAND on le mange, zéro ou plusieurs parmi ${MOMENTS.map((m) => `"${m.id}"`).join(", ")} (un brownie : category "dessert", moments ["gouter"] ; un porridge : ["petit-dejeuner"] ; un plat : ["dejeuner", "diner"]).
 - yield_quantity + yield_unit : le rendement (« 4 » + « personnes », « 12 » + « cookies »). portion_size : unités par portion (1 par défaut ; 2 si « 1 portion = 2 cookies »).
 - prep_minutes / cook_minutes : entiers, null si absents (0 si pas de cuisson du tout).
 - ingredients : une entrée par ligne. text = la ligne telle qu'écrite. quantity (nombre, ex. 1.5), unit (g, kg, ml, cl, l, c. à soupe, c. à café, pincée, gousse, tranche, sachet… ou "" si aucune), name sans quantité ni « de » (« farine », « huile d'olive »). Convertis tasses/cups et onces en g ou ml. section : titre du groupe s'il y en a (« Pâte », « Garniture »), sinon null. grams_estimate : poids estimé en grammes. aisle : un de ${AISLES.map((a) => `"${a}"`).join(", ")}. scalable : false pour « sel au goût », « poivre », « un filet de… ».
@@ -26,6 +28,7 @@ export const RESPONSE_SCHEMA = {
   properties: {
     title: { type: "STRING" },
     category: { type: "STRING", nullable: true, enum: CATEGORIES.map((c) => c.id) },
+    moments: { type: "ARRAY", items: { type: "STRING", enum: MOMENTS.map((m) => m.id) } },
     yield_quantity: { type: "NUMBER", nullable: true },
     yield_unit: { type: "STRING" },
     portion_size: { type: "NUMBER", nullable: true },

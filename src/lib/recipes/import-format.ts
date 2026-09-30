@@ -8,7 +8,8 @@
  * docs/FORMAT-IMPORT.md.
  */
 import { z } from "zod";
-import { CATEGORY_IDS } from "@/config/categories";
+import { CATEGORY_IDS, LEGACY_CATEGORY_TO_MOMENT } from "@/config/categories";
+import { MOMENT_IDS } from "@/config/moments";
 import { newId } from "@/lib/ids";
 import { emptyRecipe } from "./factory";
 import { stripArticlesBeforeTokens, tokensToMarkers, timersIn } from "./markers";
@@ -40,6 +41,8 @@ export const importIngredientSchema = z.object({
 export const importSchema = z.object({
   title: z.string().min(1, "Titre manquant"),
   category: z.string().nullish(),
+  /** Moments de repas : petit-dejeuner, dejeuner, gouter, diner (plusieurs possibles). */
+  moments: z.array(z.string()).nullish(),
   tags: z.array(z.string()).nullish(),
   yield_quantity: num,
   yield_unit: str,
@@ -134,13 +137,19 @@ export function importToRecipe(data: ImportData, sourceType: SourceType): { reci
     return { id: newId(), position: i, text, timerMinutes: timersIn(text)[0] ?? null };
   });
 
-  const category = CATEGORY_IDS.find((c) => c === data.category) ?? null;
+  // Anciennes catégories « goûter » / « petit-déj » → moment + type de plat
+  const legacy = data.category ? LEGACY_CATEGORY_TO_MOMENT[data.category] : undefined;
+  const category = CATEGORY_IDS.find((c) => c === (legacy ? legacy.category : data.category)) ?? null;
+  const moments = [...new Set([...(data.moments ?? []), ...(legacy ? [legacy.moment] : [])])].filter((m) =>
+    (MOMENT_IDS as readonly string[]).includes(m),
+  );
   const n = data.nutrition_per_portion;
 
   const recipe: Recipe = {
     ...base,
     title: data.title.trim(),
     category,
+    moments,
     tags: [...new Set([...(data.tags ?? []), "a-tester"])],
     yieldQuantity: data.yield_quantity,
     yieldUnit: data.yield_unit || "personnes",

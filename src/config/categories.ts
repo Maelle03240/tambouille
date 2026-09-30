@@ -1,10 +1,10 @@
 /**
- * Catégories de recettes.
+ * Catégories = TYPE de plat (une seule par recette). Le moment où on le mange
+ * (petit-déj, goûter…) est à part : src/config/moments.ts.
  * - `id` est ce qui est stocké en base : ne jamais le renommer une fois des
  *   recettes enregistrées (changer `label` à la place).
  * - `hue` : teinte de la couleur de la catégorie (0-360, espace OKLCH).
- * Ajouter une catégorie = ajouter une ligne ici (et dans la contrainte SQL
- * `recipes_category_check` si elle existe, voir supabase/migrations).
+ * Ajouter une catégorie = ajouter une ligne ici (pas de contrainte SQL).
  */
 export const CATEGORIES = [
   { id: "entree", label: "Entrées", singular: "Entrée", hue: 165 },
@@ -13,10 +13,14 @@ export const CATEGORIES = [
   { id: "sauce", label: "Sauces", singular: "Sauce", hue: 25 },
   { id: "apero", label: "Apéro", singular: "Apéro", hue: 300 },
   { id: "cocktail", label: "Cocktails & mocktails", singular: "Cocktail / mocktail", hue: 220 },
-  { id: "petit-dejeuner", label: "Petit-déj", singular: "Petit-déjeuner", hue: 260 },
-  { id: "gouter", label: "Goûter", singular: "Goûter", hue: 95 },
   { id: "pain", label: "Pains", singular: "Pain", hue: 75 },
 ] as const;
+
+/** Anciennes catégories devenues des moments (imports JSON / IA à l'ancienne). */
+export const LEGACY_CATEGORY_TO_MOMENT: Record<string, { moment: string; category: string | null }> = {
+  gouter: { moment: "gouter", category: "dessert" },
+  "petit-dejeuner": { moment: "petit-dejeuner", category: null },
+};
 
 export type CategoryId = (typeof CATEGORIES)[number]["id"];
 

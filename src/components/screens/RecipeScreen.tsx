@@ -12,6 +12,7 @@ import { EmptyState, SectionTitle, Spinner, cx } from "@/components/ui/primitive
 import { categoryColors, getCategory } from "@/config/categories";
 import { RATINGS, PROTEIN_SOURCES } from "@/config/ui";
 import { tagLabel } from "@/config/tags";
+import { momentLabel } from "@/config/moments";
 import { patchRecipe } from "@/lib/data/actions";
 import { useRecipe, useSettings } from "@/lib/data/hooks";
 import { useSearchId } from "@/lib/hooks/useSearchId";
@@ -144,13 +145,18 @@ export function RecipeScreen() {
           </div>
         )}
 
-        {(recipe.rating || tags.filter((t) => t !== "a-tester").length > 0) && (
+        {(recipe.rating || (recipe.moments ?? []).length > 0 || tags.filter((t) => t !== "a-tester").length > 0) && (
           <div className="flex flex-wrap gap-1.5">
             {recipe.rating && (
               <span className="rounded-full bg-accent-200 px-3 py-1 text-[13px] font-bold text-accent-800">
                 {RATINGS.find((r) => r.id === recipe.rating)?.label}
               </span>
             )}
+            {(recipe.moments ?? []).map((m) => (
+              <span key={m} className="rounded-full bg-leaf-200 px-3 py-1 text-[13px] font-bold text-leaf-800">
+                {momentLabel(m)}
+              </span>
+            ))}
             {tags
               .filter((t) => t !== "a-tester")
               .map((t) => (

@@ -8,6 +8,7 @@ Définition exacte et validation : `src/lib/recipes/import-format.ts`. Exemple c
 {
   "title": "Tarte tatin de Mamie",
   "category": "dessert",
+  "moments": ["gouter"],
   "yield_quantity": 6,
   "yield_unit": "personnes",
   "portion_size": 1,
@@ -33,7 +34,8 @@ Définition exacte et validation : `src/lib/recipes/import-format.ts`. Exemple c
 }
 ```
 
-- **category** : `entree`, `plat`, `dessert`, `sauce`, `apero`, `cocktail`, `petit-dejeuner`, `gouter`, `pain` (liste : `src/config/categories.ts`).
+- **category** (type de plat) : `entree`, `plat`, `dessert`, `sauce`, `apero`, `cocktail`, `pain` (liste : `src/config/categories.ts`).
+- **moments** (quand on le mange, plusieurs possibles) : `petit-dejeuner`, `dejeuner`, `gouter`, `diner` (liste : `src/config/moments.ts`).
 - **ingredients** : `text` suffit (« 200 g de farine » est lu tout seul) ; `quantity` / `unit` / `name` le précisent. `section` = groupe facultatif.
 - **steps** : `{nom exact de l'ingrédient}` affiche sa quantité (recalculée selon les portions) ; `{8 min}`, `{1 h 30}` crée un minuteur. Deux ingrédients de même nom : `{huile d'olive#2}` pour le second.
 - **nutrition_per_portion** : valeurs **par portion**, estimées.

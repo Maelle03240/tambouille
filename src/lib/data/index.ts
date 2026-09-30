@@ -12,7 +12,9 @@ export function getRepository(): Repository {
   if (instance) return instance;
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  instance = url && key ? new SupabaseRepository(url, key) : new LocalRepository();
+  // NEXT_PUBLIC_FORCE_LOCAL=1 : mode local même avec Supabase configuré (tests)
+  const forceLocal = process.env.NEXT_PUBLIC_FORCE_LOCAL === "1";
+  instance = url && key && !forceLocal ? new SupabaseRepository(url, key) : new LocalRepository();
   return instance;
 }
 

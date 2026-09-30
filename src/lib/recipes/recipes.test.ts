@@ -135,6 +135,14 @@ describe("import JSON", () => {
     expect(doubts[0].key).toBe(`ingredient:${recipe.ingredients[1].id}`);
   });
 
+  it("ancienne catégorie « goûter » → dessert + moment goûter", () => {
+    const res = parseImportJson(JSON.stringify({ title: "Brownies", category: "gouter", moments: ["gouter", "inconnu"] }));
+    if (!res.ok) throw new Error(res.error);
+    const { recipe } = importToRecipe(res.data, "photo");
+    expect(recipe.category).toBe("dessert");
+    expect(recipe.moments).toEqual(["gouter"]);
+  });
+
   it("refuse un JSON invalide avec un message clair", () => {
     const res = parseImportJson("{ pas du json");
     expect(res.ok).toBe(false);

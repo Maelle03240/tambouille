@@ -3,6 +3,7 @@
  * une recette au format d'import JSON, à coller ensuite dans l'appli.
  */
 import { CATEGORIES } from "@/config/categories";
+import { MOMENTS } from "@/config/moments";
 import { SAMPLE_RECIPE } from "@/lib/recipes/samples";
 
 export function claudeImportPrompt(): string {
@@ -10,7 +11,8 @@ export function claudeImportPrompt(): string {
   return `Mets cette recette au format JSON ci-dessous pour mon appli de cuisine. Réponds uniquement avec le JSON.
 
 Règles :
-- category : une de ${CATEGORIES.map((c) => c.id).join(", ")}
+- category (type de plat) : une de ${CATEGORIES.map((c) => c.id).join(", ")}
+- moments (quand on le mange, plusieurs possibles) : ${MOMENTS.map((m) => m.id).join(", ")}
 - ingredients : une entrée par ligne ; name sans quantité ni « de » ; unit parmi g, kg, ml, cl, l, c. à soupe, c. à café, pincée, gousse… ou "" ; section = groupe facultatif.
 - steps : cite chaque ingrédient utilisé entre accolades avec son name exact ({beurre}) et chaque durée de minuteur entre accolades ({8 min}).
 - nutrition_per_portion : estimation PAR PORTION.

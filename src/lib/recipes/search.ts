@@ -11,6 +11,8 @@ const fold = (s: string) =>
 export interface RecipeFilter {
   query: string;
   category: string | null;
+  /** Moments cochés : la recette doit convenir à l'un d'eux. */
+  moments?: string[];
   tags: string[];
 }
 
@@ -18,6 +20,7 @@ export function filterRecipes(recipes: Recipe[], f: RecipeFilter, opts: TagOptio
   const words = fold(f.query).split(/\s+/).filter(Boolean);
   return recipes
     .filter((r) => !f.category || r.category === f.category)
+    .filter((r) => !f.moments?.length || f.moments.some((m) => (r.moments ?? []).includes(m)))
     .filter((r) => {
       if (!f.tags.length) return true;
       const tags = displayTags(r, opts);
