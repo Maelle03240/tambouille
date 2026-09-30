@@ -116,3 +116,32 @@ button:disabled {
 .text-balance {
   text-wrap: balance;
 }
+
+/* Impression A4 d'une recette (bouton « Imprimer » de la fiche). */
+@page {
+  size: A4;
+  margin: 14mm;
+}
+@media print {
+  html,
+  body {
+    background: white;
+    font-size: 12pt;
+  }
+  [role="status"],
+  nav {
+    display: none !important;
+  }
+  .pt-safe {
+    padding-top: 0 !important;
+  }
+  header {
+    border-radius: 12px !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  main section p,
+  main section div {
+    break-inside: avoid;
+  }
+}

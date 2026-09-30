@@ -5,6 +5,7 @@ import { useSettings } from "@/lib/data/hooks";
 import { displayTags } from "@/lib/recipes/tags";
 import type { Recipe } from "@/lib/recipes/types";
 import { formatDuration } from "@/lib/recipes/markers";
+import { RATINGS } from "@/config/ui";
 import { totalMinutes } from "@/lib/recipes/tags";
 
 /**
@@ -30,7 +31,7 @@ export function RecipeCard({ recipe }: { recipe: Recipe }) {
         {total ? <span className="normal-case tracking-normal">{formatDuration(total)}</span> : null}
       </div>
       <div className="flex-1" />
-      {(rich || test) && (
+      {(rich || test || recipe.rating) && (
         <div className="flex flex-wrap gap-1">
           {rich && (
             <span className="rounded-full px-2 py-0.5 text-[10.5px] font-extrabold" style={{ background: colors.ink, color: colors.bg }}>
@@ -38,6 +39,9 @@ export function RecipeCard({ recipe }: { recipe: Recipe }) {
             </span>
           )}
           {test && <span className="rounded-full bg-leaf-300 px-2 py-0.5 text-[10.5px] font-extrabold text-leaf-900">À tester</span>}
+          {recipe.rating && (
+            <span className="rounded-full bg-white/55 px-2 py-0.5 text-[10.5px] font-extrabold">{RATINGS.find((x) => x.id === recipe.rating)?.label}</span>
+          )}
         </div>
       )}
       <div className="font-heading text-[21px] leading-[1.1] text-balance">{recipe.title}</div>

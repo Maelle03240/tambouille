@@ -75,7 +75,7 @@ export function RecipeScreen() {
       >
         <div className="mx-auto flex max-w-3xl flex-col gap-3.5">
           <div className="flex items-center justify-between gap-3 pt-1">
-            <Link href="/" aria-label="Retour" className="flex size-12 items-center justify-center rounded-full bg-white/45">
+            <Link href="/" aria-label="Retour" className="flex size-12 items-center justify-center rounded-full bg-white/45 print:invisible">
               <IconBack />
             </Link>
             <OfflineBanner compact />
@@ -94,12 +94,12 @@ export function RecipeScreen() {
       <main className="mx-auto flex max-w-3xl flex-col gap-[22px] px-5 pt-5">
         <Link
           href={`/cuisine?id=${recipe.id}`}
-          className="flex h-16 items-center justify-center gap-2.5 rounded-full bg-accent-600 font-heading text-[21px] text-neutral-100 shadow-md active:bg-accent-700"
+          className="print:hidden flex h-16 items-center justify-center gap-2.5 rounded-full bg-accent-600 font-heading text-[21px] text-neutral-100 shadow-md active:bg-accent-700"
         >
           Commencer à cuisiner
         </Link>
 
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-2 print:hidden">
           {canEdit && (
             <button
               type="button"
@@ -129,6 +129,13 @@ export function RecipeScreen() {
             className="flex h-10 items-center gap-1.5 rounded-full border-[1.5px] border-divider px-4 text-sm font-bold text-neutral-800"
           >
             <IconCart size={15} /> Courses
+          </button>
+          <button
+            type="button"
+            onClick={() => window.print()}
+            className="hidden h-10 items-center gap-1.5 rounded-full border-[1.5px] border-divider px-4 text-sm font-bold text-neutral-800 sm:flex"
+          >
+            Imprimer
           </button>
           {canEdit && (
             <Link
@@ -213,7 +220,7 @@ export function RecipeScreen() {
           </div>
         )}
 
-        <div className="wide:grid wide:grid-cols-[minmax(260px,38%)_1fr] wide:gap-8">
+        <div className="wide:grid wide:grid-cols-[minmax(260px,38%)_1fr] wide:gap-8 print:grid print:grid-cols-[34%_1fr] print:gap-8">
           <section className="flex flex-col">
             <SectionTitle className="mb-0.5">Ingrédients</SectionTitle>
             {recipe.ingredients.length ? (
@@ -222,7 +229,7 @@ export function RecipeScreen() {
               <p className="py-2 text-neutral-700">Aucun ingrédient pour l&apos;instant.</p>
             )}
           </section>
-          <section className="mt-[22px] flex flex-col gap-3 wide:mt-0">
+          <section className="mt-[22px] flex flex-col gap-3 wide:mt-0 print:mt-0">
             <SectionTitle>Étapes</SectionTitle>
             {recipe.steps.map((s, i) => (
               <div key={s.id} className="flex gap-3 text-[17px] leading-[1.45]">

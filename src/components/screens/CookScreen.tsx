@@ -17,6 +17,7 @@ import { TimerDial, TimerPill, TimersBar, type DialMode } from "@/components/coo
 import { remainingSec, useCookSession } from "@/components/cook/useCookSession";
 import { useFollowScroll } from "@/components/cook/useFollowScroll";
 import { useWakeLock } from "@/components/cook/useWakeLock";
+import { AimSheet } from "@/components/cook/AimSheet";
 import { CheckableIngredients } from "@/components/recipe/IngredientList";
 import { ReviewNoteSheet } from "@/components/recipe/ReviewNoteSheet";
 import { StepText, stepPlainText } from "@/components/recipe/StepText";
@@ -25,6 +26,7 @@ import { EmptyState, Spinner, cx } from "@/components/ui/primitives";
 import { getCategory } from "@/config/categories";
 import { UI } from "@/config/ui";
 import { patchRecipe } from "@/lib/data/actions";
+import { RATINGS } from "@/config/ui";
 import { useRecipe } from "@/lib/data/hooks";
 import { useSearchId } from "@/lib/hooks/useSearchId";
 import { formatDuration } from "@/lib/recipes/markers";
@@ -67,6 +69,7 @@ function Cook({ recipe }: { recipe: Recipe }) {
   const [ingOpen, setIngOpen] = useState(false);
   const [reviewOpen, setReviewOpen] = useState(false);
   const [reviewAdded, setReviewAdded] = useState(false);
+  const [aimOpen, setAimOpen] = useState(false);
   const [openedDial, setDial] = useState<{ key: string; stepIndex: number; minutes: number } | null>(null);
   // Un minuteur qui sonne ouvre son cadran
   const ringingTimer = s.ringing ? s.timers[s.ringing] : undefined;
@@ -122,6 +125,14 @@ function Cook({ recipe }: { recipe: Recipe }) {
     if (dialMode === "done" && dial) s.stopTimer(dial.key);
     s.acknowledge();
     setDial(null);
+  }
+
+  async function rate(rating: Recipe["rating"]) {
+    try {
+      await patchRecipe(recipe.id, { rating, tags: recipe.tags.filter((t) => t !== "a-tester") });
+    } catch (e) {
+      toast(e instanceof Error ? e.message : "Modification impossible");
+    }
   }
 
   async function markTested() {
@@ -181,6 +192,11 @@ function Cook({ recipe }: { recipe: Recipe }) {
             <div className="flex flex-col">
               <span className="text-[17px] font-bold">Portions</span>
               <span className="text-sm text-neutral-700">{recipe.yieldUnit}</span>
+              {(recipe.kcal != null || recipe.proteinG != null) && (
+                <button type="button" onClick={() => setAimOpen(true)} className="mt-0.5 self-start text-sm font-bold text-accent-700">
+                  Viser kcal / protéines
+                </button>
+              )}
             </div>
             <div className="flex items-center gap-1.5 rounded-full bg-surface p-[5px] wide:bg-bg">
               <button
@@ -234,6 +250,11 @@ function Cook({ recipe }: { recipe: Recipe }) {
 
         {/* Colonne étapes */}
         <main ref={stepsColumn} className="wide:no-scrollbar wide:overflow-y-auto wide:px-4 wide:pt-1">
+          {recipe.personalNotes && (
+            <div className="mb-3 max-w-[720px] rounded-3xl bg-leaf-200 px-4 py-3 text-base leading-relaxed text-leaf-900">
+              <strong>Ma note ·</strong> {recipe.personalNotes}
+            </div>
+          )}
           <h2 className="px-1.5 pb-2.5 font-heading text-[22px] wide:hidden">Étapes</h2>
           <ol className="flex max-w-[720px] flex-col gap-2 wide:gap-2.5">
             {recipe.steps.map((st, i) => {
@@ -272,6 +293,24 @@ function Cook({ recipe }: { recipe: Recipe }) {
           {allDone && (
             <div className="mt-6 flex max-w-[720px] flex-col items-center gap-3 rounded-[28px] bg-leaf-200 px-5 py-7 text-center text-leaf-900">
               <p className="font-heading text-[30px]">Bon appétit !</p>
+              {canEdit && (
+                <div className="flex flex-wrap justify-center gap-2">
+                  {RATINGS.map((r) => (
+                    <button
+                      key={r.id}
+                      type="button"
+                      disabled={!online}
+                      onClick={() => rate(r.id)}
+                      className={cx(
+                        "h-11 rounded-full border-[1.5px] px-4 font-bold disabled:opacity-45",
+                        recipe.rating === r.id ? "border-leaf-800 bg-leaf-800 text-neutral-100" : "border-leaf-600",
+                      )}
+                    >
+                      {r.label}
+                    </button>
+                  ))}
+                </div>
+              )}
               {canEdit && recipe.tags.includes("a-tester") && (
                 <button
                   type="button"
@@ -328,6 +367,8 @@ function Cook({ recipe }: { recipe: Recipe }) {
           onClose={closeDial}
         />
       )}
+
+      {aimOpen && <AimSheet recipe={recipe} open onClose={() => setAimOpen(false)} onApply={(v) => s.setServings(v)} />}
 
       <ReviewNoteSheet
         recipeId={recipe.id}
