@@ -6,8 +6,10 @@ import { useApp } from "@/components/app/AppProvider";
 import { OfflineBanner } from "@/components/app/OfflineBanner";
 import { IngredientList } from "@/components/recipe/IngredientList";
 import { ReviewNoteSheet } from "@/components/recipe/ReviewNoteSheet";
+import { ImageSheet } from "@/components/recipe/ImageSheet";
+import { imageUrl } from "@/lib/images";
 import { StepText } from "@/components/recipe/StepText";
-import { IconBack, IconBookmark, IconCart, IconPencil } from "@/components/ui/icons";
+import { IconBack, IconBookmark, IconCart, IconImage, IconPencil } from "@/components/ui/icons";
 import { EmptyState, SectionTitle, Spinner, cx } from "@/components/ui/primitives";
 import { categoryColors, getCategory } from "@/config/categories";
 import { RATINGS, PROTEIN_SOURCES } from "@/config/ui";
@@ -32,6 +34,7 @@ export function RecipeScreen() {
   const settings = useSettings();
   const { canEdit, online, toast } = useApp();
   const [reviewOpen, setReviewOpen] = useState(false);
+  const [imageOpen, setImageOpen] = useState(false);
 
   if (recipe === undefined) {
     return (
@@ -81,7 +84,11 @@ export function RecipeScreen() {
             <OfflineBanner compact />
             <span className="text-[13px] font-bold tracking-[.06em] uppercase">{getCategory(recipe.category).label}</span>
           </div>
-          {/* Emplacement image (V2) : photo perso > illustration > couverture typographique */}
+          {/* Photo perso > illustration > couverture typographique (le titre sur la couleur) */}
+          {imageUrl(recipe.imagePath) && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={imageUrl(recipe.imagePath)!} alt="" className="mt-1 h-52 w-full rounded-3xl object-cover sm:h-72" />
+          )}
           <h1 className="pt-6 font-heading text-[40px] leading-[1.02] text-balance sm:text-[52px]">{recipe.title}</h1>
           <div className="flex flex-wrap gap-x-4 gap-y-1 text-[15px] font-bold">
             {yieldLabel(recipe) && <span>{yieldLabel(recipe)}</span>}
@@ -153,6 +160,16 @@ export function RecipeScreen() {
             >
               <IconPencil size={15} /> Modifier
             </Link>
+          )}
+          {canEdit && (
+            <button
+              type="button"
+              onClick={() => setImageOpen(true)}
+              disabled={!online}
+              className="flex h-10 items-center gap-1.5 rounded-full border-[1.5px] border-divider px-4 text-sm font-bold text-neutral-800 disabled:opacity-45"
+            >
+              <IconImage size={15} /> Image
+            </button>
           )}
         </div>
 
@@ -244,6 +261,7 @@ export function RecipeScreen() {
         </div>
       </main>
       <ReviewNoteSheet recipeId={recipe.id} open={reviewOpen} onClose={() => setReviewOpen(false)} />
+      <ImageSheet recipe={recipe} open={imageOpen} onClose={() => setImageOpen(false)} />
     </div>
   );
 }

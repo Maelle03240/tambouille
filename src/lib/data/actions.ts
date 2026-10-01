@@ -9,6 +9,8 @@ import { PLANNING_DEFAULTS } from "@/config/planning";
 import type { MealPlanEntry, MealTemplate, PantryBasic } from "@/lib/planning/types";
 import type { CustomIngredient, Recipe, ReviewItem, UserSettings } from "@/lib/recipes/types";
 import { getRepository } from ".";
+import { base64ToBlob, compressForStorage } from "@/lib/import/image";
+import { requestIllustration } from "@/lib/import/client";
 import { db, getMeta, setMeta, type ShoppingState } from "./db";
 
 export class OfflineError extends Error {
@@ -101,6 +103,46 @@ export async function patchRecipe(id: string, patch: Partial<Recipe>) {
   const current = await db.recipes.get(id);
   if (!current) throw new Error("Recette introuvable");
   return saveRecipe({ ...current, ...patch });
+}
+
+/* ───────────── Images (V2) ───────────── */
+
+/**
+ * Remplace l'image d'une recette. Priorité d'affichage (spec §8) : photo
+ * perso > illustration générée > couverture typographique ; une illustration
+ * ne remplace donc jamais une photo perso.
+ */
+export async function setRecipeImage(recipeId: string, source: Blob, kind: "personal" | "generated") {
+  requireOnline();
+  const current = await db.recipes.get(recipeId);
+  if (!current) throw new Error("Recette introuvable");
+  if (kind === "generated" && current.imageKind === "personal") return current;
+  const blob = await compressForStorage(source);
+  const ext = blob.type === "image/webp" ? "webp" : "jpg";
+  const repo = getRepository();
+  const imagePath = await repo.uploadImage(`${recipeId}/${Date.now()}.${ext}`, blob);
+  const saved = await patchRecipe(recipeId, { imagePath, imageKind: kind });
+  if (current.imagePath && current.imagePath !== imagePath) await repo.deleteImage(current.imagePath).catch(() => {});
+  return saved;
+}
+
+export async function removeRecipeImage(recipeId: string) {
+  requireOnline();
+  const current = await db.recipes.get(recipeId);
+  if (!current?.imagePath) return;
+  await getRepository().deleteImage(current.imagePath).catch(() => {});
+  await patchRecipe(recipeId, { imagePath: null, imageKind: "none" });
+}
+
+/** Illustration IA (style vieux livre de cuisine), puis enregistrement. */
+export async function illustrateRecipe(recipeId: string) {
+  const r = await db.recipes.get(recipeId);
+  if (!r) throw new Error("Recette introuvable");
+  const img = await requestIllustration(
+    r.title,
+    r.ingredients.slice(0, 6).map((i) => i.name),
+  );
+  return setRecipeImage(recipeId, base64ToBlob(img.base64, img.mimeType), "generated");
 }
 
 /* ───────────── À revoir (fonctionne hors ligne) ───────────── */

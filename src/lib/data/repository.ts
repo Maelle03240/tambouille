@@ -53,5 +53,9 @@ export interface Repository {
   savePantryBasic(b: PantryBasic): Promise<void>;
   deletePantryBasic(id: string): Promise<void>;
   saveCustomIngredient(c: CustomIngredient): Promise<void>;
+
+  /** Image de recette : renvoie la référence à stocker dans recipe.imagePath. */
+  uploadImage(path: string, blob: Blob): Promise<string>;
+  deleteImage(imagePath: string): Promise<void>;
   deleteCustomIngredient(id: string): Promise<void>;
 }

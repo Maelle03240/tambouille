@@ -46,5 +46,14 @@ export class LocalRepository implements Repository {
   async savePantryBasic() {}
   async deletePantryBasic() {}
   async saveCustomIngredient() {}
+  async uploadImage(_path: string, blob: Blob) {
+    return await new Promise<string>((resolve, reject) => {
+      const r = new FileReader();
+      r.onload = () => resolve(String(r.result));
+      r.onerror = () => reject(r.error);
+      r.readAsDataURL(blob);
+    });
+  }
+  async deleteImage() {}
   async deleteCustomIngredient() {}
 }

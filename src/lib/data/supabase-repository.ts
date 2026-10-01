@@ -152,6 +152,17 @@ export class SupabaseRepository implements Repository {
     fail(error, "Basiques");
   }
 
+  async uploadImage(path: string, blob: Blob) {
+    const { error } = await this.client.storage.from("recipe-images").upload(path, blob, { contentType: blob.type, upsert: true });
+    fail(error, "Image");
+    return path;
+  }
+
+  async deleteImage(imagePath: string) {
+    if (imagePath.startsWith("data:")) return;
+    await this.client.storage.from("recipe-images").remove([imagePath]);
+  }
+
   async saveCustomIngredient(c: CustomIngredient) {
     const { error } = await this.client.from("custom_ingredients").upsert(customIngredientToRow(c));
     fail(error, "Ingrédient perso");

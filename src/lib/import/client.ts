@@ -65,3 +65,6 @@ export interface PerPortionResult {
 }
 
 export const requestNutrition = (body: unknown) => postJson<PerPortionResult>("/api/nutrition", body);
+
+export const requestIllustration = (title: string, ingredients: string[]) =>
+  postJson<{ base64: string; mimeType: string }>("/api/illustrate", { title, ingredients });

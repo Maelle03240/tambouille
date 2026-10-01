@@ -77,7 +77,8 @@ async function cacheFirst(request) {
   const hit = await cache.match(request);
   if (hit) return hit;
   const res = await fetch(request);
-  if (res.ok) cache.put(request, res.clone());
+  // « opaque » = image d'un autre domaine (Supabase) : on la garde quand même
+  if (res.ok || res.type === "opaque") cache.put(request, res.clone());
   return res;
 }
 
@@ -97,6 +98,8 @@ self.addEventListener("fetch", (event) => {
   const { request } = event;
   if (request.method !== "GET") return;
   const url = new URL(request.url);
+  // images des recettes (Supabase Storage) : cache d'abord, dispo hors ligne
+  if (url.pathname.startsWith("/storage/v1/object/public/recipe-images/")) return event.respondWith(cacheFirst(request));
   if (url.origin !== self.location.origin) return;
   if (url.pathname.startsWith("/api/")) return;
   // données de navigation interne de Next (RSC) : réseau seulement ; hors

@@ -90,6 +90,19 @@ export function SettingsScreen() {
           </Button>
         )}
 
+        {app.features.illustrations && (
+          <label className="flex min-h-14 items-center justify-between gap-3 rounded-[28px] bg-surface px-5 font-bold">
+            Illustrations automatiques
+            <input
+              type="checkbox"
+              checked={settings.autoIllustrations}
+              disabled={!app.online}
+              onChange={(e) => saveSettings({ ...settings, autoIllustrations: e.target.checked }).catch((err) => app.toast(err.message))}
+              className="size-6 accent-[var(--color-accent-600)]"
+            />
+          </label>
+        )}
+
         <section className="flex flex-col gap-3">
           <SectionTitle>Tags automatiques</SectionTitle>
           <Field label="« Riche en protéines » à partir de (g par portion)">

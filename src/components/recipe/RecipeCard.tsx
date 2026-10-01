@@ -6,6 +6,7 @@ import { displayTags } from "@/lib/recipes/tags";
 import type { Recipe } from "@/lib/recipes/types";
 import { formatDuration } from "@/lib/recipes/markers";
 import { RATINGS } from "@/config/ui";
+import { imageUrl } from "@/lib/images";
 import { totalMinutes } from "@/lib/recipes/tags";
 
 /**
@@ -30,7 +31,11 @@ export function RecipeCard({ recipe }: { recipe: Recipe }) {
         <span>{getCategory(recipe.category).singular}</span>
         {total ? <span className="normal-case tracking-normal">{formatDuration(total)}</span> : null}
       </div>
-      <div className="flex-1" />
+      {imageUrl(recipe.imagePath) ? (
+        <div className="min-h-24 flex-1 rounded-[14px] bg-cover bg-center" style={{ backgroundImage: `url("${imageUrl(recipe.imagePath)}")` }} />
+      ) : (
+        <div className="flex-1" />
+      )}
       {(rich || test || recipe.rating) && (
         <div className="flex flex-wrap gap-1">
           {rich && (

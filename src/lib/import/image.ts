@@ -28,3 +28,30 @@ function fileToBase64(blob: Blob): Promise<string> {
     reader.readAsDataURL(blob);
   });
 }
+
+/**
+ * Image de recette : 800 px max, WebP (repli JPEG si le navigateur ne sait
+ * pas encoder le WebP, ex. anciens iPhone).
+ */
+export async function compressForStorage(source: Blob, maxSide = 800): Promise<Blob> {
+  const bitmap = await createImageBitmap(source);
+  const scale = Math.min(1, maxSide / Math.max(bitmap.width, bitmap.height));
+  const canvas = document.createElement("canvas");
+  canvas.width = Math.round(bitmap.width * scale);
+  canvas.height = Math.round(bitmap.height * scale);
+  canvas.getContext("2d")!.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+  bitmap.close();
+  const encode = (type: string) => new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, type, 0.82));
+  const webp = await encode("image/webp");
+  if (webp && webp.type === "image/webp") return webp;
+  const jpeg = await encode("image/jpeg");
+  if (!jpeg) throw new Error("Conversion de l'image impossible");
+  return jpeg;
+}
+
+export function base64ToBlob(base64: string, type = "image/jpeg"): Blob {
+  const bin = atob(base64);
+  const bytes = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+  return new Blob([bytes], { type });
+}

@@ -14,7 +14,8 @@ import { CATEGORIES, categoryColors } from "@/config/categories";
 import { MOMENTS } from "@/config/moments";
 import { TAGS } from "@/config/tags";
 import { PROTEIN_SOURCES, RATINGS, YIELD_UNITS } from "@/config/ui";
-import { deleteRecipe, saveRecipe } from "@/lib/data/actions";
+import { deleteRecipe, illustrateRecipe, saveRecipe } from "@/lib/data/actions";
+import { useSettings } from "@/lib/data/hooks";
 import { db } from "@/lib/data/db";
 import { requestNutrition } from "@/lib/import/client";
 import type { Doubt } from "@/lib/recipes/import-format";
@@ -58,6 +59,7 @@ export function RecipeEditor({
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [recalculating, setRecalculating] = useState(false);
   const { features } = useApp();
+  const settings = useSettings();
   const linkedCount = draft.ingredients.filter((i) => i.customIngredientId).length;
 
   /** Recalcule les valeurs par portion (IA), avec les vraies valeurs des ingrédients perso liés. */
@@ -151,6 +153,10 @@ export function RecipeEditor({
         keepForReview: keepForReview ? doubts.map((d) => ({ field: d.key, note: d.question })) : [],
       });
       toast(mode === "edit" ? "Modifications enregistrées" : "Recette enregistrée");
+      // Illustration en arrière-plan, sans bloquer (réglage « Illustrations automatiques »)
+      if (mode !== "edit" && settings.autoIllustrations && features.illustrations && !saved.imagePath) {
+        illustrateRecipe(saved.id).catch(() => {});
+      }
       onSaved(saved);
     } catch (e) {
       toast(e instanceof Error ? e.message : "Enregistrement impossible");
