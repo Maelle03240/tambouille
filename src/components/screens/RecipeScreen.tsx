@@ -125,7 +125,7 @@ export function RecipeScreen() {
                 toTest ? "border-transparent bg-leaf-300 text-leaf-900" : "border-divider text-neutral-800",
               )}
             >
-              {toTest ? "À tester ✓" : "Marquer « à tester »"}
+              {toTest ? "À tester" : "Testé"}
             </button>
           )}
           <button

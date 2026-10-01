@@ -83,3 +83,4 @@ Format : date — décision — pourquoi.
 - **Style des illustrations changé** (à sa demande, d'après ses exemples ; remplace « vieux livre de cuisine, encre et aquarelle » de la spec §8) : gouache détaillée façon livre de cuisine, plat seul sur fond blanc. Modèle Cloudflare `flux-2-klein-9b` (~2 s ; flux-1-schnell trop simple, flux-2-dev trop lent). Recette taguée « Meal prep » → dessinée dans une boîte en verre transparente. Quota gratuit Cloudflare : 10 000 neurons / jour, message clair quand il est atteint.
 - Accueil : filtres moments (Petit-déj…Dîner) à la fin de la 2ᵉ ligne, après les tags.
 - Courses : étiquette « Ajouté » (au lieu de « Perso ») sur les articles ajoutés à la main.
+- Fiche recette : bouton « Testé » / « À tester » (en couleur) au lieu de « Marquer « à tester » » — moins de texte.
