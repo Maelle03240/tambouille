@@ -84,3 +84,5 @@ Format : date — décision — pourquoi.
 - Accueil : filtres moments (Petit-déj…Dîner) à la fin de la 2ᵉ ligne, après les tags.
 - Courses : étiquette « Ajouté » (au lieu de « Perso ») sur les articles ajoutés à la main.
 - Fiche recette : bouton « Testé » / « À tester » (en couleur) au lieu de « Marquer « à tester » » — moins de texte.
+- Hors ligne : l'appli s'affiche tout de suite avec les données de l'appareil quand un profil est en cache, sans attendre Supabase (qui, hors ligne, peut bloquer en voulant rafraîchir une session expirée → page blanche sur iPhone).
+- Commande vocale plus robuste sur iPhone : lecture des résultats provisoires (Safari ne finalise pas toujours), relance limitée, erreurs affichées (micro refusé, indisponible, coupé).

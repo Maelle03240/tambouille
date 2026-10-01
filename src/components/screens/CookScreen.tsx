@@ -114,7 +114,7 @@ function Cook({ recipe }: { recipe: Recipe }) {
       unlockAudio();
       s.startTimer(key, Math.min(s.current, recipe.steps.length - 1), minutes, minutes * 60);
     }
-  });
+  }, toast);
 
   // Reprise d'une cuisson en cours : on revient sur l'étape où on en était
   // (pas à l'ouverture sur l'étape 1 : on laisse voir le titre et les portions)

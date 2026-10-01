@@ -86,10 +86,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
   // Session
   useEffect(() => {
     requestPersistentStorage();
-    repo.getSession().then((s) => {
-      setSession(s);
-      setAuthReady(true);
-    });
+    // hors ligne, Supabase peut mettre longtemps (ou échouer) à rafraîchir une
+    // session expirée : on ne bloque pas l'affichage dessus (voir plus bas)
+    repo
+      .getSession()
+      .then(setSession)
+      .catch(() => {})
+      .finally(() => setAuthReady(true));
     return repo.onAuthChange(setSession);
   }, [repo]);
 
@@ -142,7 +145,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   return (
     <Ctx.Provider value={value}>
-      {!authReady && repo.mode === "supabase" ? null : needsLogin ? <LoginScreen /> : children}
+      {/* profil en cache (déjà connectée sur cet appareil) : on affiche tout de suite les données locales */}
+      {repo.mode === "supabase" && !authReady && !profile ? null : needsLogin ? <LoginScreen /> : children}
       {toastMsg && (
         <div
           role="status"

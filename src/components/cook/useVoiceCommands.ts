@@ -54,15 +54,31 @@ export function parseVoiceCommand(heard: string): VoiceCommand | null {
   return null;
 }
 
-export function useVoiceCommands(onCommand: (c: VoiceCommand, heard: string) => void) {
+const ERRORS: Record<string, string> = {
+  "not-allowed": "Micro refusé : autorise-le dans les réglages du téléphone",
+  "service-not-allowed": "Commande vocale indisponible sur cet appareil",
+  "audio-capture": "Aucun micro trouvé",
+  network: "La commande vocale a besoin d'internet",
+};
+
+/**
+ * Sur iPhone, la reconnaissance continue renvoie souvent une seule phrase qui
+ * s'allonge (« suivant … suivant ») sans jamais être « finale », et s'arrête
+ * sans prévenir : on lit donc aussi les résultats provisoires, en ne traitant
+ * que le texte nouveau, et on signale les erreurs.
+ */
+export function useVoiceCommands(onCommand: (c: VoiceCommand, heard: string) => void, onError?: (message: string) => void) {
   const [supported, setSupported] = useState(false);
   const [listening, setListening] = useState(false);
   const rec = useRef<Recognition | null>(null);
+  const start = useRef<() => void>(() => {});
   const wanted = useRef(false);
   const handler = useRef(onCommand);
+  const errorHandler = useRef(onError);
   useEffect(() => {
     handler.current = onCommand;
-  }, [onCommand]);
+    errorHandler.current = onError;
+  }, [onCommand, onError]);
 
   useEffect(() => {
     const w = window as unknown as { SpeechRecognition?: new () => Recognition; webkitSpeechRecognition?: new () => Recognition };
@@ -71,30 +87,51 @@ export function useVoiceCommands(onCommand: (c: VoiceCommand, heard: string) => 
     const r = new Ctor();
     r.lang = "fr-FR";
     r.continuous = true;
-    r.interimResults = false;
+    r.interimResults = true;
+    // texte déjà traité, par résultat
+    let consumed: number[] = [];
+    let quickEnds = 0;
+    let startedAt = 0;
+    const begin = () => {
+      consumed = [];
+      startedAt = Date.now();
+      r.start();
+    };
+    const giveUp = (message?: string) => {
+      wanted.current = false;
+      setListening(false);
+      if (message) errorHandler.current?.(message);
+    };
     r.onresult = (e) => {
       for (let i = e.resultIndex; i < e.results.length; i++) {
-        if (!e.results[i].isFinal) continue;
-        const heard = e.results[i][0].transcript;
-        const cmd = parseVoiceCommand(heard);
-        if (cmd) handler.current(cmd, heard);
+        const res = e.results[i];
+        const full = res[0].transcript;
+        const fresh = full.slice(consumed[i] ?? 0);
+        const cmd = parseVoiceCommand(fresh);
+        if (!cmd) continue;
+        // un minuteur sans durée peut encore recevoir son nombre : on attend la fin de phrase
+        if (cmd.kind === "timer" && cmd.minutes == null && !res.isFinal) continue;
+        consumed[i] = full.length;
+        handler.current(cmd, fresh);
       }
     };
     // la reconnaissance s'arrête après un silence : on relance tant que le micro est voulu
     r.onend = () => {
-      if (wanted.current) {
-        try {
-          r.start();
-        } catch {}
-      } else setListening(false);
-    };
-    r.onerror = (e) => {
-      if (e.error === "not-allowed" || e.error === "service-not-allowed") {
-        wanted.current = false;
-        setListening(false);
+      if (!wanted.current) return setListening(false);
+      quickEnds = Date.now() - startedAt < 1500 ? quickEnds + 1 : 0;
+      if (quickEnds >= 3) return giveUp("Le micro s'est coupé, retouche le bouton");
+      try {
+        begin();
+      } catch {
+        giveUp("Le micro s'est coupé, retouche le bouton");
       }
     };
+    r.onerror = (e) => {
+      if (e.error === "no-speech" || e.error === "aborted") return;
+      giveUp(ERRORS[e.error] ?? `Commande vocale : erreur « ${e.error} »`);
+    };
     rec.current = r;
+    start.current = begin;
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setSupported(true);
     return () => {
@@ -115,9 +152,12 @@ export function useVoiceCommands(onCommand: (c: VoiceCommand, heard: string) => 
     } else {
       wanted.current = true;
       try {
-        r.start();
-      } catch {}
-      setListening(true);
+        start.current();
+        setListening(true);
+      } catch {
+        wanted.current = false;
+        errorHandler.current?.("Impossible de démarrer le micro");
+      }
     }
   }, []);
 
