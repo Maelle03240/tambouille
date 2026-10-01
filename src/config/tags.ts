@@ -6,7 +6,8 @@
  * Ajouter un tag manuel = ajouter une ligne ici. Ne pas renommer un `id` existant.
  */
 export const TAGS = [
-  { id: "a-tester", label: "À tester", kind: "manual" },
+  // affiché comme sticker « Nouveau » ; retiré quand on note la recette (fin du mode cuisine)
+  { id: "a-tester", label: "Nouveau", kind: "manual" },
   { id: "fetes", label: "Fêtes", kind: "manual" },
   { id: "meal-prep", label: "Meal prep", kind: "manual" },
   { id: "one-pot", label: "One-pot", kind: "manual" },

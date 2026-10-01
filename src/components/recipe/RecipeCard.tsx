@@ -8,6 +8,7 @@ import { formatDuration } from "@/lib/recipes/markers";
 import { RATINGS } from "@/config/ui";
 import { imageUrl } from "@/lib/images";
 import { cx } from "@/components/ui/primitives";
+import { NewSticker } from "./NewSticker";
 import { totalMinutes } from "@/lib/recipes/tags";
 
 /**
@@ -25,9 +26,10 @@ export function RecipeCard({ recipe }: { recipe: Recipe }) {
   return (
     <Link
       href={`/recette?id=${recipe.id}`}
-      className="flex min-h-[210px] flex-col gap-2.5 rounded-3xl p-3.5 transition-transform active:scale-[.98]"
+      className="relative flex min-h-[210px] flex-col gap-2.5 rounded-3xl p-3.5 transition-transform active:scale-[.98]"
       style={{ background: colors.bg, color: colors.ink }}
     >
+      {test && <NewSticker className="absolute top-9 -right-1.5 z-10" />}
       <div className="flex items-start justify-between gap-2 text-[11px] font-bold tracking-[.06em] uppercase opacity-80">
         <span>{getCategory(recipe.category).singular}</span>
         {total ? <span className="normal-case tracking-normal">{formatDuration(total)}</span> : null}
@@ -40,14 +42,13 @@ export function RecipeCard({ recipe }: { recipe: Recipe }) {
       ) : (
         <div className="flex-1" />
       )}
-      {(rich || test || recipe.rating) && (
+      {(rich || recipe.rating) && (
         <div className="flex flex-wrap gap-1">
           {rich && (
             <span className="rounded-full px-2 py-0.5 text-[10.5px] font-extrabold" style={{ background: colors.ink, color: colors.bg }}>
               Riche en protéines
             </span>
           )}
-          {test && <span className="rounded-full bg-leaf-300 px-2 py-0.5 text-[10.5px] font-extrabold text-leaf-900">À tester</span>}
           {recipe.rating && (
             <span className="rounded-full bg-white/55 px-2 py-0.5 text-[10.5px] font-extrabold">{RATINGS.find((x) => x.id === recipe.rating)?.label}</span>
           )}

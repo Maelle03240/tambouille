@@ -86,3 +86,6 @@ Format : date — décision — pourquoi.
 - Fiche recette : bouton « Testé » / « À tester » (en couleur) au lieu de « Marquer « à tester » » — moins de texte.
 - Hors ligne : l'appli s'affiche tout de suite avec les données de l'appareil quand un profil est en cache, sans attendre Supabase (qui, hors ligne, peut bloquer en voulant rafraîchir une session expirée → page blanche sur iPhone).
 - Commande vocale plus robuste sur iPhone : lecture des résultats provisoires (Safari ne finalise pas toujours), relance limitée, erreurs affichées (micro refusé, indisponible, coupé).
+- **« À tester » devient un sticker « Nouveau »** (id `a-tester` inchangé) : posé à l'ajout, retiré dès qu'on note la recette (Réussie / À refaire / Ratée) ; la note s'affiche ensuite sur la carte. Plus de bouton sur la fiche (le tag reste modifiable dans l'éditeur). Filtre « Nouveau » sur l'accueil.
+- Fin du mode cuisine : le bloc « Bon appétit ! » et la notation sont toujours en bas des étapes (on fait défiler, on ne touche pas la dernière étape) ; plus de « Recommencer » / « Retour à la fiche ».
+- Commande vocale : plus d'écho de la phrase entendue ; à l'activation, rappel des mots (« suivant », « précédent », « minuteur 5 minutes », « stop »).

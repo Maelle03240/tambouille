@@ -7,6 +7,7 @@ import { OfflineBanner } from "@/components/app/OfflineBanner";
 import { IngredientList } from "@/components/recipe/IngredientList";
 import { ReviewNoteSheet } from "@/components/recipe/ReviewNoteSheet";
 import { ImageSheet } from "@/components/recipe/ImageSheet";
+import { NewSticker } from "@/components/recipe/NewSticker";
 import { imageUrl } from "@/lib/images";
 import { StepText } from "@/components/recipe/StepText";
 import { IconBack, IconBookmark, IconCart, IconImage, IconPencil } from "@/components/ui/icons";
@@ -15,7 +16,7 @@ import { categoryColors, getCategory } from "@/config/categories";
 import { RATINGS, PROTEIN_SOURCES } from "@/config/ui";
 import { tagLabel } from "@/config/tags";
 import { momentLabel } from "@/config/moments";
-import { addToShopping, patchRecipe } from "@/lib/data/actions";
+import { addToShopping } from "@/lib/data/actions";
 import { useRecipe, useSettings } from "@/lib/data/hooks";
 import { useSearchId } from "@/lib/hooks/useSearchId";
 import { formatDuration } from "@/lib/recipes/markers";
@@ -60,16 +61,6 @@ export function RecipeScreen() {
   const toTest = recipe.tags.includes("a-tester");
   const hasNutrition = [recipe.kcal, recipe.proteinG, recipe.fatG, recipe.carbsG, recipe.fiberG].some((v) => v != null);
 
-  async function toggleTest() {
-    if (!recipe) return;
-    try {
-      const next = toTest ? recipe.tags.filter((t) => t !== "a-tester") : [...recipe.tags, "a-tester"];
-      await patchRecipe(recipe.id, { tags: next });
-    } catch (e) {
-      toast(e instanceof Error ? e.message : "Modification impossible");
-    }
-  }
-
   return (
     <div className="pb-16">
       <header
@@ -97,6 +88,7 @@ export function RecipeScreen() {
               )}
             />
           )}
+          {toTest && <NewSticker className="mt-4 -mb-5 self-start" />}
           <h1 className="pt-6 font-heading text-[40px] leading-[1.02] text-balance sm:text-[52px]">{recipe.title}</h1>
           <div className="flex flex-wrap gap-x-4 gap-y-1 text-[15px] font-bold">
             {yieldLabel(recipe) && <span>{yieldLabel(recipe)}</span>}
@@ -115,19 +107,6 @@ export function RecipeScreen() {
         </Link>
 
         <div className="flex flex-wrap gap-2 print:hidden">
-          {canEdit && (
-            <button
-              type="button"
-              onClick={toggleTest}
-              disabled={!online}
-              className={cx(
-                "h-10 rounded-full border-[1.5px] px-4 text-sm font-bold disabled:opacity-45",
-                toTest ? "border-transparent bg-leaf-300 text-leaf-900" : "border-divider text-neutral-800",
-              )}
-            >
-              {toTest ? "À tester" : "Testé"}
-            </button>
-          )}
           <button
             type="button"
             onClick={() => setReviewOpen(true)}

@@ -97,8 +97,7 @@ function Cook({ recipe }: { recipe: Recipe }) {
   }
 
   // Commande vocale (en option)
-  const voice = useVoiceCommands((cmd, heard) => {
-    toast(`« ${heard.trim()} »`);
+  const voice = useVoiceCommands((cmd) => {
     if (cmd.kind === "next" && s.current < recipe.steps.length) onTapStep(s.current);
     else if (cmd.kind === "previous" && s.current > 0) onTapStep(s.current - 1);
     else if (cmd.kind === "stop") {
@@ -151,20 +150,14 @@ function Cook({ recipe }: { recipe: Recipe }) {
 
   async function rate(rating: Recipe["rating"]) {
     try {
+      // noter retire le sticker « Nouveau » (la recette a été faite)
       await patchRecipe(recipe.id, { rating, tags: recipe.tags.filter((t) => t !== "a-tester") });
+      toast(RATINGS.find((r) => r.id === rating)?.label ?? "Noté");
     } catch (e) {
       toast(e instanceof Error ? e.message : "Modification impossible");
     }
   }
 
-  async function markTested() {
-    try {
-      await patchRecipe(recipe.id, { tags: recipe.tags.filter((t) => t !== "a-tester") });
-      toast("Recette marquée comme testée");
-    } catch (e) {
-      toast(e instanceof Error ? e.message : "Modification impossible");
-    }
-  }
 
   const reviewButton = (
     <button
@@ -201,7 +194,10 @@ function Cook({ recipe }: { recipe: Recipe }) {
           {voice.supported && (
             <button
               type="button"
-              onClick={voice.toggle}
+              onClick={() => {
+                if (!voice.listening) toast("Dis « suivant », « précédent », « minuteur 5 minutes » ou « stop »");
+                voice.toggle();
+              }}
               aria-label={voice.listening ? "Couper le micro" : "Commande vocale"}
               aria-pressed={voice.listening}
               className={cx(
@@ -325,44 +321,25 @@ function Cook({ recipe }: { recipe: Recipe }) {
             })}
           </ol>
 
-          {allDone && (
+          {/* fin de recette, toujours en bas (on fait défiler, on ne touche pas la dernière étape) */}
+          {canEdit && recipe.steps.length > 0 && (
             <div className="mt-6 flex max-w-[720px] flex-col items-center gap-3 rounded-[28px] bg-leaf-200 px-5 py-7 text-center text-leaf-900">
               <p className="font-heading text-[30px]">Bon appétit !</p>
-              {canEdit && (
-                <div className="flex flex-wrap justify-center gap-2">
-                  {RATINGS.map((r) => (
-                    <button
-                      key={r.id}
-                      type="button"
-                      disabled={!online}
-                      onClick={() => rate(r.id)}
-                      className={cx(
-                        "h-11 rounded-full border-[1.5px] px-4 font-bold disabled:opacity-45",
-                        recipe.rating === r.id ? "border-leaf-800 bg-leaf-800 text-neutral-100" : "border-leaf-600",
-                      )}
-                    >
-                      {r.label}
-                    </button>
-                  ))}
-                </div>
-              )}
-              {canEdit && recipe.tags.includes("a-tester") && (
-                <button
-                  type="button"
-                  onClick={markTested}
-                  disabled={!online}
-                  className="h-12 rounded-full bg-leaf-700 px-5 font-bold text-neutral-100 disabled:opacity-45"
-                >
-                  Retirer « à tester »
-                </button>
-              )}
-              <div className="flex gap-2">
-                <button type="button" onClick={s.reset} className="h-11 rounded-full px-4 font-bold">
-                  Recommencer
-                </button>
-                <Link href={`/recette?id=${recipe.id}`} className="flex h-11 items-center rounded-full px-4 font-bold">
-                  Retour à la fiche
-                </Link>
+              <div className="flex flex-wrap justify-center gap-2">
+                {RATINGS.map((r) => (
+                  <button
+                    key={r.id}
+                    type="button"
+                    disabled={!online}
+                    onClick={() => rate(r.id)}
+                    className={cx(
+                      "h-11 rounded-full border-[1.5px] px-4 font-bold disabled:opacity-45",
+                      recipe.rating === r.id ? "border-leaf-800 bg-leaf-800 text-neutral-100" : "border-leaf-600",
+                    )}
+                  >
+                    {r.label}
+                  </button>
+                ))}
               </div>
             </div>
           )}
