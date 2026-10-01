@@ -141,6 +141,7 @@ export async function illustrateRecipe(recipeId: string) {
   const img = await requestIllustration(
     r.title,
     r.ingredients.slice(0, 6).map((i) => i.name),
+    r.tags.includes("meal-prep"),
   );
   return setRecipeImage(recipeId, base64ToBlob(img.base64, img.mimeType), "generated");
 }

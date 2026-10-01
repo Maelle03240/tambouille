@@ -1,5 +1,5 @@
 /**
- * POST /api/illustrate — { title, ingredients: string[] } → { data: { base64, mimeType } }
+ * POST /api/illustrate — { title, ingredients: string[], mealPrep } → { data: { base64, mimeType } }
  * Illustration façon vieux livre de cuisine (style imposé dans
  * src/lib/ai/generateIllustration.ts). Désactivée sans les variables Cloudflare.
  */
@@ -13,9 +13,9 @@ export async function POST(req: Request) {
   const generator = getIllustrationGenerator();
   if (!generator) return Response.json({ error: "Illustrations non configurées." }, { status: 404 });
   try {
-    const { title, ingredients } = (await req.json()) as { title?: string; ingredients?: string[] };
+    const { title, ingredients, mealPrep } = (await req.json()) as { title?: string; ingredients?: string[]; mealPrep?: boolean };
     if (!title) return Response.json({ error: "Titre manquant." }, { status: 400 });
-    const bytes = await illustrateRecipe(generator, title, ingredients);
+    const bytes = await illustrateRecipe(generator, { title, ingredients, mealPrep });
     return Response.json({ data: { base64: Buffer.from(bytes).toString("base64"), mimeType: "image/jpeg" } });
   } catch (e) {
     return errorResponse(e);

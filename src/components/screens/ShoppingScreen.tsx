@@ -234,7 +234,7 @@ export function ShoppingScreen() {
                             {it.from.length > 0 && <span className="truncate text-[13px] text-neutral-700">{it.from.join(" + ")}</span>}
                           </span>
                           {it.perso && (
-                            <span className="ml-auto flex-none rounded-full bg-leaf-200 px-2.5 py-0.5 text-[11px] font-bold text-leaf-800">Perso</span>
+                            <span className="ml-auto flex-none rounded-full bg-leaf-200 px-2.5 py-0.5 text-[11px] font-bold text-leaf-800">Ajouté</span>
                           )}
                         </button>
                         <button

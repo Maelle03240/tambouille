@@ -96,21 +96,6 @@ export function HomeScreen() {
         })}
       </div>
       <div className="no-scrollbar mx-auto flex max-w-5xl gap-1.5 overflow-x-auto px-5 pb-4">
-        {MOMENTS.map((m) => (
-          <button
-            key={m.id}
-            type="button"
-            onClick={() => toggleMoment(m.id)}
-            aria-pressed={moments.includes(m.id)}
-            className={cx(
-              "h-9 flex-none rounded-full border-[1.5px] px-3.5 text-sm font-bold whitespace-nowrap",
-              moments.includes(m.id) ? "border-leaf-700 bg-leaf-700 text-neutral-100" : "border-leaf-400 bg-leaf-100 text-leaf-800",
-            )}
-          >
-            {m.label}
-          </button>
-        ))}
-        <span className="w-px flex-none bg-divider" aria-hidden />
         {FILTER_TAGS.map((t) => (
           <button
             key={t.id}
@@ -123,6 +108,21 @@ export function HomeScreen() {
             )}
           >
             {t.label}
+          </button>
+        ))}
+        <span className="w-px flex-none bg-divider" aria-hidden />
+        {MOMENTS.map((m) => (
+          <button
+            key={m.id}
+            type="button"
+            onClick={() => toggleMoment(m.id)}
+            aria-pressed={moments.includes(m.id)}
+            className={cx(
+              "h-9 flex-none rounded-full border-[1.5px] px-3.5 text-sm font-bold whitespace-nowrap",
+              moments.includes(m.id) ? "border-leaf-700 bg-leaf-700 text-neutral-100" : "border-leaf-400 bg-leaf-100 text-leaf-800",
+            )}
+          >
+            {m.label}
           </button>
         ))}
       </div>
