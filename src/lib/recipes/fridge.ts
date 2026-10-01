@@ -3,7 +3,7 @@
  * recettes je peux faire, et ce qui manque. Les basiques (sel, huile…)
  * comptent comme toujours là. Fonctions pures, testées dans fridge.test.ts.
  */
-import { FRIDGE_FAMILIES } from "@/config/fridge";
+import { FRIDGE_FAMILIES, FRIDGE_NOT_SAME } from "@/config/fridge";
 import type { Recipe } from "./types";
 
 export interface FridgeMatch {
@@ -40,6 +40,16 @@ export function ingredientMatches(ingredientName: string, term: string): boolean
   return tw.length > 0 && tw.every((w) => iw.includes(w));
 }
 
+/**
+ * L'ingrédient est-il ce produit ? Comme `ingredientMatches`, sauf les
+ * variantes qui sont un autre produit (« sucre » ≠ « sucre glace »).
+ */
+export function isSameProduct(ingredientName: string, term: string, notSame: Record<string, string[]> = FRIDGE_NOT_SAME): boolean {
+  if (!ingredientMatches(ingredientName, term)) return false;
+  const key = Object.keys(notSame).find((k) => ingredientMatches(k, term) && ingredientMatches(term, k));
+  return !key || !notSame[key].some((w) => ingredientMatches(ingredientName, w) && !ingredientMatches(term, w));
+}
+
 /** Mots-clés couverts par un produit : lui-même + sa famille (« sucre » → cassonade…). */
 function variants(term: string, families: Record<string, string[]>): string[] {
   const key = Object.keys(families).find((k) => ingredientMatches(k, term) && ingredientMatches(term, k));
@@ -72,10 +82,10 @@ export function fridgeMatches(
     const missing: string[] = [];
     let used = 0;
     for (const name of names) {
-      if (mine.some((t) => ingredientMatches(name, t))) {
+      if (mine.some((t) => isSameProduct(name, t))) {
         got.push(name);
         used++;
-      } else if (always.some((b) => ingredientMatches(name, b))) got.push(name);
+      } else if (always.some((b) => isSameProduct(name, b))) got.push(name);
       else missing.push(name);
     }
     if (used > 0 || (!mine.length && missing.length === 0)) out.push({ recipe, have: got, missing, used });

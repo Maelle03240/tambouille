@@ -24,15 +24,27 @@ export const FRIDGE_BASICS = [
 export const FRIDGE_ALWAYS = ["eau", "glaçons"] as const;
 
 /**
- * Familles : avoir « sucre » couvre aussi la cassonade, etc. (en plus des
- * noms qui contiennent le mot : « sucre en poudre », « huile d'olive »).
+ * Familles : avoir « épices » couvre aussi le cumin, etc. (en plus des noms
+ * qui contiennent le mot : « huile d'olive »). Pas de famille pour le sucre
+ * ni le fromage : ce sont des produits différents.
  */
 export const FRIDGE_FAMILIES: Record<string, string[]> = {
-  sucre: ["cassonade", "vergeoise", "sucre roux", "sucre glace", "sucre vanillé"],
   épices: ["cumin", "paprika", "curry", "curcuma", "cannelle", "muscade", "piment", "gingembre moulu", "herbes de provence", "origan", "thym", "quatre-épices", "ras el hanout", "garam masala", "cardamome", "clou de girofle"],
   pâtes: ["spaghetti", "tagliatelle", "penne", "fusilli", "macaroni", "coquillettes", "lasagne", "linguine", "farfalle", "nouilles"],
   riz: ["basmati", "risotto", "arborio"],
-  fromage: ["gruyère", "emmental", "parmesan", "comté", "mozzarella", "feta", "chèvre", "cheddar", "ricotta", "mascarpone", "reblochon", "raclette"],
   levure: ["bicarbonate"],
   crème: ["crème fraîche", "crème liquide"],
+};
+
+/**
+ * Variantes qui ne sont PAS le produit de base : « sucre » ne couvre pas le
+ * sucre roux ni le sucre glace (« sucre en poudre » oui).
+ */
+export const FRIDGE_NOT_SAME: Record<string, string[]> = {
+  sucre: ["roux", "glace", "vanille", "vanillé", "coco", "complet", "muscovado", "perlé", "canne", "candi"],
+  farine: ["complète", "complet", "sarrasin", "riz", "maïs", "châtaigne", "coco", "amande", "pois chiche", "seigle", "épeautre"],
+  lait: ["coco", "amande", "avoine", "soja", "riz", "concentré", "poudre"],
+  beurre: ["cacahuète", "cacahuètes", "karité"],
+  levure: ["boulanger", "fraîche"],
+  pâtes: ["brisée", "feuilletée", "sablée", "pizza", "curry", "amande", "tartiner", "fruits"],
 };
