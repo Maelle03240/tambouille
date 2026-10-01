@@ -9,9 +9,10 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import { OfflineBanner } from "@/components/app/OfflineBanner";
 import { TabBar } from "@/components/app/TabBar";
-import { IconBack, IconPlus, IconTrash } from "@/components/ui/icons";
-import { EmptyState, TextInput } from "@/components/ui/primitives";
+import { IconBack, IconCheck, IconPlus, IconTrash } from "@/components/ui/icons";
+import { EmptyState, TextInput, cx } from "@/components/ui/primitives";
 import { categoryColors, getCategory } from "@/config/categories";
+import { FRIDGE_ALWAYS, FRIDGE_STAPLES } from "@/config/fridge";
 import { setFridge } from "@/lib/data/actions";
 import { useFridge, usePantry, useRecipes } from "@/lib/data/hooks";
 import { fridgeMatches } from "@/lib/recipes/fridge";
@@ -24,9 +25,13 @@ export function FridgeScreen() {
 
   const items = useMemo(() => fridge ?? [], [fridge]);
   const matches = useMemo(
-    () => fridgeMatches(recipes ?? [], items, (pantry ?? []).map((b) => b.name)),
+    () => fridgeMatches(recipes ?? [], items, [...FRIDGE_ALWAYS, ...(pantry ?? []).map((b) => b.name)]),
     [recipes, items, pantry],
   );
+
+  const staples: readonly string[] = FRIDGE_STAPLES;
+  const others = items.filter((it) => !staples.includes(it));
+  const toggle = (it: string) => setFridge(items.includes(it) ? items.filter((x) => x !== it) : [...items, it]);
 
   function add(e: React.FormEvent) {
     e.preventDefault();
@@ -34,7 +39,7 @@ export function FridgeScreen() {
     const fresh = draft
       .split(/[,;\n]/)
       .map((t) => t.trim().toLowerCase())
-      .filter((t) => t && !items.includes(t));
+      .filter((t, i, all) => t && !items.includes(t) && all.indexOf(t) === i);
     if (fresh.length) void setFridge([...items, ...fresh]);
     setDraft("");
   }
@@ -74,9 +79,31 @@ export function FridgeScreen() {
           </button>
         </form>
 
-        {items.length > 0 && (
+        {/* classiques : un geste au lieu de tout écrire */}
+        <div className="flex flex-wrap gap-1.5">
+          {staples.map((it) => {
+            const on = items.includes(it);
+            return (
+              <button
+                key={it}
+                type="button"
+                aria-pressed={on}
+                onClick={() => toggle(it)}
+                className={cx(
+                  "flex h-9 items-center gap-1 rounded-full border-[1.5px] px-3.5 text-sm font-bold",
+                  on ? "border-leaf-700 bg-leaf-700 text-neutral-100" : "border-divider text-neutral-800",
+                )}
+              >
+                {on && <IconCheck size={14} stroke={3} />}
+                {it}
+              </button>
+            );
+          })}
+        </div>
+
+        {others.length > 0 && (
           <div className="flex flex-wrap gap-2">
-            {items.map((it) => (
+            {others.map((it) => (
               <button
                 key={it}
                 type="button"
