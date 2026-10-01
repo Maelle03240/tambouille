@@ -5,7 +5,6 @@ import { useSettings } from "@/lib/data/hooks";
 import { displayTags } from "@/lib/recipes/tags";
 import type { Recipe } from "@/lib/recipes/types";
 import { formatDuration } from "@/lib/recipes/markers";
-import { ratingLabel } from "@/config/ui";
 import { imageUrl } from "@/lib/images";
 import { cx } from "@/components/ui/primitives";
 import { NewSticker } from "./NewSticker";
@@ -42,15 +41,12 @@ export function RecipeCard({ recipe }: { recipe: Recipe }) {
       ) : (
         <div className="flex-1" />
       )}
-      {(rich || ratingLabel(recipe.rating)) && (
+      {rich && (
         <div className="flex flex-wrap gap-1">
           {rich && (
             <span className="rounded-full px-2 py-0.5 text-[10.5px] font-extrabold" style={{ background: colors.ink, color: colors.bg }}>
               Riche en protéines
             </span>
-          )}
-          {ratingLabel(recipe.rating) && (
-            <span className="rounded-full bg-white/55 px-2 py-0.5 text-[10.5px] font-extrabold">{ratingLabel(recipe.rating)}</span>
           )}
         </div>
       )}

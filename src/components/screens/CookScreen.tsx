@@ -70,6 +70,8 @@ function Cook({ recipe }: { recipe: Recipe }) {
   const [ingOpen, setIngOpen] = useState(false);
   const [reviewOpen, setReviewOpen] = useState(false);
   const [reviewAdded, setReviewAdded] = useState(false);
+  // « À revoir » de fin de recette : retire aussi le NEW (pas celui du haut)
+  const reviewFromEnd = useRef(false);
   const [aimOpen, setAimOpen] = useState(false);
   const [voiceHint, setVoiceHint] = useState(false);
   const voiceHintTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
@@ -154,11 +156,11 @@ function Cook({ recipe }: { recipe: Recipe }) {
     setDial(null);
   }
 
-  /** « Réussie » : retire le sticker NEW. (« À revoir » ouvre la note à revoir, le NEW reste.) */
-  async function markSuccess() {
+  /** Fin de recette : la recette a été faite, le sticker NEW part (« Réussie » comme « À revoir »). */
+  async function removeNew() {
+    if (!recipe.tags.includes("a-tester")) return;
     try {
-      await patchRecipe(recipe.id, { rating: "reussie", tags: recipe.tags.filter((t) => t !== "a-tester") });
-      toast("Réussie !");
+      await patchRecipe(recipe.id, { tags: recipe.tags.filter((t) => t !== "a-tester") });
     } catch (e) {
       toast(e instanceof Error ? e.message : "Modification impossible");
     }
@@ -168,7 +170,10 @@ function Cook({ recipe }: { recipe: Recipe }) {
   const reviewButton = (
     <button
       type="button"
-      onClick={() => setReviewOpen(true)}
+      onClick={() => {
+        reviewFromEnd.current = false;
+        setReviewOpen(true);
+      }}
       className={cx(
         "flex h-11 flex-none items-center gap-1.5 rounded-full border-[1.5px] px-3.5 text-sm font-bold",
         reviewAdded ? "border-transparent bg-accent-200 text-accent-800" : "border-divider text-neutral-800",
@@ -350,17 +355,20 @@ function Cook({ recipe }: { recipe: Recipe }) {
                 <button
                   type="button"
                   disabled={!online}
-                  onClick={markSuccess}
-                  className={cx(
-                    "h-12 rounded-full border-[1.5px] px-5 font-bold disabled:opacity-45",
-                    recipe.rating === "reussie" ? "border-leaf-800 bg-leaf-800 text-neutral-100" : "border-leaf-600",
-                  )}
+                  onClick={async () => {
+                    await removeNew();
+                    toast("Réussie !");
+                  }}
+                  className="h-12 rounded-full border-[1.5px] border-leaf-600 px-5 font-bold disabled:opacity-45"
                 >
                   Réussie
                 </button>
                 <button
                   type="button"
-                  onClick={() => setReviewOpen(true)}
+                  onClick={() => {
+                    reviewFromEnd.current = true;
+                    setReviewOpen(true);
+                  }}
                   className={cx(
                     "h-12 rounded-full border-[1.5px] px-5 font-bold",
                     reviewAdded ? "border-accent-700 bg-accent-700 text-neutral-100" : "border-leaf-600",
@@ -414,7 +422,10 @@ function Cook({ recipe }: { recipe: Recipe }) {
         recipeId={recipe.id}
         open={reviewOpen}
         onClose={() => setReviewOpen(false)}
-        onAdded={() => setReviewAdded(true)}
+        onAdded={() => {
+          setReviewAdded(true);
+          if (reviewFromEnd.current) void removeNew();
+        }}
       />
     </div>
   );

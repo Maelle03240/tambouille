@@ -13,7 +13,7 @@ import { StepText } from "@/components/recipe/StepText";
 import { IconBack, IconBookmark, IconCart, IconImage, IconPencil } from "@/components/ui/icons";
 import { EmptyState, SectionTitle, Spinner, cx } from "@/components/ui/primitives";
 import { categoryColors, getCategory } from "@/config/categories";
-import { PROTEIN_SOURCES, ratingLabel } from "@/config/ui";
+import { PROTEIN_SOURCES } from "@/config/ui";
 import { tagLabel } from "@/config/tags";
 import { momentLabel } from "@/config/moments";
 import { addToShopping } from "@/lib/data/actions";
@@ -175,13 +175,8 @@ export function RecipeScreen() {
           </div>
         )}
 
-        {(ratingLabel(recipe.rating) || (recipe.moments ?? []).length > 0 || tags.filter((t) => t !== "a-tester").length > 0) && (
+        {((recipe.moments ?? []).length > 0 || tags.filter((t) => t !== "a-tester").length > 0) && (
           <div className="flex flex-wrap gap-1.5">
-            {ratingLabel(recipe.rating) && (
-              <span className="rounded-full bg-accent-200 px-3 py-1 text-[13px] font-bold text-accent-800">
-                {ratingLabel(recipe.rating)}
-              </span>
-            )}
             {(recipe.moments ?? []).map((m) => (
               <span key={m} className="rounded-full bg-leaf-200 px-3 py-1 text-[13px] font-bold text-leaf-800">
                 {momentLabel(m)}

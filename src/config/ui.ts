@@ -38,14 +38,9 @@ export const PROTEIN_SOURCES = [
   { id: "poudre", label: "Poudre" },
 ] as const;
 
-/**
- * Notes proposées (fin du mode cuisine, éditeur). « À refaire » et « Ratée »
- * existent encore en base mais ne sont plus proposées : une recette pas
- * réussie va dans « À revoir » (avec ce qui n'a pas marché).
+/*
+ * Plus de note (Réussie / À refaire / Ratée) affichée : en fin de mode
+ * cuisine, « Réussie » et « À revoir » retirent seulement le sticker NEW
+ * (« À revoir » ajoute aussi la recette à la liste À revoir). La colonne
+ * `rating` reste en base, inutilisée.
  */
-export const RATINGS = [{ id: "reussie", label: "Réussie" }] as const;
-
-/** Libellé d'une note proposée, ou null (anciennes notes « À refaire » / « Ratée » : non affichées). */
-export function ratingLabel(id: string | null): string | null {
-  return RATINGS.find((r) => r.id === id)?.label ?? null;
-}

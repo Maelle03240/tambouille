@@ -13,7 +13,7 @@ import { Button, Chip, Field, NumberInput, SectionTitle, Sheet, Spinner, TextAre
 import { CATEGORIES, categoryColors } from "@/config/categories";
 import { MOMENTS } from "@/config/moments";
 import { TAGS } from "@/config/tags";
-import { PROTEIN_SOURCES, RATINGS, YIELD_UNITS } from "@/config/ui";
+import { PROTEIN_SOURCES, YIELD_UNITS } from "@/config/ui";
 import { deleteRecipe, illustrateRecipe, saveRecipe } from "@/lib/data/actions";
 import { useSettings } from "@/lib/data/hooks";
 import { db } from "@/lib/data/db";
@@ -402,13 +402,6 @@ export function RecipeEditor({
             placeholder="ex. doubler les câpres, elles partent en premier"
             rows={3}
           />
-          <div className="flex flex-wrap gap-2">
-            {RATINGS.map((r) => (
-              <Chip key={r.id} selected={draft.rating === r.id} onClick={() => set("rating", draft.rating === r.id ? null : r.id)}>
-                {r.label}
-              </Chip>
-            ))}
-          </div>
         </section>
 
         {mode === "edit" && isAdmin && (
