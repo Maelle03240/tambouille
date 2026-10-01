@@ -28,12 +28,21 @@ Ouvre http://localhost:3000. Sans configuration, l'appli tourne en **mode local*
 
 Crée une clé sur https://aistudio.google.com/apikey (niveau gratuit). Sans clé, l'appli marche quand même : saisie à la main et « coller du JSON ».
 
+### 2 bis. Cloudflare — illustrations IA (facultatif)
+
+1. Crée un compte gratuit sur https://dash.cloudflare.com/sign-up.
+2. **Account ID** : menu de gauche **AI → Workers AI**, il est affiché sur la page (ou dans l'adresse : `dash.cloudflare.com/<account-id>/…`).
+3. **Token** : icône profil → **My Profile → API Tokens → Create Token** → modèle **Workers AI** → *Continue to summary* → *Create Token*. Copie-le (il ne s'affiche qu'une fois).
+4. Mets les deux dans `CLOUDFLARE_ACCOUNT_ID` et `CLOUDFLARE_API_TOKEN` (`.env.local` et Vercel), puis redéploie.
+
+Le niveau gratuit de Workers AI suffit pour un usage perso.
+
 ### 3. GitHub + Vercel — mise en ligne
 
 1. Mets le dossier sur un dépôt GitHub **privé**.
 2. Sur https://vercel.com (plan Hobby gratuit) : **Add New → Project**, importe le dépôt.
 3. Dans **Environment Variables**, ajoute celles de [`.env.example`](.env.example) :
-   `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `GEMINI_API_KEY` (les variables Cloudflare sont pour la V2).
+   `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `GEMINI_API_KEY`, et si tu les as `CLOUDFLARE_ACCOUNT_ID`, `CLOUDFLARE_API_TOKEN`.
 4. **Deploy**. Chaque `git push` redéploie tout seul.
 
 En local avec la vraie base : copie `.env.example` en `.env.local` et remplis-le.

@@ -12,6 +12,7 @@ export const AISLES = [
   "Épicerie sucrée",
   "Surgelés",
   "Boissons",
+  "Maison & hygiène",
   "Autre",
 ] as const;
 
@@ -25,11 +26,13 @@ export const AISLE_HUES: Record<string, number | null> = {
   "Épicerie sucrée": 355,
   Surgelés: 230,
   Boissons: 260,
+  "Maison & hygiène": 300,
   Autre: null,
 };
 
 /** Premier motif qui correspond = rayon. L'ordre compte. */
 export const AISLE_KEYWORDS: [RegExp, string][] = [
+  [/papier|essuie|mouchoir|sopalin|dentifrice|brosse [àa] dent|savon|shampo|gel douche|d[ée]odorant|lessive|adoucissant|liquide vaisselle|pastilles lave|[ée]ponge|sacs? poubelle|javel|nettoyant|coton|rasoir|couches|lingette|papier alu|film [ée]tirable/i, "Maison & hygiène"],
   [/lait de coco|cr[èe]me de coco|lait d'amande|lait d'avoine/i, "Épicerie"],
   [/poulet|b[œo]euf|porc|jambon|poisson|saumon|cabillaud|thon frais|steak|lardon|viande|dinde|veau|agneau|crevette|chorizo|saucisse/i, "Boucherie & poisson"],
   [/lait|yaourt|skyr|cr[èe]me|fromage|beurre|[œo]eufs?|jaunes?|blancs? d|parmesan|emmental|comt[ée]|mozza|ricotta|mascarpone|feta/i, "Crèmerie"],

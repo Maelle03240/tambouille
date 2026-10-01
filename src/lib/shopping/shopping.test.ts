@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { emptyIngredient, emptyRecipe } from "@/lib/recipes/factory";
 import type { Ingredient, Recipe } from "@/lib/recipes/types";
-import { aggregate, isBasic, toShareText } from "./aggregate";
+import { guessAisle } from "@/config/aisles";
+import { aggregate, isBasic, personalItems, toShareText } from "./aggregate";
 
 function ing(name: string, quantity: number | null, unit = "", extra: Partial<Ingredient> = {}): Ingredient {
   return { ...emptyIngredient(0), name, quantity, unit, ...extra };
@@ -52,5 +53,12 @@ describe("liste de courses", () => {
   it("basique : mots entiers seulement", () => {
     expect(isBasic("gros sel", ["sel"])).toBe(true);
     expect(isBasic("selle d'agneau", ["sel"])).toBe(false);
+  });
+  it("articles perso : rayon deviné ou choisi", () => {
+    expect(guessAisle("Papier toilette")).toBe("Maison & hygiène");
+    expect(guessAisle("farine T55")).toBe("Épicerie");
+    const [p] = personalItems([{ id: "1", text: "Dentifrice", aisle: "Maison & hygiène" }]);
+    expect(p).toMatchObject({ key: "perso:1", aisle: "Maison & hygiène", label: "Dentifrice", perso: true });
+    expect(toShareText([p])).toContain("MAISON & HYGIÈNE\n- Dentifrice");
   });
 });

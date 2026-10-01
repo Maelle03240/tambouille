@@ -24,6 +24,8 @@ export interface ShoppingItem {
   /** Recettes d'où vient l'article. */
   from: string[];
   basic: boolean;
+  /** Ajouté à la main (pas issu d'une recette). */
+  perso?: boolean;
 }
 
 const fold = (s: string) =>
@@ -95,6 +97,19 @@ export function aggregate(sources: ShoppingSource[], basics: string[] = []): Sho
     .sort((x, y) => AISLES.indexOf(x.aisle as never) - AISLES.indexOf(y.aisle as never) || x.name.localeCompare(y.name, "fr"))
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     .map(({ name, ...item }) => item);
+}
+
+/** Articles ajoutés à la main, mis au format de la liste (rangés par rayon). */
+export function personalItems(mine: { id: string; text: string; aisle: string }[]): ShoppingItem[] {
+  return mine.map((m) => ({
+    key: `perso:${m.id}`,
+    aisle: (AISLES as readonly string[]).includes(m.aisle) ? m.aisle : "Autre",
+    amount: "",
+    label: m.text,
+    from: [],
+    basic: false,
+    perso: true,
+  }));
 }
 
 /** Texte à partager (Notes, Keep…), groupé par rayon. */

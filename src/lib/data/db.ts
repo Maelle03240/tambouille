@@ -34,6 +34,14 @@ export interface ShoppingState {
   excluded: string[];
   /** Articles cochés (clé d'article). */
   checked: string[];
+  /** Articles ajoutés à la main (papier toilette, farine T55…). */
+  mine: PersonalItem[];
+}
+
+export interface PersonalItem {
+  id: string;
+  text: string;
+  aisle: string;
 }
 export type MetaValue = {
   lastSyncAt: string;

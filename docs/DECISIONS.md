@@ -75,3 +75,5 @@ Format : date — décision — pourquoi.
 - Mode cuisine : plus d'étiquette « En cours » ; l'étape en cours grossit légèrement par un zoom visuel (`transform`), qui ne pousse pas les autres étapes (défilement toujours fluide). Réglage `zoom` dans `src/components/cook/stepStyles.ts`.
 - Planning, vue jour : ajouter un repas à une journée (« + Goûter ») ou en retirer un (« Retirer ce repas de la journée »), sans toucher aux autres jours. Colonne `meal_plans.skipped` (migration 0006).
 - Chiffres en rouge au-dessus de l'objectif pour kcal, lipides, glucides seulement (`warnAbove` dans `src/config/planning.ts`) ; couleur `--color-danger` du thème.
+- **Articles perso dans les courses** (validé, écart à la spec qui les mettait dans Notes) : champ « Ajouter… » en haut de la liste, rayon deviné (`guessAisle`) et modifiable via ⋯, étiquette « Perso », retirés à la main. Gardés sur l'appareil comme le reste de la liste (`ShoppingState.mine`). Nouveau rayon « Maison & hygiène » (comme la maquette).
+- Illustrations IA Cloudflare : activées dès que `CLOUDFLARE_ACCOUNT_ID` / `CLOUDFLARE_API_TOKEN` sont renseignées (marche à suivre dans le README).

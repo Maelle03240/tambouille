@@ -11,13 +11,13 @@ import { OfflineBanner } from "@/components/app/OfflineBanner";
 import { TabBar } from "@/components/app/TabBar";
 import { IconBack, IconCheck, IconChevronDown, IconChevronRight, IconClose, IconMinus, IconPlus, IconShare, IconTrash } from "@/components/ui/icons";
 import { EmptyState, Sheet, TextInput, cx } from "@/components/ui/primitives";
-import { AISLES, AISLE_HUES } from "@/config/aisles";
+import { AISLES, AISLE_HUES, guessAisle } from "@/config/aisles";
 import { addPantryBasic, removePantryBasic, updateShopping } from "@/lib/data/actions";
 import { useMealPlans, usePantry, useRecipes, useShopping } from "@/lib/data/hooks";
 import { addDays, today, weekLabel, weekStart } from "@/lib/planning/dates";
 import { formatDecimal, servingsStep } from "@/lib/recipes/quantities";
 import type { Recipe } from "@/lib/recipes/types";
-import { aggregate, toShareText, type ShoppingItem } from "@/lib/shopping/aggregate";
+import { aggregate, personalItems, toShareText, type ShoppingItem } from "@/lib/shopping/aggregate";
 
 export function ShoppingScreen() {
   const params = useSearchParams();
@@ -32,6 +32,7 @@ export function ShoppingScreen() {
   const [basicsOpen, setBasicsOpen] = useState(false);
   const [newBasic, setNewBasic] = useState("");
   const [itemMenu, setItemMenu] = useState<ShoppingItem | null>(null);
+  const [draft, setDraft] = useState("");
 
   const byId = useMemo(() => new Map((recipes ?? []).map((r) => [r.id, r])), [recipes]);
 
@@ -53,7 +54,10 @@ export function ShoppingScreen() {
     return list;
   }, [plans, shopping, byId]);
 
-  const items = useMemo(() => aggregate(sources, (pantry ?? []).map((b) => b.name)), [sources, pantry]);
+  const items = useMemo(
+    () => [...aggregate(sources, (pantry ?? []).map((b) => b.name)), ...personalItems(shopping?.mine ?? [])],
+    [sources, pantry, shopping],
+  );
   const visible = items.filter((i) => showBasics || !i.basic);
   const checked = new Set(shopping?.checked ?? []);
   const left = visible.filter((i) => !checked.has(i.key)).length;
@@ -69,6 +73,23 @@ export function ShoppingScreen() {
     updateShopping((s) =>
       fromPlan ? { ...s, excluded: [...s.excluded, r.id] } : { ...s, extras: s.extras.filter((e) => e.recipeId !== r.id) },
     );
+
+  function addMine(e: React.FormEvent) {
+    e.preventDefault();
+    const t = draft.trim();
+    if (!t) return;
+    const text = t.charAt(0).toUpperCase() + t.slice(1);
+    const aisle = guessAisle(t);
+    updateShopping((s) => ({ ...s, mine: [...s.mine, { id: crypto.randomUUID(), text, aisle }] }));
+    setDraft("");
+    toast(`Rayon ${aisle}`);
+  }
+
+  const mineId = (it: ShoppingItem) => it.key.slice("perso:".length);
+  const setMineAisle = (it: ShoppingItem, aisle: string) =>
+    updateShopping((s) => ({ ...s, mine: s.mine.map((m) => (m.id === mineId(it) ? { ...m, aisle } : m)) }));
+  const removeMine = (it: ShoppingItem) =>
+    updateShopping((s) => ({ ...s, mine: s.mine.filter((m) => m.id !== mineId(it)), checked: s.checked.filter((k) => k !== it.key) }));
 
   async function share() {
     const text = toShareText(visible.filter((i) => !checked.has(i.key)), `Courses · ${weekLabel(monday)}`);
@@ -112,44 +133,59 @@ export function ShoppingScreen() {
       </header>
 
       <main className="mx-auto flex max-w-3xl flex-col gap-3 px-4 pt-2">
-        {loading ? null : sources.length === 0 ? (
+        <form onSubmit={addMine} className="flex items-center gap-1.5 rounded-full bg-surface py-[5px] pr-[5px] pl-[18px]">
+          <input
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            placeholder="Ajouter… ex. papier toilette"
+            enterKeyHint="done"
+            style={{ outline: "none" }}
+            className="h-11 min-w-0 flex-1 bg-transparent text-base placeholder:text-neutral-600"
+          />
+          <button type="submit" aria-label="Ajouter" disabled={!draft.trim()} className="flex size-11 flex-none items-center justify-center rounded-full bg-accent-600 text-neutral-100 disabled:opacity-45">
+            <IconPlus size={20} />
+          </button>
+        </form>
+        {loading ? null : items.length === 0 ? (
           <EmptyState title="Rien à acheter">Tire un menu de la semaine, ou « Ajouter aux courses » depuis une recette.</EmptyState>
         ) : (
           <>
-            <div className="rounded-[26px] bg-surface">
-              <button type="button" onClick={() => setSourcesOpen((o) => !o)} className="flex min-h-14 w-full items-center gap-3 px-4 text-left">
-                <span className="flex-1 font-bold">
-                  Pour {sources.length} recette{sources.length > 1 ? "s" : ""}
-                </span>
-                <span className={cx("transition-transform", sourcesOpen && "rotate-180")}>
-                  <IconChevronDown size={20} />
-                </span>
-              </button>
-              {sourcesOpen && (
-                <div className="flex flex-col px-2 pb-2">
-                  {sources.map(({ recipe: r, servings, fromPlan }) => (
-                    <div key={r.id} className="flex items-center gap-2 border-t border-divider py-2 pl-2">
-                      <span className="min-w-0 flex-1 leading-tight font-bold">
-                        {r.title}
-                        <span className="block text-[13px] font-normal text-neutral-700">
-                          {formatDecimal(servings)} {r.yieldUnit}
-                          {fromPlan ? " · menu" : ""}
+            {sources.length > 0 && (
+              <div className="rounded-[26px] bg-surface">
+                <button type="button" onClick={() => setSourcesOpen((o) => !o)} className="flex min-h-14 w-full items-center gap-3 px-4 text-left">
+                  <span className="flex-1 font-bold">
+                    Pour {sources.length} recette{sources.length > 1 ? "s" : ""}
+                  </span>
+                  <span className={cx("transition-transform", sourcesOpen && "rotate-180")}>
+                    <IconChevronDown size={20} />
+                  </span>
+                </button>
+                {sourcesOpen && (
+                  <div className="flex flex-col px-2 pb-2">
+                    {sources.map(({ recipe: r, servings, fromPlan }) => (
+                      <div key={r.id} className="flex items-center gap-2 border-t border-divider py-2 pl-2">
+                        <span className="min-w-0 flex-1 leading-tight font-bold">
+                          {r.title}
+                          <span className="block text-[13px] font-normal text-neutral-700">
+                            {formatDecimal(servings)} {r.yieldUnit}
+                            {fromPlan ? " · menu" : ""}
+                          </span>
                         </span>
-                      </span>
-                      <button type="button" aria-label="Moins" onClick={() => setServings(r, servings - servingsStep(r.yieldQuantity))} className="flex size-10 items-center justify-center rounded-full bg-neutral-100">
-                        <IconMinus size={18} />
-                      </button>
-                      <button type="button" aria-label="Plus" onClick={() => setServings(r, servings + servingsStep(r.yieldQuantity))} className="flex size-10 items-center justify-center rounded-full bg-neutral-100">
-                        <IconPlus size={18} />
-                      </button>
-                      <button type="button" aria-label="Retirer" onClick={() => removeSource(r, fromPlan)} className="flex size-10 items-center justify-center rounded-full text-neutral-700">
-                        <IconClose size={18} />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
+                        <button type="button" aria-label="Moins" onClick={() => setServings(r, servings - servingsStep(r.yieldQuantity))} className="flex size-10 items-center justify-center rounded-full bg-neutral-100">
+                          <IconMinus size={18} />
+                        </button>
+                        <button type="button" aria-label="Plus" onClick={() => setServings(r, servings + servingsStep(r.yieldQuantity))} className="flex size-10 items-center justify-center rounded-full bg-neutral-100">
+                          <IconPlus size={18} />
+                        </button>
+                        <button type="button" aria-label="Retirer" onClick={() => removeSource(r, fromPlan)} className="flex size-10 items-center justify-center rounded-full text-neutral-700">
+                          <IconClose size={18} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
 
             <div className="flex items-center gap-2">
               <button type="button" onClick={() => setShowBasics((v) => !v)} className="flex min-h-12 flex-1 items-center gap-2.5 px-1.5 text-left">
@@ -195,8 +231,11 @@ export function ShoppingScreen() {
                               {it.amount && <strong className="font-bold">{it.amount} </strong>}
                               {it.amount ? it.label : it.label.charAt(0).toUpperCase() + it.label.slice(1)}
                             </span>
-                            <span className="truncate text-[13px] text-neutral-700">{it.from.join(" + ")}</span>
+                            {it.from.length > 0 && <span className="truncate text-[13px] text-neutral-700">{it.from.join(" + ")}</span>}
                           </span>
+                          {it.perso && (
+                            <span className="ml-auto flex-none rounded-full bg-leaf-200 px-2.5 py-0.5 text-[11px] font-bold text-leaf-800">Perso</span>
+                          )}
                         </button>
                         <button
                           type="button"
@@ -217,7 +256,36 @@ export function ShoppingScreen() {
       </main>
 
       <Sheet open={!!itemMenu} onClose={() => setItemMenu(null)} title={itemMenu?.label}>
-        {itemMenu && (
+        {itemMenu?.perso && (
+          <>
+            <div className="mb-3 flex flex-wrap gap-2">
+              {AISLES.map((a) => (
+                <button
+                  key={a}
+                  type="button"
+                  onClick={() => {
+                    setMineAisle(itemMenu, a);
+                    setItemMenu(null);
+                  }}
+                  className={cx("h-10 rounded-full px-4 font-bold", a === itemMenu.aisle ? "bg-neutral-900 text-neutral-100" : "bg-surface")}
+                >
+                  {a}
+                </button>
+              ))}
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                removeMine(itemMenu);
+                setItemMenu(null);
+              }}
+              className="mb-2 h-14 rounded-full bg-surface font-bold"
+            >
+              Retirer de la liste
+            </button>
+          </>
+        )}
+        {itemMenu && !itemMenu.perso && (
           <button
             type="button"
             disabled={!online}

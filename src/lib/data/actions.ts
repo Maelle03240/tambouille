@@ -253,7 +253,7 @@ export async function deleteCustomIngredient(id: string) {
 
 /* ───────────── Liste de courses (locale) ───────────── */
 
-export const EMPTY_SHOPPING: ShoppingState = { extras: [], servings: {}, excluded: [], checked: [] };
+export const EMPTY_SHOPPING: ShoppingState = { extras: [], servings: {}, excluded: [], checked: [], mine: [] };
 
 export async function updateShopping(fn: (s: ShoppingState) => ShoppingState) {
   const cur = { ...EMPTY_SHOPPING, ...((await getMeta("shopping")) ?? {}) };
