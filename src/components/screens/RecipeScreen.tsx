@@ -8,6 +8,7 @@ import { IngredientList } from "@/components/recipe/IngredientList";
 import { ReviewNoteSheet } from "@/components/recipe/ReviewNoteSheet";
 import { ImageSheet } from "@/components/recipe/ImageSheet";
 import { NewSticker } from "@/components/recipe/NewSticker";
+import { RecipeOrigin } from "@/components/recipe/RecipeOrigin";
 import { imageUrl } from "@/lib/images";
 import { StepText } from "@/components/recipe/StepText";
 import { IconBack, IconBookmark, IconCart, IconImage, IconPencil } from "@/components/ui/icons";
@@ -33,7 +34,7 @@ export function RecipeScreen() {
   const id = useSearchId();
   const recipe = useRecipe(id);
   const settings = useSettings();
-  const { canEdit, online, toast } = useApp();
+  const { canEdit, online, toast, isAdmin, profile } = useApp();
   const [reviewOpen, setReviewOpen] = useState(false);
   const [imageOpen, setImageOpen] = useState(false);
 
@@ -60,6 +61,8 @@ export function RecipeScreen() {
   const tags = displayTags(recipe, settings);
   const toTest = recipe.tags.includes("a-tester");
   const img = imageUrl(recipe.imagePath);
+  // modifiable : la bibliothèque (un membre crée alors sa version) ou mes recettes perso ; pas celles des autres
+  const editable = canEdit && (isAdmin || recipe.status === "library" || recipe.ownerId === profile?.id);
   const hasNutrition = [recipe.kcal, recipe.proteinG, recipe.fatG, recipe.carbsG, recipe.fiberG].some((v) => v != null);
 
   return (
@@ -78,12 +81,12 @@ export function RecipeScreen() {
           </div>
           {/* Photo perso > illustration > couverture typographique (le titre sur la couleur).
               Toucher l'image (ou son emplacement vide) ouvre photo / IA / supprimer. */}
-          {(img || canEdit) && (
+          {(img || editable) && (
             <div className="relative mt-1">
               <button
                 type="button"
                 aria-label="Image de la recette"
-                disabled={!canEdit || !online}
+                disabled={!editable || !online}
                 onClick={() => setImageOpen(true)}
                 className="block w-full disabled:cursor-default"
               >
@@ -107,7 +110,7 @@ export function RecipeScreen() {
               {toTest && <NewSticker size={68} className="absolute -top-2 right-0" />}
             </div>
           )}
-          {toTest && !img && !canEdit && <NewSticker size={68} className="mt-2 self-start" />}
+          {toTest && !img && !editable && <NewSticker size={68} className="mt-2 self-start" />}
           <h1 className="pt-6 font-heading text-[40px] leading-[1.02] text-balance sm:text-[52px]">{recipe.title}</h1>
           <div className="flex flex-wrap gap-x-4 gap-y-1 text-[15px] font-bold">
             {yieldLabel(recipe) && <span>{yieldLabel(recipe)}</span>}
@@ -118,6 +121,7 @@ export function RecipeScreen() {
       </header>
 
       <main className="mx-auto flex max-w-3xl flex-col gap-[22px] px-5 pt-5">
+        <RecipeOrigin recipe={recipe} />
         <Link
           href={`/cuisine?id=${recipe.id}`}
           className="print:hidden flex h-16 items-center justify-center gap-2.5 rounded-full bg-accent-600 font-heading text-[21px] text-neutral-100 shadow-md active:bg-accent-700"
@@ -150,7 +154,7 @@ export function RecipeScreen() {
           >
             Imprimer
           </button>
-          {canEdit && (
+          {editable && (
             <Link
               href={online ? `/modifier?id=${recipe.id}` : "#"}
               onClick={(e) => {

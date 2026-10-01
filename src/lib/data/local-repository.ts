@@ -42,6 +42,8 @@ export class LocalRepository implements Repository {
       settings: (await getMeta("settings")) ?? null,
       households: (await getMeta("households")) ?? [LOCAL_HOUSEHOLD],
       householdId: LOCAL_HOUSEHOLD.id,
+      housemates: [],
+      people: [],
       shopping: (await getMeta("shopping")) ?? EMPTY_SHOPPING,
       mealPlans: await db.mealPlans.toArray(),
       templates: await db.templates.toArray(),
@@ -52,6 +54,8 @@ export class LocalRepository implements Repository {
 
   async saveRecipe() {}
   async deleteRecipe() {}
+  async retireFork() {}
+  async setRecipeStatus() {}
   async upsertReviewItems() {}
   async deleteReviewItems() {}
   async saveSettings() {}

@@ -106,7 +106,8 @@ export class SupabaseRepository implements Repository {
     this.household = current?.id ?? null;
     const hid = current?.id ?? "00000000-0000-0000-0000-000000000000";
 
-    const [recipes, review, profile, settings, plans, templates, pantry, customs, shopRecipes, shopChecks, shopItems] = await Promise.all([
+    const myHouseholds = rows.map((h) => h.id);
+    const [recipes, review, profile, settings, plans, templates, pantry, customs, shopRecipes, shopChecks, shopItems, mates, people] = await Promise.all([
       this.client.from("recipes").select("*, ingredients(*), steps(*)"),
       this.client.from("review_items").select("*"),
       uid ? this.client.from("profiles").select("*").eq("id", uid).maybeSingle() : null,
@@ -119,6 +120,10 @@ export class SupabaseRepository implements Repository {
       this.client.from("shopping_recipes").select("*").eq("household_id", hid),
       this.client.from("shopping_checks").select("item_key").eq("household_id", hid).eq("checked", true),
       this.client.from("shopping_items").select("*").eq("household_id", hid).order("created_at"),
+      myHouseholds.length
+        ? this.client.from("household_members").select("user_id").in("household_id", myHouseholds)
+        : Promise.resolve({ data: [] as { user_id: string }[], error: null }),
+      this.client.from("profiles").select("id, display_name, role"),
     ]);
     fail(recipes.error, "Lecture des recettes");
     fail(review.error, "Lecture de la liste à revoir");
@@ -136,6 +141,8 @@ export class SupabaseRepository implements Repository {
         planning: { ...PLANNING_DEFAULTS, ...(current?.planning ?? personal.planning) },
       },
       households: rows.map((h): Household => ({ id: h.id, name: h.name })),
+      housemates: [...new Set((mates.data ?? []).map((m) => m.user_id as string))].filter((id) => id !== uid),
+      people: (people.data ?? []).map(profileFromRow),
       householdId: current?.id ?? null,
       mealPlans: (plans.data ?? []).map(mealPlanFromRow),
       templates: (templates.data ?? []).map(templateFromRow),
@@ -165,6 +172,19 @@ export class SupabaseRepository implements Repository {
   async deleteRecipe(id: string) {
     const { error } = await this.client.from("recipes").delete().eq("id", id);
     fail(error, "Suppression");
+  }
+
+  async retireFork(id: string) {
+    const { error } = await this.client.rpc("retire_fork", { fork: id });
+    fail(error, "Version perso");
+  }
+
+  async setRecipeStatus(id: string, patch: { status?: Recipe["status"]; proposalStatus?: Recipe["proposalStatus"] }) {
+    const row: Record<string, unknown> = {};
+    if (patch.status) row.status = patch.status;
+    if (patch.proposalStatus !== undefined) row.proposal_status = patch.proposalStatus;
+    const { error } = await this.client.from("recipes").update(row).eq("id", id);
+    fail(error, "Proposition");
   }
 
   async upsertReviewItems(items: ReviewItem[]) {

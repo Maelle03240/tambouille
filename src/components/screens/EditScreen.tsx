@@ -12,7 +12,7 @@ export function EditScreen() {
   const router = useRouter();
   const id = params.get("id");
   const recipe = useRecipe(id);
-  const { canEdit, online } = useApp();
+  const { canEdit, online, isAdmin, profile } = useApp();
 
   if (recipe === undefined) {
     return (
@@ -21,7 +21,9 @@ export function EditScreen() {
       </div>
     );
   }
-  if (!recipe || !canEdit || !online) {
+  // la recette perso de quelqu'un d'autre ne se modifie pas
+  const editable = !!recipe && canEdit && (isAdmin || recipe.status === "library" || recipe.ownerId === profile?.id);
+  if (!recipe || !editable || !online) {
     return (
       <div className="pt-safe px-5">
         <EmptyState title={!recipe ? "Recette introuvable" : !online ? "Hors ligne" : "Lecture seule"}>

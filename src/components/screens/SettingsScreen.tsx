@@ -9,7 +9,7 @@ import { Button, Chip, Field, NumberInput, SectionTitle, Spinner, TextInput } fr
 import { BRAND } from "@/config/brand";
 import { exportAll, renameHousehold, saveSettings, switchHousehold } from "@/lib/data/actions";
 import { getMeta } from "@/lib/data/db";
-import { useHouseholds, useOpenReviewCount, useSettings } from "@/lib/data/hooks";
+import { useHouseholds, useOpenReviewCount, usePendingProposals, useSettings } from "@/lib/data/hooks";
 import { ROLE_LABELS } from "@/config/ui";
 import Link from "next/link";
 
@@ -31,6 +31,7 @@ export function SettingsScreen() {
   const threshold = thresholdDraft === undefined ? settings.proteinRichThresholdG : thresholdDraft;
   const lastSync = useLiveQuery(() => getMeta("lastSyncAt"), []);
   const households = useHouseholds();
+  const proposals = usePendingProposals();
   const current = households?.list.find((h) => h.id === households.currentId) ?? null;
   const [nameDraft, setNameDraft] = useState<string | null>(null);
   const name = nameDraft ?? current?.name ?? "";
@@ -122,7 +123,7 @@ export function SettingsScreen() {
         )}
         {app.isAdmin && app.mode === "supabase" && (
           <Link href="/admin" className="flex h-14 items-center justify-between rounded-[28px] bg-surface px-5 font-bold">
-            Admin <span className="text-accent-700">→</span>
+            Admin <span className="text-accent-700">{proposals?.length ? `${proposals.length} proposition${proposals.length > 1 ? "s" : ""} →` : "→"}</span>
           </Link>
         )}
         {/* tout le monde voit les siens sur l'accueil ; ici, l'admin voit ceux de tous */}

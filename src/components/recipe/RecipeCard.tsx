@@ -1,7 +1,8 @@
 "use client";
 import Link from "next/link";
 import { categoryColors, getCategory } from "@/config/categories";
-import { useSettings } from "@/lib/data/hooks";
+import { usePeople, useSettings } from "@/lib/data/hooks";
+import { useApp } from "@/components/app/AppProvider";
 import { displayTags } from "@/lib/recipes/tags";
 import type { Recipe } from "@/lib/recipes/types";
 import { formatDuration } from "@/lib/recipes/markers";
@@ -21,6 +22,17 @@ export function RecipeCard({ recipe }: { recipe: Recipe }) {
   const rich = tags.includes("riche-en-proteines");
   const test = tags.includes("a-tester");
   const total = totalMinutes(recipe);
+  const { profile } = useApp();
+  const people = usePeople();
+  // recettes perso : « Ta version », « Ta recette », « De Léa »
+  const origin =
+    recipe.status !== "personal"
+      ? null
+      : recipe.ownerId === profile?.id
+        ? recipe.forkedFromId
+          ? "Ta version"
+          : "Ta recette"
+        : `De ${people?.find((p) => p.id === recipe.ownerId)?.displayName || "?"}`;
 
   return (
     <Link
@@ -51,6 +63,7 @@ export function RecipeCard({ recipe }: { recipe: Recipe }) {
         </div>
       )}
       <div className="font-heading text-[21px] leading-[1.1] text-balance">{recipe.title}</div>
+      {origin && <div className="-mt-1.5 text-[12px] font-bold opacity-75">{origin}</div>}
       {(recipe.proteinG != null || recipe.kcal != null) && (
         <div className="flex items-baseline justify-between gap-1.5">
           {recipe.proteinG != null ? (

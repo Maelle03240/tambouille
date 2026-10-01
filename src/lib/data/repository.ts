@@ -25,6 +25,10 @@ export interface Snapshot {
   /** Mes foyers, et celui affiché (null : aucun foyer). */
   households: Household[];
   householdId: string | null;
+  /** Comptes qui partagent un de mes foyers (je vois leurs recettes perso). */
+  housemates: string[];
+  /** Prénoms de tous les comptes (« Recette de Léa »). */
+  people: Profile[];
   shopping: ShoppingState | null;
   mealPlans: MealPlanEntry[];
   templates: MealTemplate[];
@@ -58,6 +62,10 @@ export interface Repository {
 
   saveRecipe(recipe: Recipe): Promise<void>;
   deleteRecipe(id: string): Promise<void>;
+  /** Version perso retirée (acceptée ou abandonnée) : tout repasse sur l'originale. */
+  retireFork(id: string): Promise<void>;
+  /** Admin : décision sur une proposition (bibliothèque, ou refus). */
+  setRecipeStatus(id: string, patch: { status?: Recipe["status"]; proposalStatus?: Recipe["proposalStatus"] }): Promise<void>;
 
   upsertReviewItems(items: ReviewItem[]): Promise<void>;
   deleteReviewItems(ids: string[]): Promise<void>;

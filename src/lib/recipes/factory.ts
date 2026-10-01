@@ -6,6 +6,10 @@ export function emptyRecipe(): Recipe {
   return {
     id: newId(),
     ownerId: null,
+    status: "library",
+    forkedFromId: null,
+    forkBase: null,
+    proposalStatus: null,
     title: "",
     category: null,
     moments: [],

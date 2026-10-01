@@ -10,7 +10,7 @@ import { IconCheck, IconChevronRight } from "@/components/ui/icons";
 import { EmptyState, cx } from "@/components/ui/primitives";
 import { categoryColors } from "@/config/categories";
 import { setReviewDone } from "@/lib/data/actions";
-import { useRecipes, useReviewItems } from "@/lib/data/hooks";
+import { useAllRecipes, useReviewItems } from "@/lib/data/hooks";
 import { FIELD_LABELS, isMyReviewItem } from "@/lib/recipes/review";
 import type { ReviewItem } from "@/lib/recipes/types";
 
@@ -22,7 +22,7 @@ function sourceOf(item: ReviewItem) {
 
 export function ReviewScreen() {
   const items = useReviewItems();
-  const recipes = useRecipes();
+  const recipes = useAllRecipes();
   const { canEdit, online, toast, isAdmin, profile, mode } = useApp();
   // ?tous=1 (Réglages, admin) : les points de tout le monde ; sinon les miens
   const all = useSearchParams().get("tous") === "1" && isAdmin;

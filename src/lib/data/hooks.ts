@@ -5,11 +5,34 @@
  */
 import { useLiveQuery } from "dexie-react-hooks";
 import { isMyReviewItem } from "@/lib/recipes/review";
+import { visibleRecipes } from "@/lib/recipes/visibility";
 import { DEFAULT_SETTINGS, EMPTY_SHOPPING } from "./actions";
 import { db, getMeta } from "./db";
 
+/**
+ * Recettes de mes listes : bibliothèque, mes versions perso (à la place de
+ * l'originale) et celles des membres de mes foyers (visibility.ts).
+ */
 export function useRecipes() {
+  return useLiveQuery(async () => {
+    const [all, profile, mates] = await Promise.all([db.recipes.toArray(), getMeta("profile"), getMeta("housemates")]);
+    return visibleRecipes(all, profile?.id ?? null, mates ?? []);
+  }, []);
+}
+
+/** Toutes les recettes du cache (pour retrouver celle d'un repas, d'une liste…). */
+export function useAllRecipes() {
   return useLiveQuery(() => db.recipes.toArray(), []);
+}
+
+/** Prénoms des comptes. */
+export function usePeople() {
+  return useLiveQuery(async () => (await getMeta("people")) ?? [], []);
+}
+
+/** Admin : propositions en attente. */
+export function usePendingProposals() {
+  return useLiveQuery(async () => (await db.recipes.toArray()).filter((r) => r.status === "personal" && r.proposalStatus === "pending"), []);
 }
 
 /** `undefined` = en chargement ; `null` = introuvable. */

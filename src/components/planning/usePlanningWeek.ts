@@ -7,7 +7,7 @@ import { useMemo } from "react";
 import { useApp } from "@/components/app/AppProvider";
 import { MOMENTS } from "@/config/moments";
 import { removePlanEntries, savePlanEntries } from "@/lib/data/actions";
-import { useMealPlans, useRecipes, useSettings } from "@/lib/data/hooks";
+import { useAllRecipes, useMealPlans, useRecipes, useSettings } from "@/lib/data/hooks";
 import { addDays, weekDays } from "@/lib/planning/dates";
 import { dayNutrition, drawDay, drawWeek, rerollSlot, type DrawContext } from "@/lib/planning/draw";
 import { entryKey, type MealPlanEntry } from "@/lib/planning/types";
@@ -15,14 +15,16 @@ import { entryKey, type MealPlanEntry } from "@/lib/planning/types";
 export function usePlanningWeek(monday: string) {
   const { toast } = useApp();
   const settings = useSettings();
+  // tirage et choix : mes recettes visibles ; affichage d'un repas : n'importe laquelle du cache
   const recipes = useRecipes();
+  const allRecipes = useAllRecipes();
   const plans = useMealPlans(monday, addDays(monday, 6));
 
   const meals = useMemo(
     () => MOMENTS.map((m) => m.id).filter((id) => settings.planning.meals.includes(id)),
     [settings.planning.meals],
   );
-  const byId = useMemo(() => new Map((recipes ?? []).map((r) => [r.id, r])), [recipes]);
+  const byId = useMemo(() => new Map((allRecipes ?? []).map((r) => [r.id, r])), [allRecipes]);
 
   const ctx: DrawContext = useMemo(
     () => ({

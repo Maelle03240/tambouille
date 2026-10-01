@@ -27,7 +27,7 @@ import { IconBack, IconBookmark, IconCheck, IconChevronDown, IconMic, IconMinus,
 import { EmptyState, Spinner, cx } from "@/components/ui/primitives";
 import { getCategory } from "@/config/categories";
 import { UI } from "@/config/ui";
-import { patchRecipe } from "@/lib/data/actions";
+import { patchRecipe, writesInPlace } from "@/lib/data/actions";
 import { useRecipe } from "@/lib/data/hooks";
 import { useSearchId } from "@/lib/hooks/useSearchId";
 import { formatDuration } from "@/lib/recipes/markers";
@@ -160,6 +160,8 @@ function Cook({ recipe }: { recipe: Recipe }) {
   async function removeNew() {
     if (!recipe.tags.includes("a-tester")) return;
     try {
+      // un membre ne retouche pas la bibliothèque (ça créerait sa version juste pour ça)
+      if (!(await writesInPlace(recipe))) return;
       await patchRecipe(recipe.id, { tags: recipe.tags.filter((t) => t !== "a-tester") });
     } catch (e) {
       toast(e instanceof Error ? e.message : "Modification impossible");

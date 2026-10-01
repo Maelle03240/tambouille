@@ -14,6 +14,10 @@ export function recipeFromRow(r: Row): Recipe {
   return {
     id: r.id,
     ownerId: r.owner_id,
+    status: r.status ?? "library",
+    forkedFromId: r.forked_from_id ?? null,
+    forkBase: r.fork_base ?? null,
+    proposalStatus: r.proposal_status ?? null,
     title: r.title,
     category: r.category,
     moments: r.moments ?? [],
@@ -70,6 +74,10 @@ export function recipeToPayload(r: Recipe): Row {
   return {
     recipe: {
       id: r.id,
+      status: r.status,
+      forked_from_id: r.forkedFromId,
+      fork_base: r.forkBase,
+      proposal_status: r.proposalStatus,
       title: r.title,
       category: r.category,
       moments: r.moments,

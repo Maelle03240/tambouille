@@ -49,7 +49,7 @@ export function RecipeEditor({
   onDeleted?: () => void;
   headerLeft: ReactNode;
 }) {
-  const { toast, online, isAdmin } = useApp();
+  const { toast, online, isAdmin, profile } = useApp();
   const [draft, setDraft] = useState<Recipe>(initial);
   const [steps, setSteps] = useState<EditableStep[]>(() =>
     initial.steps.map((s) => ({ id: s.id, tokens: markersToTokens(s.text, initial.ingredients) })),
@@ -404,13 +404,14 @@ export function RecipeEditor({
           />
         </section>
 
-        {mode === "edit" && isAdmin && (
+        {/* l'admin supprime tout ; un membre, ses recettes perso (sa version : retour à l'originale) */}
+        {mode === "edit" && (isAdmin || (draft.status === "personal" && draft.ownerId === profile?.id)) && (
           <button
             type="button"
             onClick={() => setConfirmDelete(true)}
             className="mt-4 flex h-12 items-center justify-center gap-2 rounded-full font-bold text-accent-800"
           >
-            <IconTrash size={18} /> Supprimer la recette
+            <IconTrash size={18} /> {draft.forkedFromId && !isAdmin ? "Supprimer ma version" : "Supprimer la recette"}
           </button>
         )}
       </main>

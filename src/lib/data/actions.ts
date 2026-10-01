@@ -5,6 +5,7 @@
 import { newId } from "@/lib/ids";
 import { timersIn } from "@/lib/recipes/markers";
 import { AUTO_REVIEW_RULES, autoReviewNotes } from "@/lib/recipes/review";
+import { applyBlocks, forkRecipe, reviewProposal, type BlockKey } from "@/lib/recipes/proposals";
 import { PLANNING_DEFAULTS } from "@/config/planning";
 import type { MealPlanEntry, MealTemplate, PantryBasic } from "@/lib/planning/types";
 import type { CustomIngredient, Recipe, ReviewItem, UserSettings } from "@/lib/recipes/types";
@@ -47,16 +48,52 @@ function normalizeRecipe(recipe: Recipe): Recipe {
 export interface SaveOptions {
   /** Points non vérifiés à l'import, gardés dans la liste « à revoir ». */
   keepForReview?: { field: string; note: string }[];
+  /** Membre : créer sa version même sans changement (ex. pour y mettre une image). */
+  forceFork?: boolean;
 }
 
+/** Qui suis-je ? (mode local : admin) */
+async function me() {
+  if (getRepository().mode === "local") return { id: null, admin: true };
+  const profile = await getMeta("profile");
+  return { id: profile?.id ?? null, admin: profile?.role === "admin" };
+}
+
+/**
+ * Enregistre une recette. L'admin écrit dans la bibliothèque. Un membre :
+ * - nouvelle recette → recette perso, proposée à l'admin ;
+ * - sa recette perso → mise à jour, proposition remise en attente ;
+ * - recette de la bibliothèque → crée SA version (nouvel id), proposée.
+ * Renvoie la recette enregistrée (l'écran suit son id, qui peut changer).
+ */
 export async function saveRecipe(input: Recipe, opts: SaveOptions = {}): Promise<Recipe> {
   requireOnline();
-  const recipe = normalizeRecipe(input);
+  const who = await me();
+  const existing = await db.recipes.get(input.id);
+  let toSave = input;
+  if (!who.admin && who.id) {
+    if (!existing) toSave = { ...input, status: "personal", ownerId: who.id, proposalStatus: "pending" };
+    else if (existing.status === "personal") toSave = { ...input, proposalStatus: "pending" };
+    else {
+      // sa version : le contenu modifié, et l'originale telle qu'elle était
+      const fork = forkRecipe(input, who.id);
+      toSave = { ...fork, forkBase: { ...fork.forkBase!, recipe: existing } };
+      // rien de changé : pas de version (ni de proposition) vide
+      if (!opts.forceFork && !reviewProposal(toSave, existing).changed.length) return existing;
+    }
+  }
+  const recipe = normalizeRecipe(toSave);
   const repo = getRepository();
   await repo.saveRecipe(recipe);
   await db.recipes.put(recipe);
   await refreshAutoReview(recipe, opts.keepForReview ?? []);
   return recipe;
+}
+
+/** Peut-on écrire directement dans cette recette ? (sinon : une version perso sera créée) */
+export async function writesInPlace(recipe: Recipe) {
+  const who = await me();
+  return who.admin || (recipe.status === "personal" && recipe.ownerId === who.id);
 }
 
 /**
@@ -94,7 +131,10 @@ async function refreshAutoReview(recipe: Recipe, extra: { field: string; note: s
 
 export async function deleteRecipe(id: string) {
   requireOnline();
-  await getRepository().deleteRecipe(id);
+  const r = await db.recipes.get(id);
+  // une version perso : menus et courses repassent sur l'originale
+  if (r?.status === "personal" && r.forkedFromId) await getRepository().retireFork(id);
+  else await getRepository().deleteRecipe(id);
   await db.recipes.delete(id);
   const items = await db.reviewItems.where("recipeId").equals(id).primaryKeys();
   await db.reviewItems.bulkDelete(items);
@@ -116,15 +156,20 @@ export async function patchRecipe(id: string, patch: Partial<Recipe>) {
  */
 export async function setRecipeImage(recipeId: string, source: Blob, kind: "personal" | "generated") {
   requireOnline();
-  const current = await db.recipes.get(recipeId);
+  let current = await db.recipes.get(recipeId);
   if (!current) throw new Error("Recette introuvable");
+  // un membre sur une recette de la bibliothèque : l'image va dans sa version
+  if (!(await writesInPlace(current))) current = await saveRecipe(current, { forceFork: true });
   if (kind === "generated" && current.imageKind === "personal") return current;
   const blob = await compressForStorage(source);
   const ext = blob.type === "image/webp" ? "webp" : "jpg";
   const repo = getRepository();
-  const imagePath = await repo.uploadImage(`${recipeId}/${Date.now()}.${ext}`, blob);
-  const saved = await patchRecipe(recipeId, { imagePath, imageKind: kind });
-  if (current.imagePath && current.imagePath !== imagePath) await repo.deleteImage(current.imagePath).catch(() => {});
+  const imagePath = await repo.uploadImage(`${current.id}/${Date.now()}.${ext}`, blob);
+  const saved = await patchRecipe(current.id, { imagePath, imageKind: kind });
+  // l'ancienne image n'est supprimée que si elle appartient à cette recette (pas à l'originale)
+  if (current.imagePath && current.imagePath !== imagePath && current.imagePath.startsWith(`${current.id}/`)) {
+    await repo.deleteImage(current.imagePath).catch(() => {});
+  }
   return saved;
 }
 
@@ -132,8 +177,10 @@ export async function removeRecipeImage(recipeId: string) {
   requireOnline();
   const current = await db.recipes.get(recipeId);
   if (!current?.imagePath) return;
-  await getRepository().deleteImage(current.imagePath).catch(() => {});
-  await patchRecipe(recipeId, { imagePath: null, imageKind: "none" });
+  if (current.imagePath.startsWith(`${current.id}/`) && (await writesInPlace(current))) {
+    await getRepository().deleteImage(current.imagePath).catch(() => {});
+  }
+  return patchRecipe(recipeId, { imagePath: null, imageKind: "none" });
 }
 
 /** Illustration IA (style vieux livre de cuisine), puis enregistrement. */
@@ -360,4 +407,36 @@ export async function clearLocalData() {
   ]);
   const { rememberHousehold } = await import("./sync");
   rememberHousehold(null);
+}
+
+/* ───────────── Propositions (admin) ───────────── */
+
+/** Recette perso créée par un membre → bibliothèque. */
+export async function acceptCreation(id: string) {
+  requireOnline();
+  await getRepository().setRecipeStatus(id, { status: "library", proposalStatus: null });
+  await db.recipes.update(id, { status: "library", proposalStatus: null });
+}
+
+export async function refuseProposal(id: string) {
+  requireOnline();
+  await getRepository().setRecipeStatus(id, { proposalStatus: "refused" });
+  await db.recipes.update(id, { proposalStatus: "refused" });
+}
+
+/**
+ * Version perso acceptée : les blocs choisis rejoignent l'originale, puis la
+ * version est retirée (menus, courses, à revoir repassent sur l'originale).
+ */
+export async function acceptFork(forkId: string, take: readonly BlockKey[]) {
+  requireOnline();
+  const fork = await db.recipes.get(forkId);
+  const original = fork?.forkedFromId ? await db.recipes.get(fork.forkedFromId) : undefined;
+  if (!fork || !original) throw new Error("Recette introuvable");
+  const review = reviewProposal(fork, original);
+  if (take.length) await saveRecipe(applyBlocks(original, review.theirs, take));
+  await getRepository().retireFork(forkId);
+  await db.recipes.delete(forkId);
+  const { syncNow } = await import("./sync");
+  void syncNow();
 }

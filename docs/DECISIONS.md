@@ -131,3 +131,9 @@ Remplace « ouverture à la famille en écriture » (spec V3). Deux étapes : **
 - Temps réel (migration 0009) : courses et menu du foyer se mettent à jour chez tous les membres sans recharger. Décocher = `checked` à faux (pas de suppression, non filtrable par foyer en temps réel).
 - « À revoir » : l'accueil (et l'onglet) montrent seulement mes points (notés par moi, ou points auto de mes recettes) ; Réglages → « À revoir (tous) » pour l'admin seulement.
 - Réglages : « Illustrations automatiques » et seuil « riche en protéines » réservés à l'admin ; plus de bouton « Synchroniser maintenant » (synchro au lancement, au retour sur l'appli, au retour du réseau et en direct).
+
+**Étape 2 livrée (migration 0010)**
+- `recipes.status` (library / personal), `forked_from_id`, `fork_base` (l'originale au moment de la version + correspondance des ids), `proposal_status` (pending / refused). Règles RLS : lecture = bibliothèque, les miennes, celles des membres de mes foyers, tout pour l'admin ; écriture membre = ses recettes perso seulement (ingrédients, étapes, images suivent la recette). `retire_fork()` : version acceptée ou abandonnée ⇒ menus, modèles, courses, à revoir de tous les foyers repassent sur l'originale.
+- Listes : ma version remplace l'originale pour moi ; les recettes perso des membres de mes foyers apparaissent à côté (« De Léa ») ; l'admin voit les autres dans Admin → Propositions (`src/lib/recipes/visibility.ts`).
+- Fusion par blocs (titre, catégorie et moments, tags, portions, temps, valeurs nutritionnelles, notes, image, ingrédients et étapes) : `src/lib/recipes/proposals.ts` (testée). Blocs cochés par défaut sauf conflit avec une modif de l'admin.
+- Enregistrer sans rien changer ne crée pas de version vide. Un membre qui finit une recette de la bibliothèque ne retire pas son NEW (sinon ça créerait une version juste pour ça).

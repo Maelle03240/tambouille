@@ -21,7 +21,7 @@ export interface MetaEntry {
   value: unknown;
 }
 
-export type MetaKey = "lastSyncAt" | "profile" | "settings" | "features" | "shopping" | "fridge" | "fridgeBasics" | "households" | "householdId";
+export type MetaKey = "lastSyncAt" | "profile" | "settings" | "features" | "shopping" | "fridge" | "fridgeBasics" | "households" | "householdId" | "housemates" | "people";
 
 // Liste de courses du foyer (cache local ; envoyée au serveur par la file d'attente)
 export type { PersonalItem, ShoppingState } from "@/lib/shopping/state";
@@ -38,6 +38,8 @@ export type MetaValue = {
   /** Mes foyers, et celui affiché (menu, courses…). */
   households: Household[];
   householdId: string | null;
+  housemates: string[];
+  people: Profile[];
 };
 
 class CarnetDB extends Dexie {

@@ -2,13 +2,14 @@
 /**
  * ADMIN (Réglages → Admin) : inviter quelqu'un, gérer les foyers et leurs
  * membres, les rôles. Les droits sont vérifiés par la base (RLS) : cet écran
- * n'est qu'un raccourci. Étape 2 : les propositions de recettes s'ajouteront ici.
+ * n'est qu'un raccourci. Propositions de recettes : components/admin/Proposals.tsx.
  */
 import { useEffect, useState } from "react";
 import { useApp } from "@/components/app/AppProvider";
 import { IconClose, IconPlus, IconTrash } from "@/components/ui/icons";
 import { BackLink, Button, Chip, Field, SectionTitle, Spinner, TextInput, cx } from "@/components/ui/primitives";
 import { ROLE_LABELS } from "@/config/ui";
+import { Proposals } from "@/components/admin/Proposals";
 import { getRepository } from "@/lib/data";
 import type { AdminOverview } from "@/lib/data/repository";
 import { syncNow } from "@/lib/data/sync";
@@ -47,7 +48,7 @@ export function AdminScreen() {
     }
   }
 
-  if (!isAdmin || !admin) {
+  if (!isAdmin) {
     return (
       <main className="pt-safe mx-auto max-w-2xl px-4">
         <BackLink href="/reglages" />
@@ -68,108 +69,115 @@ export function AdminScreen() {
       <main className="mx-auto flex max-w-2xl flex-col gap-7 px-4">
         {!online && <p className="rounded-field bg-accent-100 px-4 py-3 text-accent-800">Pas de réseau.</p>}
 
-        <InviteForm households={data?.households ?? []} enabled={!!features.invites && online} onDone={() => act(async () => {}, "Invitation envoyée")} />
+        <Proposals />
 
-        <section className="flex flex-col gap-3">
-          <SectionTitle>Foyers</SectionTitle>
-          {!data ? (
-            <Spinner />
-          ) : (
-            data.households.map((h) => {
-              const others = data.people.filter((p) => !h.memberIds.includes(p.id));
-              return (
-                <div key={h.id} className="flex flex-col gap-2.5 rounded-[26px] bg-surface p-4">
-                  <div className="flex items-center gap-2">
-                    <span className="flex-1 font-heading text-[20px]">{h.name}</span>
-                    <button
-                      type="button"
-                      aria-label={`Supprimer ${h.name}`}
-                      disabled={!online}
-                      onClick={() =>
-                        confirm(`Supprimer « ${h.name} » avec son menu, ses modèles et sa liste de courses ?`) &&
-                        act(() => admin.deleteHousehold(h.id), "Foyer supprimé")
-                      }
-                      className="flex size-10 items-center justify-center rounded-full text-neutral-700 disabled:opacity-45"
-                    >
-                      <IconTrash size={18} />
-                    </button>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    {h.memberIds.map((id) => (
-                      <span key={id} className="flex h-10 items-center gap-1 rounded-full bg-neutral-100 pr-1 pl-4 font-bold">
-                        {nameOf(id)}
-                        <button
-                          type="button"
-                          aria-label={`Retirer ${nameOf(id)}`}
-                          disabled={!online}
-                          onClick={() => act(() => admin.removeMember(h.id, id))}
-                          className="flex size-8 items-center justify-center rounded-full text-neutral-700"
-                        >
-                          <IconClose size={15} />
-                        </button>
-                      </span>
-                    ))}
-                    {others.length > 0 && (
-                      <select
-                        value=""
+        {/* gestion des comptes : Supabase seulement (pas en mode local) */}
+        {admin && (
+          <>
+          <InviteForm households={data?.households ?? []} enabled={!!features.invites && online} onDone={() => act(async () => {}, "Invitation envoyée")} />
+
+          <section className="flex flex-col gap-3">
+            <SectionTitle>Foyers</SectionTitle>
+            {!data ? (
+              <Spinner />
+            ) : (
+              data.households.map((h) => {
+                const others = data.people.filter((p) => !h.memberIds.includes(p.id));
+                return (
+                  <div key={h.id} className="flex flex-col gap-2.5 rounded-[26px] bg-surface p-4">
+                    <div className="flex items-center gap-2">
+                      <span className="flex-1 font-heading text-[20px]">{h.name}</span>
+                      <button
+                        type="button"
+                        aria-label={`Supprimer ${h.name}`}
                         disabled={!online}
-                        aria-label="Ajouter un membre"
-                        onChange={(e) => e.target.value && act(() => admin.addMember(h.id, e.target.value))}
-                        className="h-10 rounded-full border-[1.5px] border-dashed border-divider bg-transparent px-3 font-bold text-neutral-700"
+                        onClick={() =>
+                          confirm(`Supprimer « ${h.name} » avec son menu, ses modèles et sa liste de courses ?`) &&
+                          act(() => admin.deleteHousehold(h.id), "Foyer supprimé")
+                        }
+                        className="flex size-10 items-center justify-center rounded-full text-neutral-700 disabled:opacity-45"
                       >
-                        <option value="">+ Ajouter</option>
-                        {others.map((p) => (
-                          <option key={p.id} value={p.id}>
-                            {p.displayName}
-                          </option>
-                        ))}
-                      </select>
-                    )}
+                        <IconTrash size={18} />
+                      </button>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {h.memberIds.map((id) => (
+                        <span key={id} className="flex h-10 items-center gap-1 rounded-full bg-neutral-100 pr-1 pl-4 font-bold">
+                          {nameOf(id)}
+                          <button
+                            type="button"
+                            aria-label={`Retirer ${nameOf(id)}`}
+                            disabled={!online}
+                            onClick={() => act(() => admin.removeMember(h.id, id))}
+                            className="flex size-8 items-center justify-center rounded-full text-neutral-700"
+                          >
+                            <IconClose size={15} />
+                          </button>
+                        </span>
+                      ))}
+                      {others.length > 0 && (
+                        <select
+                          value=""
+                          disabled={!online}
+                          aria-label="Ajouter un membre"
+                          onChange={(e) => e.target.value && act(() => admin.addMember(h.id, e.target.value))}
+                          className="h-10 rounded-full border-[1.5px] border-dashed border-divider bg-transparent px-3 font-bold text-neutral-700"
+                        >
+                          <option value="">+ Ajouter</option>
+                          {others.map((p) => (
+                            <option key={p.id} value={p.id}>
+                              {p.displayName}
+                            </option>
+                          ))}
+                        </select>
+                      )}
+                    </div>
                   </div>
-                </div>
-              );
-            })
-          )}
-          <form
-            className="flex gap-2"
-            onSubmit={(e) => {
-              e.preventDefault();
-              act(() => admin.createHousehold(newHousehold.trim()), "Foyer créé").then(() => setNewHousehold(""));
-            }}
-          >
-            <TextInput value={newHousehold} onChange={(e) => setNewHousehold(e.target.value)} placeholder="Nouveau foyer, ex. Chez Maman" />
-            <button
-              type="submit"
-              aria-label="Créer le foyer"
-              disabled={!online || !newHousehold.trim()}
-              className="flex size-12 flex-none items-center justify-center rounded-full bg-accent-600 text-neutral-100 disabled:opacity-45"
+                );
+              })
+            )}
+            <form
+              className="flex gap-2"
+              onSubmit={(e) => {
+                e.preventDefault();
+                act(() => admin.createHousehold(newHousehold.trim()), "Foyer créé").then(() => setNewHousehold(""));
+              }}
             >
-              <IconPlus size={20} />
-            </button>
-          </form>
-        </section>
+              <TextInput value={newHousehold} onChange={(e) => setNewHousehold(e.target.value)} placeholder="Nouveau foyer, ex. Chez Maman" />
+              <button
+                type="submit"
+                aria-label="Créer le foyer"
+                disabled={!online || !newHousehold.trim()}
+                className="flex size-12 flex-none items-center justify-center rounded-full bg-accent-600 text-neutral-100 disabled:opacity-45"
+              >
+                <IconPlus size={20} />
+              </button>
+            </form>
+          </section>
 
-        <section className="flex flex-col gap-3">
-          <SectionTitle>Comptes</SectionTitle>
-          {data?.people.map((p) => (
-            <div key={p.id} className="flex flex-col gap-2 rounded-[26px] bg-surface px-4 py-3">
-              <span className="font-bold">{p.displayName || "?"}</span>
-              <div className="flex flex-wrap gap-1.5">
-                {(Object.keys(ROLE_LABELS) as Role[]).map((r) => (
-                  <Chip
-                    key={r}
-                    selected={p.role === r}
-                    // on ne se retire pas soi-même le rôle admin
-                    disabled={!online || p.id === profile?.id}
-                    onClick={() => p.role !== r && act(() => admin.setRole(p.id, r))}
-                  >
-                    {ROLE_LABELS[r]}
-                  </Chip>
-                ))}
+          <section className="flex flex-col gap-3">
+            <SectionTitle>Comptes</SectionTitle>
+            {data?.people.map((p) => (
+              <div key={p.id} className="flex flex-col gap-2 rounded-[26px] bg-surface px-4 py-3">
+                <span className="font-bold">{p.displayName || "?"}</span>
+                <div className="flex flex-wrap gap-1.5">
+                  {(Object.keys(ROLE_LABELS) as Role[]).map((r) => (
+                    <Chip
+                      key={r}
+                      selected={p.role === r}
+                      // on ne se retire pas soi-même le rôle admin
+                      disabled={!online || p.id === profile?.id}
+                      onClick={() => p.role !== r && act(() => admin.setRole(p.id, r))}
+                    >
+                      {ROLE_LABELS[r]}
+                    </Chip>
+                  ))}
+                </div>
               </div>
-            </div>
-          ))}
-        </section>
+            ))}
+          </section>
+        </>
+        )}
       </main>
     </div>
   );

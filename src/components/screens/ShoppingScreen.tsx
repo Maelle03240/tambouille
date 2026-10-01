@@ -13,7 +13,7 @@ import { IconBack, IconCheck, IconChevronDown, IconChevronRight, IconClose, Icon
 import { EmptyState, Sheet, TextInput, cx } from "@/components/ui/primitives";
 import { AISLES, AISLE_HUES, guessAisle } from "@/config/aisles";
 import { addPantryBasic, removePantryBasic, updateShopping } from "@/lib/data/actions";
-import { useMealPlans, usePantry, useRecipes, useShopping } from "@/lib/data/hooks";
+import { useAllRecipes, useMealPlans, usePantry, useShopping } from "@/lib/data/hooks";
 import { addDays, today, weekLabel, weekStart } from "@/lib/planning/dates";
 import { formatDecimal, servingsStep } from "@/lib/recipes/quantities";
 import type { Recipe } from "@/lib/recipes/types";
@@ -23,7 +23,7 @@ export function ShoppingScreen() {
   const params = useSearchParams();
   const { toast, online } = useApp();
   const [monday, setMonday] = useState(() => weekStart(params.get("semaine") ?? today()));
-  const recipes = useRecipes();
+  const recipes = useAllRecipes();
   const plans = useMealPlans(monday, addDays(monday, 6));
   const shopping = useShopping();
   const pantry = usePantry();

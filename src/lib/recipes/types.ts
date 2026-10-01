@@ -38,9 +38,26 @@ export interface Step {
   timerMinutes: number | null;
 }
 
+/** Bibliothèque commune, ou version perso d'un membre (proposée à l'admin). */
+export type RecipeStatus = "library" | "personal";
+export type ProposalStatus = "pending" | "refused";
+
+/** Copie de la recette d'origine au moment où la version perso a été créée. */
+export interface ForkBase {
+  recipe: Recipe;
+  /** id dans la version perso → id dans l'originale (ingrédients et étapes). */
+  idMap: Record<string, string>;
+}
+
 export interface Recipe {
   id: string;
   ownerId: string | null;
+  status: RecipeStatus;
+  /** Version perso d'une recette de la bibliothèque : l'originale. */
+  forkedFromId: string | null;
+  forkBase: ForkBase | null;
+  /** Proposition à l'admin (versions perso) : en attente ou refusée. */
+  proposalStatus: ProposalStatus | null;
   title: string;
   category: CategoryId | null;
   /** Moments de repas (petit-déj, goûter…), plusieurs possibles. */
