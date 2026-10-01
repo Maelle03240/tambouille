@@ -117,7 +117,7 @@ export class SupabaseRepository implements Repository {
       this.client.from("pantry_basics").select("*").eq("household_id", hid),
       this.client.from("custom_ingredients").select("*"),
       this.client.from("shopping_recipes").select("*").eq("household_id", hid),
-      this.client.from("shopping_checks").select("item_key").eq("household_id", hid),
+      this.client.from("shopping_checks").select("item_key").eq("household_id", hid).eq("checked", true),
       this.client.from("shopping_items").select("*").eq("household_id", hid).order("created_at"),
     ]);
     fail(recipes.error, "Lecture des recettes");
@@ -224,9 +224,10 @@ export class SupabaseRepository implements Repository {
     for (const op of ops) {
       let res;
       if (op.kind === "check") {
-        res = op.on
-          ? await this.client.from("shopping_checks").upsert({ household_id: householdId, item_key: op.key }, { ignoreDuplicates: true })
-          : await this.client.from("shopping_checks").delete().match({ household_id: householdId, item_key: op.key });
+        // décocher = checked à faux (pas de suppression : le temps réel ne filtre pas les suppressions par foyer)
+        res = await this.client
+          .from("shopping_checks")
+          .upsert({ household_id: householdId, item_key: op.key, checked: op.on, updated_at: new Date().toISOString() });
       } else if (op.kind === "item") {
         res = op.item
           ? await this.client
@@ -283,6 +284,18 @@ export class SupabaseRepository implements Repository {
       const res = await this.client.from("households").update({ daily_targets, planning }).eq("id", this.household);
       fail(res.error, "Objectifs du foyer");
     }
+  }
+
+  /** Prévient quand un autre membre change la liste de courses ou le menu du foyer. */
+  watchHousehold(householdId: string, onChange: () => void) {
+    const channel = this.client.channel(`foyer:${householdId}`);
+    for (const table of ["shopping_checks", "shopping_items", "shopping_recipes", "meal_plans"]) {
+      channel.on("postgres_changes", { event: "*", schema: "public", table, filter: `household_id=eq.${householdId}` }, onChange);
+    }
+    channel.subscribe();
+    return () => {
+      void this.client.removeChannel(channel);
+    };
   }
 
   readonly admin: AdminApi = {

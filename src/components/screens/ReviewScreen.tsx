@@ -1,6 +1,7 @@
 "use client";
 /** Liste « à revoir » (maquette écran 07) : points auto + notes manuelles. */
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { useMemo, useState } from "react";
 import { useApp } from "@/components/app/AppProvider";
 import { OfflineBanner } from "@/components/app/OfflineBanner";
@@ -10,7 +11,7 @@ import { EmptyState, cx } from "@/components/ui/primitives";
 import { categoryColors } from "@/config/categories";
 import { setReviewDone } from "@/lib/data/actions";
 import { useRecipes, useReviewItems } from "@/lib/data/hooks";
-import { FIELD_LABELS } from "@/lib/recipes/review";
+import { FIELD_LABELS, isMyReviewItem } from "@/lib/recipes/review";
 import type { ReviewItem } from "@/lib/recipes/types";
 
 function sourceOf(item: ReviewItem) {
@@ -22,20 +23,24 @@ function sourceOf(item: ReviewItem) {
 export function ReviewScreen() {
   const items = useReviewItems();
   const recipes = useRecipes();
-  const { canEdit, online, toast } = useApp();
+  const { canEdit, online, toast, isAdmin, profile, mode } = useApp();
+  // ?tous=1 (Réglages, admin) : les points de tout le monde ; sinon les miens
+  const all = useSearchParams().get("tous") === "1" && isAdmin;
+  const me = mode === "local" ? null : (profile?.id ?? null);
   const [showDone, setShowDone] = useState(false);
 
   const groups = useMemo(() => {
     const byRecipe = new Map<string, ReviewItem[]>();
     for (const it of items ?? []) {
       if (it.done !== showDone) continue;
+      if (!all && !isMyReviewItem(it, recipes?.find((r) => r.id === it.recipeId), me)) continue;
       byRecipe.set(it.recipeId, [...(byRecipe.get(it.recipeId) ?? []), it]);
     }
     return [...byRecipe.entries()]
       .map(([id, its]) => ({ recipe: recipes?.find((r) => r.id === id), items: its }))
       .filter((g) => g.recipe)
       .sort((a, b) => a.recipe!.title.localeCompare(b.recipe!.title, "fr"));
-  }, [items, recipes, showDone]);
+  }, [items, recipes, showDone, all, me]);
 
   async function toggle(item: ReviewItem) {
     try {

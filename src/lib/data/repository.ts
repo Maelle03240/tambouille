@@ -48,6 +48,8 @@ export interface Repository {
   renameHousehold(id: string, name: string): Promise<void>;
   /** Liste de courses du foyer (opérations de la file d'attente). */
   applyShoppingOps(householdId: string, ops: ShoppingOp[]): Promise<void>;
+  /** Temps réel : appelle onChange quand un membre modifie courses ou menu. Renvoie de quoi arrêter. */
+  watchHousehold(householdId: string, onChange: () => void): () => void;
   /** Gestion des foyers et des comptes (admin, Supabase seulement). */
   readonly admin: AdminApi | null;
 

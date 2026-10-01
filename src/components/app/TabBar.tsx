@@ -1,4 +1,5 @@
 "use client";
+import { useApp } from "./AppProvider";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { UI } from "@/config/ui";
@@ -18,7 +19,8 @@ const TAB_DEFS = {
 
 export function TabBar() {
   const pathname = usePathname();
-  const reviewCount = useOpenReviewCount();
+  const { profile, mode } = useApp();
+  const reviewCount = useOpenReviewCount(mode === "local" ? null : (profile?.id ?? null));
   return (
     <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-divider bg-bg/95 backdrop-blur-sm">
       <div className="pb-safe mx-auto grid max-w-2xl pt-1.5" style={{ gridTemplateColumns: `repeat(${UI.tabs.length}, 1fr)` }}>

@@ -65,6 +65,7 @@ export async function saveRecipe(input: Recipe, opts: SaveOptions = {}): Promise
  */
 async function refreshAutoReview(recipe: Recipe, extra: { field: string; note: string }[]) {
   const repo = getRepository();
+  const me = (await repo.getSession())?.userId ?? null;
   const ruleFields = new Set(AUTO_REVIEW_RULES.map((r) => r.field));
   const missing = autoReviewNotes(recipe);
   const missingFields = new Set(missing.map((m) => m.field));
@@ -81,7 +82,7 @@ async function refreshAutoReview(recipe: Recipe, extra: { field: string; note: s
       field: m.field,
       note: m.note,
       done: false,
-      createdBy: null,
+      createdBy: me === "local" ? null : me,
       createdAt: new Date().toISOString(),
     }));
 

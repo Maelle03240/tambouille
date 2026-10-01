@@ -30,6 +30,9 @@ export class LocalRepository implements Repository {
     await setMeta("households", [{ id: LOCAL_HOUSEHOLD.id, name }]);
   }
   async applyShoppingOps() {}
+  watchHousehold() {
+    return () => {};
+  }
 
   async fetchSnapshot(): Promise<Snapshot> {
     return {

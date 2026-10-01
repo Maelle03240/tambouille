@@ -116,15 +116,26 @@ async function doSync() {
   if (pendingShopping.length) await flushOutbox().catch(() => {});
 }
 
-/** Une seule synchro à la fois ; les appels simultanés attendent la même. Ne lève jamais. */
+let queued: Promise<void> | null = null;
+
+/**
+ * Une seule synchro à la fois. Si une synchro tourne déjà, on en refait une
+ * juste après (elle a pu partir avant le changement : foyer, écriture…).
+ * Ne lève jamais.
+ */
 export function syncNow(): Promise<void> {
   if (typeof navigator !== "undefined" && !navigator.onLine) return Promise.resolve();
-  if (!running) {
-    setStatus({ syncing: true, error: status.error });
-    running = doSync()
-      .then(() => setStatus({ syncing: false, error: null }))
-      .catch((e) => setStatus({ syncing: false, error: e instanceof Error ? e.message : "Synchro impossible" }))
-      .finally(() => (running = null));
+  if (running) {
+    queued ??= running.then(() => {
+      queued = null;
+      return syncNow();
+    });
+    return queued;
   }
+  setStatus({ syncing: true, error: status.error });
+  running = doSync()
+    .then(() => setStatus({ syncing: false, error: null }))
+    .catch((e) => setStatus({ syncing: false, error: e instanceof Error ? e.message : "Synchro impossible" }))
+    .finally(() => (running = null));
   return running;
 }

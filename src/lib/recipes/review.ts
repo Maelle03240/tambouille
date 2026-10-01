@@ -3,7 +3,7 @@
  * des champs manquants. Remplir le champ fait disparaître le point au
  * prochain enregistrement. Ajouter une règle = ajouter une ligne à RULES.
  */
-import type { Recipe } from "./types";
+import type { Recipe, ReviewItem } from "./types";
 
 export interface AutoReviewRule {
   field: string;
@@ -42,3 +42,14 @@ export const FIELD_LABELS: Record<string, string> = {
   ingredients: "Ingrédients",
   steps: "Étapes",
 };
+
+/**
+ * Point « à revoir » qui me concerne : noté par moi, ou point automatique
+ * d'une recette que j'ai ajoutée. (L'admin voit tous les points dans
+ * Réglages → À revoir ; l'accueil ne montre que les siens.)
+ */
+export function isMyReviewItem(item: ReviewItem, recipe: Pick<Recipe, "ownerId"> | undefined, userId: string | null): boolean {
+  if (!userId) return true;
+  if (item.createdBy) return item.createdBy === userId;
+  return !recipe?.ownerId || recipe.ownerId === userId;
+}

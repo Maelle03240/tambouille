@@ -4,6 +4,7 @@
  * jour automatique quand le cache change (useLiveQuery).
  */
 import { useLiveQuery } from "dexie-react-hooks";
+import { isMyReviewItem } from "@/lib/recipes/review";
 import { DEFAULT_SETTINGS, EMPTY_SHOPPING } from "./actions";
 import { db, getMeta } from "./db";
 
@@ -23,8 +24,16 @@ export function useReviewItems(recipeId?: string) {
   );
 }
 
-export function useOpenReviewCount() {
-  return useLiveQuery(async () => (await db.reviewItems.toArray()).filter((i) => !i.done).length, []) ?? 0;
+/** Points « à revoir » ouverts : les miens (accueil), ou tous (admin, Réglages). */
+export function useOpenReviewCount(userId: string | null, all = false) {
+  return (
+    useLiveQuery(async () => {
+      const open = (await db.reviewItems.toArray()).filter((i) => !i.done);
+      if (all) return open.length;
+      const recipes = new Map((await db.recipes.toArray()).map((r) => [r.id, r]));
+      return open.filter((i) => isMyReviewItem(i, recipes.get(i.recipeId), userId)).length;
+    }, [userId, all]) ?? 0
+  );
 }
 
 export function useSettings() {

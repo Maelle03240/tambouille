@@ -128,3 +128,6 @@ Remplace « ouverture à la famille en écriture » (spec V3). Deux étapes : **
 - Accepter = fusionner : la version perso rejoint la bibliothèque, menus / courses / « À revoir » qui l'utilisaient pointent vers la recette commune.
 - Refus : la version perso reste chez son auteur (pas de message).
 - Originale supprimée ⇒ les versions perso restent à leurs auteurs. Un membre peut supprimer sa version et revenir à l'originale. Un membre ne supprime rien dans la bibliothèque.
+- Temps réel (migration 0009) : courses et menu du foyer se mettent à jour chez tous les membres sans recharger. Décocher = `checked` à faux (pas de suppression, non filtrable par foyer en temps réel).
+- « À revoir » : l'accueil (et l'onglet) montrent seulement mes points (notés par moi, ou points auto de mes recettes) ; Réglages → « À revoir (tous) » pour l'admin seulement.
+- Réglages : « Illustrations automatiques » et seuil « riche en protéines » réservés à l'admin ; plus de bouton « Synchroniser maintenant » (synchro au lancement, au retour sur l'appli, au retour du réseau et en direct).

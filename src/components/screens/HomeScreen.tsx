@@ -23,8 +23,9 @@ const FILTER_TAGS = TAGS.filter((t) => t.id !== "fetes");
 export function HomeScreen() {
   const recipes = useRecipes();
   const settings = useSettings();
-  const reviewCount = useOpenReviewCount();
-  const { canEdit, online, toast, syncing } = useApp();
+
+  const { canEdit, online, toast, syncing, profile, mode } = useApp();
+  const reviewCount = useOpenReviewCount(mode === "local" ? null : (profile?.id ?? null));
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState<string | null>(null);
   const [tags, setTags] = useState<string[]>([]);

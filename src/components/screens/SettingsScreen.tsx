@@ -25,7 +25,7 @@ function Row({ label, value }: { label: string; value: React.ReactNode }) {
 export function SettingsScreen() {
   const app = useApp();
   const settings = useSettings();
-  const reviewCount = useOpenReviewCount();
+  const reviewCount = useOpenReviewCount(null, true);
   // undefined = pas modifié : on affiche la valeur enregistrée
   const [thresholdDraft, setThreshold] = useState<number | null | undefined>(undefined);
   const threshold = thresholdDraft === undefined ? settings.proteinRichThresholdG : thresholdDraft;
@@ -125,21 +125,19 @@ export function SettingsScreen() {
             Admin <span className="text-accent-700">→</span>
           </Link>
         )}
-        <Link href="/a-revoir" className="flex h-14 items-center justify-between rounded-[28px] bg-surface px-5 font-bold">
-          À revoir <span className="text-accent-700">{reviewCount}</span>
-        </Link>
+        {/* tout le monde voit les siens sur l'accueil ; ici, l'admin voit ceux de tous */}
+        {app.isAdmin && (
+          <Link href="/a-revoir?tous=1" className="flex h-14 items-center justify-between rounded-[28px] bg-surface px-5 font-bold">
+            À revoir (tous) <span className="text-accent-700">{reviewCount}</span>
+          </Link>
+        )}
         <Link href="/ingredients" className="flex h-14 items-center justify-between rounded-[28px] bg-surface px-5 font-bold">
           Mes ingrédients <span className="text-accent-700">→</span>
         </Link>
         {app.syncError && <p className="rounded-field bg-accent-100 px-4 py-3 text-accent-800">{app.syncError}</p>}
 
-        {app.mode === "supabase" && (
-          <Button onClick={app.sync} disabled={!app.online || app.syncing}>
-            Synchroniser maintenant
-          </Button>
-        )}
-
-        {app.features.illustrations && (
+        {/* réglages de la bibliothèque : admin seulement */}
+        {app.isAdmin && app.features.illustrations && (
           <label className="flex min-h-14 items-center justify-between gap-3 rounded-[28px] bg-surface px-5 font-bold">
             Illustrations automatiques
             <input
@@ -152,17 +150,19 @@ export function SettingsScreen() {
           </label>
         )}
 
-        <section className="flex flex-col gap-3">
-          <SectionTitle>Tags automatiques</SectionTitle>
-          <Field label="« Riche en protéines » à partir de (g par portion)">
-            <div className="flex gap-2">
-              <NumberInput value={threshold} onChange={setThreshold} className="flex-1" />
-              <Button variant="primary" onClick={saveThreshold} disabled={!app.online || threshold === settings.proteinRichThresholdG}>
-                OK
-              </Button>
-            </div>
-          </Field>
-        </section>
+        {app.isAdmin && (
+          <section className="flex flex-col gap-3">
+            <SectionTitle>Tags automatiques</SectionTitle>
+            <Field label="« Riche en protéines » à partir de (g par portion)">
+              <div className="flex gap-2">
+                <NumberInput value={threshold} onChange={setThreshold} className="flex-1" />
+                <Button variant="primary" onClick={saveThreshold} disabled={!app.online || threshold === settings.proteinRichThresholdG}>
+                  OK
+                </Button>
+              </div>
+            </Field>
+          </section>
+        )}
 
         <section className="flex flex-col gap-3">
           <SectionTitle>Sauvegarde</SectionTitle>

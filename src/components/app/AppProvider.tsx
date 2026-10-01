@@ -107,6 +107,21 @@ export function AppProvider({ children }: { children: ReactNode }) {
     if (online && session) void syncNow();
   }, [online, session]);
 
+  // …en direct quand un autre membre du foyer change les courses ou le menu…
+  const householdId = useLiveQuery(() => getMeta("householdId"), []);
+  useEffect(() => {
+    if (!session || !householdId) return;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const stop = repo.watchHousehold(householdId, () => {
+      clearTimeout(timer);
+      timer = setTimeout(() => void syncNow(), 800);
+    });
+    return () => {
+      clearTimeout(timer);
+      stop();
+    };
+  }, [repo, session, householdId]);
+
   // …et en revenant sur l'appli : on voit ce que les autres membres du foyer ont changé
   useEffect(() => {
     if (!session) return;
