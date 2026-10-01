@@ -9,7 +9,7 @@ import { Button, Chip, Field, NumberInput, SectionTitle, Spinner, TextInput } fr
 import { BRAND } from "@/config/brand";
 import { exportAll, renameHousehold, saveSettings, switchHousehold } from "@/lib/data/actions";
 import { getMeta } from "@/lib/data/db";
-import { useHouseholds, useOpenReviewCount, usePendingProposals, useSettings } from "@/lib/data/hooks";
+import { useHouseholds, usePendingProposals, useSettings } from "@/lib/data/hooks";
 import { ROLE_LABELS } from "@/config/ui";
 import Link from "next/link";
 
@@ -25,7 +25,6 @@ function Row({ label, value }: { label: string; value: React.ReactNode }) {
 export function SettingsScreen() {
   const app = useApp();
   const settings = useSettings();
-  const reviewCount = useOpenReviewCount(null, true);
   // undefined = pas modifié : on affiche la valeur enregistrée
   const [thresholdDraft, setThreshold] = useState<number | null | undefined>(undefined);
   const threshold = thresholdDraft === undefined ? settings.proteinRichThresholdG : thresholdDraft;
@@ -123,13 +122,13 @@ export function SettingsScreen() {
         )}
         {app.isAdmin && app.mode === "supabase" && (
           <Link href="/admin" className="flex h-14 items-center justify-between rounded-[28px] bg-surface px-5 font-bold">
-            Admin <span className="text-accent-700">{proposals?.length ? `${proposals.length} proposition${proposals.length > 1 ? "s" : ""} →` : "→"}</span>
+            Admin <span className="text-accent-700">→</span>
           </Link>
         )}
-        {/* tout le monde voit les siens sur l'accueil ; ici, l'admin voit ceux de tous */}
+        {/* admin : les propositions des membres (chacun a ses « à revoir » sur l'accueil) */}
         {app.isAdmin && (
-          <Link href="/a-revoir?tous=1" className="flex h-14 items-center justify-between rounded-[28px] bg-surface px-5 font-bold">
-            À revoir (tous) <span className="text-accent-700">{reviewCount}</span>
+          <Link href="/propositions" className="flex h-14 items-center justify-between rounded-[28px] bg-surface px-5 font-bold">
+            Propositions <span className="text-accent-700">{proposals?.length ? proposals.length : "→"}</span>
           </Link>
         )}
         <Link href="/ingredients" className="flex h-14 items-center justify-between rounded-[28px] bg-surface px-5 font-bold">

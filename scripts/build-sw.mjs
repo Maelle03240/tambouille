@@ -5,7 +5,7 @@
  */
 import { readFileSync, writeFileSync } from "node:fs";
 
-const ROUTES = ["/", "/recette", "/cuisine", "/ajouter", "/modifier", "/a-revoir", "/reglages", "/astuces", "/menu", "/courses", "/ingredients", "/frigo", "/admin", "/bienvenue"];
+const ROUTES = ["/", "/recette", "/cuisine", "/ajouter", "/modifier", "/a-revoir", "/reglages", "/astuces", "/menu", "/courses", "/ingredients", "/frigo", "/admin", "/bienvenue", "/propositions"];
 
 const version = (process.env.VERCEL_GIT_COMMIT_SHA || "").slice(0, 8) || Date.now().toString(36);
 const template = readFileSync(new URL("./sw.template.js", import.meta.url), "utf8");

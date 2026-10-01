@@ -47,15 +47,14 @@ export function useReviewItems(recipeId?: string) {
   );
 }
 
-/** Points « à revoir » ouverts : les miens (accueil), ou tous (admin, Réglages). */
-export function useOpenReviewCount(userId: string | null, all = false) {
+/** Mes points « à revoir » ouverts (accueil, onglet). */
+export function useOpenReviewCount(userId: string | null) {
   return (
     useLiveQuery(async () => {
       const open = (await db.reviewItems.toArray()).filter((i) => !i.done);
-      if (all) return open.length;
       const recipes = new Map((await db.recipes.toArray()).map((r) => [r.id, r]));
       return open.filter((i) => isMyReviewItem(i, recipes.get(i.recipeId), userId)).length;
-    }, [userId, all]) ?? 0
+    }, [userId]) ?? 0
   );
 }
 

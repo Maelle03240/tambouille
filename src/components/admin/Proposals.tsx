@@ -1,6 +1,6 @@
 "use client";
 /**
- * ADMIN → PROPOSITIONS (famille étape 2).
+ * PROPOSITIONS (famille étape 2) — blocs de l'écran Réglages → Propositions.
  * - Recette créée par un membre : Accepter (→ bibliothèque) ou Refuser.
  * - Versions perso d'une même recette : regroupées ; pour chacune, les blocs
  *   changés côte à côte (actuel → proposé), cochés par défaut sauf ceux que
@@ -11,65 +11,48 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import { useApp } from "@/components/app/AppProvider";
 import { IconCheck } from "@/components/ui/icons";
-import { SectionTitle, cx } from "@/components/ui/primitives";
+import { cx } from "@/components/ui/primitives";
 import { CATEGORIES } from "@/config/categories";
 import { MOMENTS } from "@/config/moments";
 import { tagLabel } from "@/config/tags";
 import { acceptCreation, acceptFork, refuseProposal } from "@/lib/data/actions";
-import { useAllRecipes, usePendingProposals, usePeople } from "@/lib/data/hooks";
 import { BLOCKS, blockLines, defaultTake, reviewProposal, type BlockKey } from "@/lib/recipes/proposals";
 import type { Recipe } from "@/lib/recipes/types";
+import { imageUrl } from "@/lib/images";
 
 /** Libellé d'une catégorie, d'un moment ou d'un tag (pour l'avant / après). */
-const labelOf = (id: string) =>
+export const labelOf = (id: string) =>
   !id ? "—" : (CATEGORIES.find((c) => c.id === id)?.label ?? MOMENTS.find((m) => m.id === id)?.label ?? tagLabel(id));
 
-export function Proposals() {
-  const pending = usePendingProposals();
-  const all = useAllRecipes();
-  const people = usePeople();
-  const nameOf = (id: string | null) => people?.find((p) => p.id === id)?.displayName || "?";
-
-  const byId = useMemo(() => new Map((all ?? []).map((r) => [r.id, r])), [all]);
-  const creations = (pending ?? []).filter((r) => !r.forkedFromId || !byId.has(r.forkedFromId));
-  const groups = new Map<string, Recipe[]>();
-  for (const r of pending ?? []) {
-    if (r.forkedFromId && byId.has(r.forkedFromId)) groups.set(r.forkedFromId, [...(groups.get(r.forkedFromId) ?? []), r]);
-  }
-
-  if (!pending?.length) return null;
-
+/** Une nouvelle recette proposée, en entier, pour juger avant d'accepter. */
+export function CreationDetail({ recipe, onDone }: { recipe: Recipe; onDone: () => void }) {
+  const img = imageUrl(recipe.imagePath);
   return (
-    <section className="flex flex-col gap-3">
-      <SectionTitle>Propositions · {pending.length}</SectionTitle>
-
-      {creations.map((r) => (
-        <div key={r.id} className="flex flex-col gap-2.5 rounded-[26px] bg-surface p-4">
-          <div>
-            <Link href={`/recette?id=${r.id}`} className="font-heading text-[20px] leading-tight">
-              {r.title}
-            </Link>
-            <p className="text-sm text-neutral-700">Nouvelle recette de {nameOf(r.ownerId)}</p>
+    <div className="flex flex-col gap-3">
+      {img && (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={img} alt="" className="h-52 w-full rounded-3xl object-cover" />
+      )}
+      {BLOCKS.filter((b) => b.key !== "title" && b.key !== "image").map((b) => {
+        const lines = blockLines(recipe, b.key, labelOf);
+        if (b.key === "notes" && lines[0] === "—") return null;
+        return (
+          <div key={b.key} className="flex flex-col gap-1 rounded-[20px] bg-surface px-4 py-3">
+            <span className="text-[13px] font-bold tracking-[.04em] text-accent-700 uppercase">{b.label}</span>
+            {lines.map((l, i) => (
+              <span key={i} className="leading-snug">
+                {l}
+              </span>
+            ))}
           </div>
-          <Decision onAccept={() => acceptCreation(r.id)} onRefuse={() => refuseProposal(r.id)} />
-        </div>
-      ))}
-
-      {[...groups.entries()].map(([originalId, forks]) => (
-        <div key={originalId} className="flex flex-col gap-3 rounded-[26px] bg-surface p-4">
-          <Link href={`/recette?id=${originalId}`} className="font-heading text-[20px] leading-tight">
-            {byId.get(originalId)!.title}
-          </Link>
-          {forks.map((f) => (
-            <ForkProposal key={f.id} fork={f} original={byId.get(originalId)!} author={nameOf(f.ownerId)} />
-          ))}
-        </div>
-      ))}
-    </section>
+        );
+      })}
+      <Decision onAccept={() => acceptCreation(recipe.id).then(onDone)} onRefuse={() => refuseProposal(recipe.id).then(onDone)} />
+    </div>
   );
 }
 
-function ForkProposal({ fork, original, author }: { fork: Recipe; original: Recipe; author: string }) {
+export function ForkProposal({ fork, original, author, onDone }: { fork: Recipe; original: Recipe; author: string; onDone?: () => void }) {
   const review = useMemo(() => reviewProposal(fork, original), [fork, original]);
   // undefined = choix par défaut (recalculé si l'originale change)
   const [picked, setPicked] = useState<BlockKey[] | undefined>(undefined);
@@ -120,14 +103,14 @@ function ForkProposal({ fork, original, author }: { fork: Recipe; original: Reci
       })}
       <Decision
         acceptLabel={review.changed.length ? `Accepter (${take.length})` : undefined}
-        onAccept={review.changed.length && take.length ? () => acceptFork(fork.id, take) : undefined}
-        onRefuse={() => refuseProposal(fork.id)}
+        onAccept={review.changed.length && take.length ? () => acceptFork(fork.id, take).then(onDone) : undefined}
+        onRefuse={() => refuseProposal(fork.id).then(onDone)}
       />
     </div>
   );
 }
 
-function Decision({ onAccept, onRefuse, acceptLabel = "Accepter" }: { onAccept?: () => Promise<unknown>; onRefuse: () => Promise<unknown>; acceptLabel?: string }) {
+export function Decision({ onAccept, onRefuse, acceptLabel = "Accepter" }: { onAccept?: () => Promise<unknown>; onRefuse: () => Promise<unknown>; acceptLabel?: string }) {
   const { toast, online } = useApp();
   const [busy, setBusy] = useState(false);
   const run = async (fn: () => Promise<unknown>, done: string) => {

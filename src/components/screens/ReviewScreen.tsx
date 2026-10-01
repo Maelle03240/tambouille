@@ -1,7 +1,6 @@
 "use client";
 /** Liste « à revoir » (maquette écran 07) : points auto + notes manuelles. */
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
 import { useMemo, useState } from "react";
 import { useApp } from "@/components/app/AppProvider";
 import { OfflineBanner } from "@/components/app/OfflineBanner";
@@ -23,9 +22,8 @@ function sourceOf(item: ReviewItem) {
 export function ReviewScreen() {
   const items = useReviewItems();
   const recipes = useAllRecipes();
-  const { canEdit, online, toast, isAdmin, profile, mode } = useApp();
-  // ?tous=1 (Réglages, admin) : les points de tout le monde ; sinon les miens
-  const all = useSearchParams().get("tous") === "1" && isAdmin;
+  const { canEdit, online, toast, profile, mode } = useApp();
+  // mes points : notés par moi, ou points auto de mes recettes
   const me = mode === "local" ? null : (profile?.id ?? null);
   const [showDone, setShowDone] = useState(false);
 
@@ -33,14 +31,14 @@ export function ReviewScreen() {
     const byRecipe = new Map<string, ReviewItem[]>();
     for (const it of items ?? []) {
       if (it.done !== showDone) continue;
-      if (!all && !isMyReviewItem(it, recipes?.find((r) => r.id === it.recipeId), me)) continue;
+      if (!isMyReviewItem(it, recipes?.find((r) => r.id === it.recipeId), me)) continue;
       byRecipe.set(it.recipeId, [...(byRecipe.get(it.recipeId) ?? []), it]);
     }
     return [...byRecipe.entries()]
       .map(([id, its]) => ({ recipe: recipes?.find((r) => r.id === id), items: its }))
       .filter((g) => g.recipe)
       .sort((a, b) => a.recipe!.title.localeCompare(b.recipe!.title, "fr"));
-  }, [items, recipes, showDone, all, me]);
+  }, [items, recipes, showDone, me]);
 
   async function toggle(item: ReviewItem) {
     try {

@@ -137,3 +137,5 @@ Remplace « ouverture à la famille en écriture » (spec V3). Deux étapes : **
 - Listes : ma version remplace l'originale pour moi ; les recettes perso des membres de mes foyers apparaissent à côté (« De Léa ») ; l'admin voit les autres dans Admin → Propositions (`src/lib/recipes/visibility.ts`).
 - Fusion par blocs (titre, catégorie et moments, tags, portions, temps, valeurs nutritionnelles, notes, image, ingrédients et étapes) : `src/lib/recipes/proposals.ts` (testée). Blocs cochés par défaut sauf conflit avec une modif de l'admin.
 - Enregistrer sans rien changer ne crée pas de version vide. Un membre qui finit une recette de la bibliothèque ne retire pas son NEW (sinon ça créerait une version juste pour ça).
+- Propositions déplacées dans **Réglages → Propositions** (à la place de « À revoir (tous) », supprimé) : une liste, puis chaque proposition ouverte en entier (nouvelle recette : tout son contenu ; modification : avant / après par bloc) avec Accepter / Refuser. L'écran Admin ne garde que invitations, foyers, comptes.
+- Accepter (création ou modification) remet le sticker NEW sur la recette de la bibliothèque : à vérifier en la cuisinant.

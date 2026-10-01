@@ -2,14 +2,13 @@
 /**
  * ADMIN (Réglages → Admin) : inviter quelqu'un, gérer les foyers et leurs
  * membres, les rôles. Les droits sont vérifiés par la base (RLS) : cet écran
- * n'est qu'un raccourci. Propositions de recettes : components/admin/Proposals.tsx.
+ * n'est qu'un raccourci. Les propositions de recettes sont dans Réglages → Propositions.
  */
 import { useEffect, useState } from "react";
 import { useApp } from "@/components/app/AppProvider";
 import { IconClose, IconPlus, IconTrash } from "@/components/ui/icons";
 import { BackLink, Button, Chip, Field, SectionTitle, Spinner, TextInput, cx } from "@/components/ui/primitives";
 import { ROLE_LABELS } from "@/config/ui";
-import { Proposals } from "@/components/admin/Proposals";
 import { getRepository } from "@/lib/data";
 import type { AdminOverview } from "@/lib/data/repository";
 import { syncNow } from "@/lib/data/sync";
@@ -68,8 +67,6 @@ export function AdminScreen() {
 
       <main className="mx-auto flex max-w-2xl flex-col gap-7 px-4">
         {!online && <p className="rounded-field bg-accent-100 px-4 py-3 text-accent-800">Pas de réseau.</p>}
-
-        <Proposals />
 
         {/* gestion des comptes : Supabase seulement (pas en mode local) */}
         {admin && (

@@ -411,11 +411,15 @@ export async function clearLocalData() {
 
 /* ───────────── Propositions (admin) ───────────── */
 
-/** Recette perso créée par un membre → bibliothèque. */
+const withNew = (tags: string[]) => (tags.includes("a-tester") ? tags : [...tags, "a-tester"]);
+
+/** Recette perso créée par un membre → bibliothèque, avec le sticker NEW (à vérifier en la cuisinant). */
 export async function acceptCreation(id: string) {
   requireOnline();
   await getRepository().setRecipeStatus(id, { status: "library", proposalStatus: null });
   await db.recipes.update(id, { status: "library", proposalStatus: null });
+  const r = await db.recipes.get(id);
+  if (r && !r.tags.includes("a-tester")) await patchRecipe(id, { tags: withNew(r.tags) });
 }
 
 export async function refuseProposal(id: string) {
@@ -434,7 +438,11 @@ export async function acceptFork(forkId: string, take: readonly BlockKey[]) {
   const original = fork?.forkedFromId ? await db.recipes.get(fork.forkedFromId) : undefined;
   if (!fork || !original) throw new Error("Recette introuvable");
   const review = reviewProposal(fork, original);
-  if (take.length) await saveRecipe(applyBlocks(original, review.theirs, take));
+  if (take.length) {
+    const merged = applyBlocks(original, review.theirs, take);
+    // acceptée : NEW, il y a peut-être des choses à revoir en la cuisinant
+    await saveRecipe({ ...merged, tags: withNew(merged.tags) });
+  }
   await getRepository().retireFork(forkId);
   await db.recipes.delete(forkId);
   const { syncNow } = await import("./sync");
