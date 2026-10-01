@@ -69,6 +69,13 @@ export function ShoppingScreen() {
   const setServings = (r: Recipe, v: number) =>
     updateShopping((s) => ({ ...s, servings: { ...s.servings, [r.id]: Math.max(servingsStep(r.yieldQuantity), v) } }));
 
+  /** Vide la liste : recettes du menu retirées, ajouts, articles perso et cases cochées. */
+  function clearAll() {
+    if (!confirm("Vider la liste de courses ?")) return;
+    const planned = sources.filter((x) => x.fromPlan).map((x) => x.recipe.id);
+    void updateShopping((s) => ({ extras: [], servings: {}, excluded: [...new Set([...s.excluded, ...planned])], checked: [], mine: [] }));
+  }
+
   const removeSource = (r: Recipe, fromPlan: boolean) =>
     updateShopping((s) =>
       fromPlan ? { ...s, excluded: [...s.excluded, r.id] } : { ...s, extras: s.extras.filter((e) => e.recipeId !== r.id) },
@@ -115,9 +122,19 @@ export function ShoppingScreen() {
         <div className="flex items-end justify-between gap-3 px-1 pt-2">
           <h1 className="font-heading text-[36px] leading-[1.1]">Courses</h1>
           {visible.length > 0 && (
-            <button type="button" onClick={share} className="flex h-11 items-center gap-2 rounded-full border-[1.5px] border-divider px-4 font-bold">
-              <IconShare size={18} /> Partager
-            </button>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                aria-label="Tout enlever"
+                onClick={clearAll}
+                className="flex size-11 items-center justify-center rounded-full border-[1.5px] border-divider text-neutral-700"
+              >
+                <IconTrash size={18} />
+              </button>
+              <button type="button" onClick={share} className="flex h-11 items-center gap-2 rounded-full border-[1.5px] border-divider px-4 font-bold">
+                <IconShare size={18} /> Partager
+              </button>
+            </div>
           )}
         </div>
         <div className="flex items-center gap-1 pt-1">

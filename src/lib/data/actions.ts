@@ -252,6 +252,10 @@ export async function savePlanEntries(entries: MealPlanEntry[]) {
   requireOnline();
   await getRepository().upsertMealPlans(entries);
   await db.mealPlans.bulkPut(entries);
+  // une recette remise au menu revient dans la liste de courses (si on l'en avait retirée)
+  const ids = new Set(entries.map((e) => e.recipeId).filter(Boolean));
+  const excluded = (await getMeta("shopping"))?.excluded ?? [];
+  if (excluded.some((id) => ids.has(id))) await updateShopping((sh) => ({ ...sh, excluded: sh.excluded.filter((id) => !ids.has(id)) }));
 }
 
 export async function removePlanEntries(entries: MealPlanEntry[]) {

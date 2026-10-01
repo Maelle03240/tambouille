@@ -142,3 +142,4 @@ Remplace « ouverture à la famille en écriture » (spec V3). Deux étapes : **
 - Réglages : foyers affichés comme des profils (pastille de couleur avec initiale, `src/config/households.ts`), bouton « Renommer » ; « Propositions » affiche toujours le nombre (0 compris) ; « Mes ingrédients » renommé « Étiquettes nutritionnelles » avec une phrase qui dit à quoi ça sert ; pied de page et écran de connexion : seulement « Le carnet de Tambouille ».
 - Accueil : « À revoir » réduit à l'icône + le nombre.
 - Lecture d'étiquette en photo testée (Gemini) : nom, kcal, protéines, lipides, glucides, fibres lus correctement.
+- Courses : bouton corbeille « Tout enlever » (avec confirmation) : retire les recettes du menu, les ajouts, les articles perso et les cases cochées. Une recette remise au menu revient dans la liste.
