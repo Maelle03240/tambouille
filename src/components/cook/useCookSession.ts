@@ -53,15 +53,15 @@ export function remainingSec(t: Timer, now = Date.now()) {
  */
 export function useCookSession(recipeId: string, baseServings: number, stepCount: number) {
   const [saved] = useState(() => load(recipeId));
-  const [servings, setServings] = useState(saved?.servings ?? baseServings);
   // On ne reprend où on en était que si on cuisinait vraiment (minuteur
   // lancé, ou ingrédients cochés sans être allée au bout) ; après un simple
-  // coup d'œil ou une recette finie, on repart du début.
+  // coup d'œil ou une recette finie, on repart du début (portions comprises).
   const [resume] = useState(() => {
     if (!saved) return false;
     const hasTimers = Object.values(saved.timers ?? {}).some((t) => !t.rang);
     return hasTimers || (saved.checked.length > 0 && saved.current < stepCount - 1);
   });
+  const [servings, setServings] = useState(resume ? saved!.servings : baseServings);
   const [checked, setChecked] = useState<Set<string>>(() => new Set(resume ? saved!.checked : []));
   const [current, setCurrent] = useState(() => (resume ? Math.min(saved!.current, stepCount) : 0));
   const [timers, setTimers] = useState<Record<string, Timer>>(saved?.timers ?? {});

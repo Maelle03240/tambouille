@@ -6,7 +6,7 @@ const BURST =
 
 /**
  * Sticker « NEW » : recette jamais cuisinée (tag `a-tester`, posé à l'ajout,
- * retiré par « Réussie » en fin de mode cuisine). Couleur : marron du thème (--color-accent-700).
+ * retiré par « Réussie » en fin de mode cuisine). Couleur : marron du bouton « + Ajouter » (--color-accent-600).
  */
 export function NewSticker({ size = 56, className }: { size?: number; className?: string }) {
   return (
@@ -18,7 +18,7 @@ export function NewSticker({ size = 56, className }: { size?: number; className?
       aria-label="Nouveau"
       className={cx("pointer-events-none drop-shadow-sm", className)}
     >
-      <polygon points={BURST} fill="var(--color-accent-700)" />
+      <polygon points={BURST} fill="var(--color-accent-600)" />
       <text
         x="0"
         y="0"

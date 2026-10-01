@@ -94,5 +94,5 @@ Format : date — décision — pourquoi.
 - Fiche : plus de bouton « Image » ; toucher l'image (ou son emplacement vide, en pointillés) ouvre photo / IA / supprimer.
 - Catégorie « Cocktails & mocktails » renommée « Boissons » (id `cocktail` inchangé).
 - Commande vocale : rappel des mots dans une bulle sous le bouton micro (6 s) ; nouveaux mots « pause » / « reprends » pour les minuteurs.
-- Sticker NEW en marron (`--color-accent-700`).
-- Mode cuisine : on ne reprend à l'étape où on en était que si on cuisinait vraiment (minuteur en marche ou en pause, ou ingrédients cochés sans être allée au bout) ; sinon on repart du début, ingrédients décochés. Les portions choisies sont gardées.
+- Sticker NEW du même marron que « + Ajouter » (`--color-accent-600`).
+- Mode cuisine : on ne reprend à l'étape où on en était que si on cuisinait vraiment (minuteur en marche ou en pause, ou ingrédients cochés sans être allée au bout) ; sinon on repart du début : étapes, ingrédients décochés et portions d.origine.
