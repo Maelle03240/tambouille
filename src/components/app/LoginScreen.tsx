@@ -48,7 +48,6 @@ export function LoginScreen() {
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src="/icons/icon-192.png" alt="" width={112} height={112} className="rounded-[28px]" />
         <h1 className="font-heading text-[34px] leading-tight">{BRAND.name}</h1>
-        <p className="text-neutral-700">{BRAND.tagline}</p>
       </div>
       <form onSubmit={submit} className="flex flex-col gap-4">
         <Field label="E-mail">

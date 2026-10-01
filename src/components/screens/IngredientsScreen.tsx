@@ -69,10 +69,13 @@ export function IngredientsScreen() {
     <div className="pb-16">
       <header className="pt-safe mx-auto flex max-w-2xl items-center gap-3 px-4 pb-2">
         <BackLink href="/reglages" />
-        <h1 className="font-heading text-[30px] leading-tight">Mes ingrédients</h1>
+        <h1 className="font-heading text-[30px] leading-tight">Étiquettes nutritionnelles</h1>
       </header>
       <main className="mx-auto flex max-w-2xl flex-col gap-3 px-4">
-        <p className="text-[15px] text-neutral-700">Pour les produits dont tu connais l&apos;étiquette (whey, skyr…).</p>
+        <p className="text-[15px] text-neutral-700">
+          Photographie l&apos;étiquette de tes produits (whey, skyr…) : les kcal et protéines des recettes qui les utilisent seront calculées avec
+          les vraies valeurs.
+        </p>
         <div className="grid grid-cols-2 gap-2">
           <Button variant="primary" disabled={!online || !features.ai || reading} onClick={() => photo.current?.click()}>
             {reading ? <Spinner /> : <IconCamera size={20} />} Étiquette
@@ -93,7 +96,7 @@ export function IngredientsScreen() {
         ))}
       </main>
 
-      <Sheet open={!!editing} onClose={() => setEditing(null)} title="Ingrédient perso">
+      <Sheet open={!!editing} onClose={() => setEditing(null)} title="Étiquette">
         {editing && (
           <>
             <Field label="Nom">

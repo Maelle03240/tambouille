@@ -5,7 +5,8 @@ import { useState } from "react";
 import { useApp } from "@/components/app/AppProvider";
 import { OfflineBanner } from "@/components/app/OfflineBanner";
 import { TabBar } from "@/components/app/TabBar";
-import { Button, Chip, Field, NumberInput, SectionTitle, Spinner, TextInput } from "@/components/ui/primitives";
+import { Button, Field, NumberInput, SectionTitle, Spinner, TextInput, cx } from "@/components/ui/primitives";
+import { householdColors } from "@/config/households";
 import { BRAND } from "@/config/brand";
 import { exportAll, renameHousehold, saveSettings, switchHousehold } from "@/lib/data/actions";
 import { getMeta } from "@/lib/data/db";
@@ -91,17 +92,34 @@ export function SettingsScreen() {
         {app.mode === "supabase" && (
           <section className="flex flex-col gap-3">
             <SectionTitle>Foyer</SectionTitle>
-            {households && households.list.length > 1 && (
-              <div className="flex flex-wrap gap-2">
-                {households.list.map((h) => (
-                  <Chip
-                    key={h.id}
-                    selected={h.id === households.currentId}
-                    onClick={() => h.id !== households.currentId && run(() => switchHousehold(h.id))}
-                  >
-                    {h.name}
-                  </Chip>
-                ))}
+            {/* comme des profils : une pastille de couleur par foyer, le mien entouré */}
+            {households && households.list.length > 0 && (
+              <div className="flex flex-wrap gap-3">
+                {households.list.map((h) => {
+                  const colors = householdColors(h.id);
+                  const on = h.id === households.currentId;
+                  return (
+                    <button
+                      key={h.id}
+                      type="button"
+                      aria-pressed={on}
+                      disabled={!app.online}
+                      onClick={() => !on && run(() => switchHousehold(h.id))}
+                      className="flex w-[84px] flex-col items-center gap-1.5 disabled:opacity-60"
+                    >
+                      <span
+                        className={cx(
+                          "flex size-[72px] items-center justify-center rounded-[22px] font-heading text-[30px] transition-shadow",
+                          on && "ring-[3px] ring-ink ring-offset-2 ring-offset-bg",
+                        )}
+                        style={{ background: colors.bg, color: colors.ink }}
+                      >
+                        {h.name.replace(/^chezs+/i, "").charAt(0).toUpperCase()}
+                      </span>
+                      <span className={cx("w-full truncate text-center text-sm", on ? "font-bold" : "text-neutral-700")}>{h.name}</span>
+                    </button>
+                  );
+                })}
               </div>
             )}
             {current ? (
@@ -112,7 +130,7 @@ export function SettingsScreen() {
                   disabled={!app.online || !name.trim() || name === current.name}
                   onClick={() => run(() => renameHousehold(current.id, name), "Foyer renommé").then(() => setNameDraft(null))}
                 >
-                  OK
+                  Renommer
                 </Button>
               </div>
             ) : (
@@ -128,11 +146,11 @@ export function SettingsScreen() {
         {/* admin : les propositions des membres (chacun a ses « à revoir » sur l'accueil) */}
         {app.isAdmin && (
           <Link href="/propositions" className="flex h-14 items-center justify-between rounded-[28px] bg-surface px-5 font-bold">
-            Propositions <span className="text-accent-700">{proposals?.length ? proposals.length : "→"}</span>
+            Propositions <span className="text-accent-700">{proposals?.length ?? 0}</span>
           </Link>
         )}
         <Link href="/ingredients" className="flex h-14 items-center justify-between rounded-[28px] bg-surface px-5 font-bold">
-          Mes ingrédients <span className="text-accent-700">→</span>
+          Étiquettes nutritionnelles <span className="text-accent-700">→</span>
         </Link>
         {app.syncError && <p className="rounded-field bg-accent-100 px-4 py-3 text-accent-800">{app.syncError}</p>}
 
@@ -175,7 +193,7 @@ export function SettingsScreen() {
           </Button>
         )}
         <p className="pb-4 text-center text-xs text-neutral-600">
-          {BRAND.name} · {BRAND.tagline}
+          {BRAND.name}
         </p>
       </main>
       <TabBar />

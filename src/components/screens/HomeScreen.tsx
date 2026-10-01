@@ -59,8 +59,8 @@ export function HomeScreen() {
             <h1 className="font-heading text-[34px] leading-[1.05] sm:text-[40px]">Mes recettes</h1>
           </div>
           {reviewCount > 0 && (
-            <Link href="/a-revoir" className="flex items-center gap-1.5 py-2 text-sm font-bold text-accent-700">
-              <IconBookmark size={15} /> À revoir · {reviewCount}
+            <Link href="/a-revoir" aria-label={`À revoir : ${reviewCount}`} className="flex items-center gap-1 py-2 text-[15px] font-bold text-accent-700">
+              <IconBookmark size={16} /> {reviewCount}
             </Link>
           )}
         </div>

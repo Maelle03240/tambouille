@@ -139,3 +139,6 @@ Remplace « ouverture à la famille en écriture » (spec V3). Deux étapes : **
 - Enregistrer sans rien changer ne crée pas de version vide. Un membre qui finit une recette de la bibliothèque ne retire pas son NEW (sinon ça créerait une version juste pour ça).
 - Propositions déplacées dans **Réglages → Propositions** (à la place de « À revoir (tous) », supprimé) : une liste, puis chaque proposition ouverte en entier (nouvelle recette : tout son contenu ; modification : avant / après par bloc) avec Accepter / Refuser. L'écran Admin ne garde que invitations, foyers, comptes.
 - Accepter (création ou modification) remet le sticker NEW sur la recette de la bibliothèque : à vérifier en la cuisinant.
+- Réglages : foyers affichés comme des profils (pastille de couleur avec initiale, `src/config/households.ts`), bouton « Renommer » ; « Propositions » affiche toujours le nombre (0 compris) ; « Mes ingrédients » renommé « Étiquettes nutritionnelles » avec une phrase qui dit à quoi ça sert ; pied de page et écran de connexion : seulement « Le carnet de Tambouille ».
+- Accueil : « À revoir » réduit à l'icône + le nombre.
+- Lecture d'étiquette en photo testée (Gemini) : nom, kcal, protéines, lipides, glucides, fibres lus correctement.
