@@ -50,3 +50,22 @@ Format : date — décision — pourquoi.
 - **Alarme des minuteurs** refaite : sonnerie forte générée (sans fichier), jouée par un élément `<audio>` en boucle jusqu'à l'arrêt (3 min max). Déblocage du son à la fin de chaque toucher (exigence iOS), `navigator.audioSession.type = "playback"` pour ignorer le bouton silencieux. Bouton « Tester l'alarme » dans Réglages. Limite connue : l'appli doit rester ouverte à l'écran (pas de son si elle est en arrière-plan ou l'écran verrouillé).
 - **Écran allumé** : témoin dans le mode cuisine (« Écran allumé » / « Veille possible ») ; le verrou est redemandé s'il est relâché par le système.
 - **Page « Astuces »** (prévue en V3 dans la spec, avancée car autonome et utile en cuisine) : mesures et équivalences, symboles du four, thermostat, cuissons, air fryer, remplacements. Onglet dédié + lien depuis le mode cuisine. Contenu dans `src/config/kitchen-guide.ts`.
+
+## 2026-10-01 — V2
+
+**Retours d'usage**
+- Feuille « Ajouter » : 5 cartes identiques (photo, capture, texte/lien, JSON, à la main) ; « à la main » = fiche vide sans IA (hors ligne IA / quota).
+- Plus de témoin « écran allumé » ni de section alarme dans Réglages (on ne peut pas régler le volume du téléphone depuis une page web) ; vibration de l'alarme : Android = vibration, iPhone = retours haptiques (astuce iOS 18+).
+- Textes d'aide allégés partout. Bouton « + Ajouter » plus petit.
+- Mode cuisine fluide : toutes les étapes ont la même taille (seules les couleurs changent, en fondu) et l'étape en cours suit le défilement en direct (ligne de lecture, sans clignotement).
+
+**V2 livrée**
+- **Planning** (onglet Menu) : semaine et jour, tirage avec règles fermes (≥ 1 repas riche en protéines et des légumes chaque jour), objectif prioritaire réglable, kcal et fourchettes en barres « prévu / objectif » (pas un journal), verrous, autre plat au hasard, choix manuel avec effet sur la barre, portions ± ½, modèles jour / semaine (repas vides complétés par le tirage), objectifs du jour fixés par l'utilisatrice. Les repas = les « moments » ; une recette sans moment est proposée selon sa catégorie (`MEAL_FALLBACK_CATEGORIES`). Poids du tirage : `src/config/planning.ts`. Migration 0004.
+- **Courses** (onglet) : ingrédients du menu de la semaine (chaque recette une fois, recette entière par défaut, ajustable) + recettes ajoutées depuis la fiche ; additionnés (g/kg, ml/cl/l), rangés par rayon (`src/config/aisles.ts`, inconnu → Autre), basiques masqués (« Mes basiques »), partage Notes / Keep ou copie. Sélection et cases cochées gardées sur l'appareil. Conformément à la spec, pas d'articles perso dans l'appli (ils vont dans Notes) — la maquette en montrait : à rediscuter si besoin.
+- **Notation** en fin de recette (réussie / à refaire / ratée, retire « à tester »), note perso en tête du mode cuisine, note visible sur les cartes.
+- **Viser environ X kcal / X g de protéines** dans le mode cuisine (parts arrondies au ¼).
+- **Impression A4** de la fiche (bouton Imprimer, sur tablette / ordinateur).
+- **Mes ingrédients** (Réglages) : étiquette lue en photo par l'IA ou saisie ; liaison automatique à l'import, choix dans l'éditeur ; « Recalculer avec mes étiquettes » (valeurs par portion, confiance « from_labels »).
+- **Images** : photo perso ou illustration IA (Cloudflare FLUX, style vieux livre de cuisine — désactivée tant que les variables Cloudflare manquent), WebP 800 px dans Supabase Storage (bucket `recipe-images`, migration 0005), fiche + cartes, « Illustrations automatiques » dans Réglages, images mises en cache hors ligne.
+- **Commande vocale** en option (bouton micro du mode cuisine) : suivant, précédent, minuteur X minutes, stop.
+- Onglets : Recettes, Menu, Courses, Astuces, Réglages ; « À revoir » en haut de l'accueil et dans Réglages.

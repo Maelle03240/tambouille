@@ -18,10 +18,12 @@ import { remainingSec, useCookSession } from "@/components/cook/useCookSession";
 import { useFollowScroll } from "@/components/cook/useFollowScroll";
 import { useWakeLock } from "@/components/cook/useWakeLock";
 import { AimSheet } from "@/components/cook/AimSheet";
+import { useVoiceCommands } from "@/components/cook/useVoiceCommands";
+import { timersIn } from "@/lib/recipes/markers";
 import { CheckableIngredients } from "@/components/recipe/IngredientList";
 import { ReviewNoteSheet } from "@/components/recipe/ReviewNoteSheet";
 import { StepText, stepPlainText } from "@/components/recipe/StepText";
-import { IconBack, IconBookmark, IconCheck, IconChevronDown, IconMinus, IconPlus } from "@/components/ui/icons";
+import { IconBack, IconBookmark, IconCheck, IconChevronDown, IconMic, IconMinus, IconPlus } from "@/components/ui/icons";
 import { EmptyState, Spinner, cx } from "@/components/ui/primitives";
 import { getCategory } from "@/config/categories";
 import { UI } from "@/config/ui";
@@ -93,6 +95,26 @@ function Cook({ recipe }: { recipe: Recipe }) {
     s.tapStep(i);
     if (next < recipe.steps.length) scrollToStep(next);
   }
+
+  // Commande vocale (en option)
+  const voice = useVoiceCommands((cmd, heard) => {
+    toast(`« ${heard.trim()} »`);
+    if (cmd.kind === "next" && s.current < recipe.steps.length) onTapStep(s.current);
+    else if (cmd.kind === "previous" && s.current > 0) onTapStep(s.current - 1);
+    else if (cmd.kind === "stop") {
+      if (s.ringing) s.stopTimer(s.ringing);
+      s.acknowledge();
+      setDial(null);
+    } else if (cmd.kind === "timer") {
+      const step = recipe.steps[s.current];
+      const inStep = step ? timersIn(step.text)[0] : undefined;
+      const minutes = cmd.minutes ?? inStep;
+      if (!minutes) return toast("Dis par exemple « minuteur 10 minutes »");
+      const key = cmd.minutes == null && step ? `${step.id}:0` : `voix:${Date.now()}`;
+      unlockAudio();
+      s.startTimer(key, Math.min(s.current, recipe.steps.length - 1), minutes, minutes * 60);
+    }
+  });
 
   // Reprise d'une cuisson en cours : on revient sur l'étape où on en était
   // (pas à l'ouverture sur l'étape 1 : on laisse voir le titre et les portions)
@@ -176,6 +198,20 @@ function Cook({ recipe }: { recipe: Recipe }) {
             <h1 className="font-heading text-[34px] leading-[1.1]">{recipe.title}</h1>
           </div>
           <OfflineBanner compact className="hidden wide:flex" />
+          {voice.supported && (
+            <button
+              type="button"
+              onClick={voice.toggle}
+              aria-label={voice.listening ? "Couper le micro" : "Commande vocale"}
+              aria-pressed={voice.listening}
+              className={cx(
+                "ml-auto flex size-11 flex-none items-center justify-center rounded-full border-[1.5px] wide:ml-0",
+                voice.listening ? "animate-pulse border-transparent bg-accent-600 text-neutral-100" : "border-divider text-neutral-800",
+              )}
+            >
+              <IconMic size={20} />
+            </button>
+          )}
           {reviewButton}
         </div>
       </header>

@@ -24,6 +24,9 @@ Elle parle français : interface, textes, commentaires et messages de commit en 
 | Moments de repas (petit-déj, goûter…) | `src/config/moments.ts` |
 | Contenu de la page Astuces (mesures, four…) | `src/config/kitchen-guide.ts` |
 | Son de l'alarme des minuteurs | `SOUND` dans `src/components/cook/alarm.ts` |
+| Règles et poids du tirage du menu, nutriments suivis | `src/config/planning.ts` (logique : `src/lib/planning/draw.ts`, testée) |
+| Rayons, mots-clés pour ranger un ingrédient | `src/config/aisles.ts` (liste de courses : `src/lib/shopping/aggregate.ts`, testée) |
+| Mots de la commande vocale | `src/components/cook/useVoiceCommands.ts` (testée) |
 | Tags | `src/config/tags.ts` (+ calcul auto dans `src/lib/recipes/tags.ts`) |
 | Onglets du bas, style du mode cuisine (1a/1b), étape qui suit le défilement, unités, rayons | `src/config/ui.ts` |
 | Seuil « deux colonnes » (iPad/paysage) | `@custom-variant wide` dans `src/app/globals.css` |
