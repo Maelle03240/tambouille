@@ -16,7 +16,8 @@ import {
   type ReactNode,
 } from "react";
 import { getRepository } from "@/lib/data";
-import { db, getMeta, requestPersistentStorage, setMeta } from "@/lib/data/db";
+import { clearLocalData } from "@/lib/data/actions";
+import { getMeta, requestPersistentStorage, setMeta } from "@/lib/data/db";
 import type { Session } from "@/lib/data/repository";
 import { getSyncStatus, subscribeSync, syncNow } from "@/lib/data/sync";
 import type { Profile } from "@/lib/recipes/types";
@@ -29,7 +30,7 @@ interface AppState {
   online: boolean;
   syncing: boolean;
   syncError: string | null;
-  features: { ai: boolean; illustrations: boolean };
+  features: { ai: boolean; illustrations: boolean; invites?: boolean };
   canEdit: boolean;
   isAdmin: boolean;
   sync: () => Promise<void>;
@@ -106,6 +107,19 @@ export function AppProvider({ children }: { children: ReactNode }) {
     if (online && session) void syncNow();
   }, [online, session]);
 
+  // …et en revenant sur l'appli : on voit ce que les autres membres du foyer ont changé
+  useEffect(() => {
+    if (!session) return;
+    let last = Date.now();
+    const onVisible = () => {
+      if (document.visibilityState !== "visible" || Date.now() - last < 20_000) return;
+      last = Date.now();
+      void syncNow();
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => document.removeEventListener("visibilitychange", onVisible);
+  }, [session]);
+
   // Fonctions IA disponibles
   useEffect(() => {
     if (!online) return;
@@ -117,7 +131,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const signOut = useCallback(async () => {
     await repo.signOut();
-    await Promise.all([db.recipes.clear(), db.reviewItems.clear(), db.outbox.clear(), db.meta.clear()]);
+    await clearLocalData();
     setSession(null);
   }, [repo]);
 

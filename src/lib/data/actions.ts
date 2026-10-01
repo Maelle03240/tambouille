@@ -11,6 +11,7 @@ import type { CustomIngredient, Recipe, ReviewItem, UserSettings } from "@/lib/r
 import { getRepository } from ".";
 import { base64ToBlob, compressForStorage } from "@/lib/import/image";
 import { requestIllustration } from "@/lib/import/client";
+import { diffShopping, EMPTY_SHOPPING } from "@/lib/shopping/state";
 import { db, getMeta, setMeta, type ShoppingState } from "./db";
 
 export class OfflineError extends Error {
@@ -252,9 +253,9 @@ export async function deleteCustomIngredient(id: string) {
   await db.customIngredients.delete(id);
 }
 
-/* ───────────── Liste de courses (locale) ───────────── */
+/* ───────────── Liste de courses du foyer (fonctionne hors ligne) ───────────── */
 
-export const EMPTY_SHOPPING: ShoppingState = { extras: [], servings: {}, excluded: [], checked: [], mine: [] };
+export { EMPTY_SHOPPING };
 
 /** Mode frigo vide : liste de ce que j'ai (sur cet appareil). */
 export async function setFridge(items: string[]) {
@@ -265,9 +266,27 @@ export async function setFridgeBasics(on: boolean) {
   await setMeta("fridgeBasics", on);
 }
 
+/**
+ * Modifie la liste : tout de suite dans le cache (l'écran se met à jour,
+ * même hors ligne), puis les changements partent au serveur via la file
+ * d'attente (envoyée maintenant si on a du réseau, sinon au retour).
+ */
 export async function updateShopping(fn: (s: ShoppingState) => ShoppingState) {
   const cur = { ...EMPTY_SHOPPING, ...((await getMeta("shopping")) ?? {}) };
-  await setMeta("shopping", fn(cur));
+  const next = fn(cur);
+  await setMeta("shopping", next);
+  const householdId = await getMeta("householdId");
+  if (getRepository().mode === "local" || !householdId) return;
+  const now = new Date().toISOString();
+  const ops = diffShopping(cur, next);
+  if (!ops.length) return;
+  await db.outbox.bulkAdd(ops.map((payload) => ({ kind: "shopping" as const, householdId, payload, createdAt: now })));
+  if (navigator.onLine) {
+    const { flushOutbox } = await import("./sync");
+    flushOutbox().catch(() => {
+      /* réessayé au prochain retour réseau */
+    });
+  }
 }
 
 export async function addToShopping(recipe: Recipe) {
@@ -286,3 +305,58 @@ export async function exportAll() {
   return JSON.stringify({ exportedAt: new Date().toISOString(), recipes }, null, 2);
 }
 
+
+/* ───────────── Foyers ───────────── */
+
+/** Change le foyer affiché : son menu, ses courses, ses objectifs… */
+export async function switchHousehold(id: string) {
+  requireOnline();
+  const { flushOutbox, rememberHousehold, syncNow } = await import("./sync");
+  await flushOutbox();
+  rememberHousehold(id);
+  getRepository().setHousehold(id);
+  await db.transaction("rw", [db.mealPlans, db.templates, db.pantry, db.meta], async () => {
+    await db.mealPlans.clear();
+    await db.templates.clear();
+    await db.pantry.clear();
+    await db.meta.delete("shopping");
+    await setMeta("householdId", id);
+  });
+  await syncNow();
+}
+
+export async function renameHousehold(id: string, name: string) {
+  requireOnline();
+  const clean = name.trim();
+  if (!clean) return;
+  await getRepository().renameHousehold(id, clean);
+  const list = (await getMeta("households")) ?? [];
+  await setMeta("households", list.map((h) => (h.id === id ? { ...h, name: clean } : h)));
+}
+
+/* ───────────── Compte ───────────── */
+
+export async function setPassword(password: string) {
+  if (password.length < 8) throw new Error("8 caractères minimum.");
+  await getRepository().updatePassword(password);
+}
+
+export async function sendPasswordReset(email: string) {
+  await getRepository().sendPasswordReset(email.trim(), `${location.origin}/bienvenue`);
+}
+
+/** Vide le cache de l'appareil (déconnexion). */
+export async function clearLocalData() {
+  await Promise.all([
+    db.recipes.clear(),
+    db.reviewItems.clear(),
+    db.outbox.clear(),
+    db.meta.clear(),
+    db.mealPlans.clear(),
+    db.templates.clear(),
+    db.pantry.clear(),
+    db.customIngredients.clear(),
+  ]);
+  const { rememberHousehold } = await import("./sync");
+  rememberHousehold(null);
+}

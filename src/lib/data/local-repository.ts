@@ -4,10 +4,12 @@
  * sont déjà faites dans le cache par actions.ts, donc ici il n'y a rien à
  * envoyer : ce dépôt « distant » se contente de relire le cache.
  */
+import { EMPTY_SHOPPING } from "@/lib/shopping/state";
 import type { Repository, Snapshot } from "./repository";
-import { db, getMeta } from "./db";
+import { db, getMeta, setMeta } from "./db";
 
 const LOCAL_USER = { userId: "local", email: null, accessToken: null };
+const LOCAL_HOUSEHOLD = { id: "local", name: "Maison" };
 
 export class LocalRepository implements Repository {
   readonly mode = "local" as const;
@@ -20,6 +22,14 @@ export class LocalRepository implements Repository {
   }
   async signIn() {}
   async signOut() {}
+  async updatePassword() {}
+  async sendPasswordReset() {}
+  readonly admin = null;
+  setHousehold() {}
+  async renameHousehold(_id: string, name: string) {
+    await setMeta("households", [{ id: LOCAL_HOUSEHOLD.id, name }]);
+  }
+  async applyShoppingOps() {}
 
   async fetchSnapshot(): Promise<Snapshot> {
     return {
@@ -27,6 +37,9 @@ export class LocalRepository implements Repository {
       reviewItems: await db.reviewItems.toArray(),
       profile: { id: "local", displayName: "Moi", role: "admin" },
       settings: (await getMeta("settings")) ?? null,
+      households: (await getMeta("households")) ?? [LOCAL_HOUSEHOLD],
+      householdId: LOCAL_HOUSEHOLD.id,
+      shopping: (await getMeta("shopping")) ?? EMPTY_SHOPPING,
       mealPlans: await db.mealPlans.toArray(),
       templates: await db.templates.toArray(),
       pantry: await db.pantry.toArray(),

@@ -1,18 +1,17 @@
 "use client";
-/** Réglages : compte, synchro, seuils, sauvegarde. */
+/** Réglages : compte, foyer, synchro, seuils, sauvegarde, accès admin. */
 import { useLiveQuery } from "dexie-react-hooks";
 import { useState } from "react";
 import { useApp } from "@/components/app/AppProvider";
 import { OfflineBanner } from "@/components/app/OfflineBanner";
 import { TabBar } from "@/components/app/TabBar";
-import { Button, Field, NumberInput, SectionTitle, Spinner } from "@/components/ui/primitives";
+import { Button, Chip, Field, NumberInput, SectionTitle, Spinner, TextInput } from "@/components/ui/primitives";
 import { BRAND } from "@/config/brand";
-import { exportAll, saveSettings } from "@/lib/data/actions";
+import { exportAll, renameHousehold, saveSettings, switchHousehold } from "@/lib/data/actions";
 import { getMeta } from "@/lib/data/db";
-import { useOpenReviewCount, useSettings } from "@/lib/data/hooks";
+import { useHouseholds, useOpenReviewCount, useSettings } from "@/lib/data/hooks";
+import { ROLE_LABELS } from "@/config/ui";
 import Link from "next/link";
-
-const ROLE_LABELS = { admin: "Administratrice", editor: "Peut modifier", reader: "Lecture seule" };
 
 function Row({ label, value }: { label: string; value: React.ReactNode }) {
   return (
@@ -31,6 +30,19 @@ export function SettingsScreen() {
   const [thresholdDraft, setThreshold] = useState<number | null | undefined>(undefined);
   const threshold = thresholdDraft === undefined ? settings.proteinRichThresholdG : thresholdDraft;
   const lastSync = useLiveQuery(() => getMeta("lastSyncAt"), []);
+  const households = useHouseholds();
+  const current = households?.list.find((h) => h.id === households.currentId) ?? null;
+  const [nameDraft, setNameDraft] = useState<string | null>(null);
+  const name = nameDraft ?? current?.name ?? "";
+
+  async function run(fn: () => Promise<unknown>, done?: string) {
+    try {
+      await fn();
+      if (done) app.toast(done);
+    } catch (e) {
+      app.toast(e instanceof Error ? e.message : "Impossible");
+    }
+  }
 
   async function saveThreshold() {
     if (threshold == null) return;
@@ -76,6 +88,43 @@ export function SettingsScreen() {
             }
           />
         </section>
+        {app.mode === "supabase" && (
+          <section className="flex flex-col gap-3">
+            <SectionTitle>Foyer</SectionTitle>
+            {households && households.list.length > 1 && (
+              <div className="flex flex-wrap gap-2">
+                {households.list.map((h) => (
+                  <Chip
+                    key={h.id}
+                    selected={h.id === households.currentId}
+                    onClick={() => h.id !== households.currentId && run(() => switchHousehold(h.id))}
+                  >
+                    {h.name}
+                  </Chip>
+                ))}
+              </div>
+            )}
+            {current ? (
+              <div className="flex gap-2">
+                <TextInput value={name} onChange={(e) => setNameDraft(e.target.value)} aria-label="Nom du foyer" />
+                <Button
+                  variant="primary"
+                  disabled={!app.online || !name.trim() || name === current.name}
+                  onClick={() => run(() => renameHousehold(current.id, name), "Foyer renommé").then(() => setNameDraft(null))}
+                >
+                  OK
+                </Button>
+              </div>
+            ) : (
+              <p className="text-neutral-700">Aucun foyer : demande à l&apos;admin de t&apos;en ajouter un.</p>
+            )}
+          </section>
+        )}
+        {app.isAdmin && app.mode === "supabase" && (
+          <Link href="/admin" className="flex h-14 items-center justify-between rounded-[28px] bg-surface px-5 font-bold">
+            Admin <span className="text-accent-700">→</span>
+          </Link>
+        )}
         <Link href="/a-revoir" className="flex h-14 items-center justify-between rounded-[28px] bg-surface px-5 font-bold">
           À revoir <span className="text-accent-700">{reviewCount}</span>
         </Link>

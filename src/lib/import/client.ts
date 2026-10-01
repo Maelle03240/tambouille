@@ -68,3 +68,15 @@ export const requestNutrition = (body: unknown) => postJson<PerPortionResult>("/
 
 export const requestIllustration = (title: string, ingredients: string[], mealPrep = false) =>
   postJson<{ base64: string; mimeType: string }>("/api/illustrate", { title, ingredients, mealPrep });
+
+/* ───────────── Admin : invitations ───────────── */
+
+export interface InviteRequest {
+  email: string;
+  name: string;
+  role: "editor" | "reader";
+  /** Foyer existant, ou null pour un nouveau foyer « Chez <prénom> ». */
+  householdId: string | null;
+}
+
+export const requestInvite = (body: InviteRequest) => postJson<{ userId: string }>("/api/admin/invite", body);

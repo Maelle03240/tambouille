@@ -36,6 +36,8 @@ Elle parle français : interface, textes, commentaires et messages de commit en 
 | Modèle d'IA | `src/lib/ai/parseRecipe.ts` → `getRecipeParser()` + `src/lib/ai/providers/` |
 | Colonnes de la base | nouvelle migration `supabase/migrations/000N_….sql` + `src/lib/data/supabase-mapping.ts` + `src/lib/recipes/types.ts` |
 | Mode frigo vide (classiques à cocher, correspondance) | `src/config/fridge.ts`, `src/lib/recipes/fridge.ts` (testée), écran `src/components/screens/FridgeScreen.tsx` |
+| Foyers, invitations, rôles (admin) | `supabase/migrations/0008_foyers.sql`, écran `src/components/screens/AdminScreen.tsx`, route `src/app/api/admin/invite/route.ts` |
+| Liste de courses partagée (opérations, hors ligne) | `src/lib/shopping/state.ts` (testée) |
 | Pages disponibles hors ligne | `ROUTES` dans `scripts/build-sw.mjs` |
 
 ## Architecture (couches, du bas vers le haut)

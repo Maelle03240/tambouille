@@ -8,51 +8,36 @@
  */
 import Dexie, { type Table } from "dexie";
 import type { MealPlanEntry, MealTemplate, PantryBasic } from "@/lib/planning/types";
-import type { CustomIngredient, Profile, Recipe, ReviewItem, UserSettings } from "@/lib/recipes/types";
+import type { CustomIngredient, Household, Profile, Recipe, ReviewItem, UserSettings } from "@/lib/recipes/types";
+import type { ShoppingOp, ShoppingState } from "@/lib/shopping/state";
 
-export interface OutboxOp {
-  seq?: number;
-  kind: "reviewItem.upsert";
-  payload: ReviewItem;
-  createdAt: string;
-}
+/** Écritures faites hors ligne, envoyées au retour du réseau (sync.ts). */
+export type OutboxOp =
+  | { seq?: number; kind: "reviewItem.upsert"; payload: ReviewItem; createdAt: string }
+  | { seq?: number; kind: "shopping"; householdId: string; payload: ShoppingOp; createdAt: string };
 
 export interface MetaEntry {
   key: string;
   value: unknown;
 }
 
-export type MetaKey = "lastSyncAt" | "profile" | "settings" | "features" | "shopping" | "fridge" | "fridgeBasics";
+export type MetaKey = "lastSyncAt" | "profile" | "settings" | "features" | "shopping" | "fridge" | "fridgeBasics" | "households" | "householdId";
 
-/** Sélection de la liste de courses (sur cet appareil seulement). */
-export interface ShoppingState {
-  /** Recettes ajoutées à la main (fiche → « Ajouter aux courses »). */
-  extras: { recipeId: string; servings: number }[];
-  /** Quantités modifiées, par recette. */
-  servings: Record<string, number>;
-  /** Recettes du menu retirées de la liste. */
-  excluded: string[];
-  /** Articles cochés (clé d'article). */
-  checked: string[];
-  /** Articles ajoutés à la main (papier toilette, farine T55…). */
-  mine: PersonalItem[];
-}
-
-export interface PersonalItem {
-  id: string;
-  text: string;
-  aisle: string;
-}
+// Liste de courses du foyer (cache local ; envoyée au serveur par la file d'attente)
+export type { PersonalItem, ShoppingState } from "@/lib/shopping/state";
 export type MetaValue = {
   lastSyncAt: string;
   profile: Profile;
   settings: UserSettings;
-  features: { ai: boolean; illustrations: boolean };
+  features: { ai: boolean; illustrations: boolean; invites?: boolean };
   shopping: ShoppingState;
   /** Mode frigo vide : ce que j'ai sous la main (sur cet appareil). */
   fridge: string[];
   /** « J'ai les basiques » coché (vrai par défaut). */
   fridgeBasics: boolean;
+  /** Mes foyers, et celui affiché (menu, courses…). */
+  households: Household[];
+  householdId: string | null;
 };
 
 class CarnetDB extends Dexie {

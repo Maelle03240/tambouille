@@ -2,18 +2,32 @@
 import { useState } from "react";
 import { BRAND } from "@/config/brand";
 import { getRepository } from "@/lib/data";
+import { sendPasswordReset } from "@/lib/data/actions";
 import { Button, Field, Spinner, TextInput } from "@/components/ui/primitives";
 
 /**
  * Connexion par e-mail + mot de passe (fonctionne dans l'appli installée,
  * contrairement aux liens magiques qui s'ouvrent dans Safari).
- * Les comptes sont créés par l'admin dans Supabase (pas d'inscription libre).
+ * Les comptes sont créés par invitation de l'admin (pas d'inscription libre).
+ * « Mot de passe oublié » envoie un lien vers /bienvenue.
  */
 export function LoginScreen() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [info, setInfo] = useState<string | null>(null);
+
+  async function forgot() {
+    setError(null);
+    if (!email.trim()) return setError("Écris d'abord ton e-mail.");
+    try {
+      await sendPasswordReset(email);
+      setInfo("E-mail envoyé : clique sur le lien pour choisir un nouveau mot de passe.");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Envoi impossible");
+    }
+  }
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -50,9 +64,13 @@ export function LoginScreen() {
           />
         </Field>
         {error && <p className="rounded-field bg-accent-100 px-4 py-3 text-accent-800">{error}</p>}
+        {info && <p className="rounded-field bg-leaf-200 px-4 py-3 text-leaf-900">{info}</p>}
         <Button type="submit" variant="primary" size="lg" disabled={busy}>
           {busy ? <Spinner /> : "Se connecter"}
         </Button>
+        <button type="button" onClick={forgot} className="h-11 text-sm font-bold text-accent-700">
+          Mot de passe oublié ?
+        </button>
       </form>
     </main>
   );

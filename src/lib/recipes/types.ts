@@ -111,6 +111,12 @@ export interface CustomIngredient {
   fiber100: number | null;
 }
 
+/** Foyer : partage menu, modèles, objectifs, basiques et liste de courses. */
+export interface Household {
+  id: string;
+  name: string;
+}
+
 export interface Profile {
   id: string;
   displayName: string;

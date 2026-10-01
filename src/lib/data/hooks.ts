@@ -60,3 +60,8 @@ export function useFridge() {
 export function useCustomIngredients() {
   return useLiveQuery(() => db.customIngredients.orderBy("name").toArray(), []);
 }
+
+/** Mes foyers et celui affiché (menu, courses, objectifs…). */
+export function useHouseholds() {
+  return useLiveQuery(async () => ({ list: (await getMeta("households")) ?? [], currentId: (await getMeta("householdId")) ?? null }), []);
+}

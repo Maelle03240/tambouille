@@ -177,8 +177,8 @@ export function mealPlanFromRow(m: Row): MealPlanEntry {
   };
 }
 
-export function mealPlanToRow(e: MealPlanEntry, ownerId: string): Row {
-  return { owner_id: ownerId, day: e.day, meal: e.meal, recipe_id: e.recipeId, portions: e.portions, locked: e.locked, skipped: e.skipped ?? false };
+export function mealPlanToRow(e: MealPlanEntry, householdId: string): Row {
+  return { household_id: householdId, day: e.day, meal: e.meal, recipe_id: e.recipeId, portions: e.portions, locked: e.locked, skipped: e.skipped ?? false };
 }
 
 export function templateFromRow(t: Row): MealTemplate {

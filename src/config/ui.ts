@@ -44,3 +44,6 @@ export const PROTEIN_SOURCES = [
  * (« À revoir » ajoute aussi la recette à la liste À revoir). La colonne
  * `rating` reste en base, inutilisée.
  */
+
+/** Libellés des rôles (id stockés en base : admin, editor, reader). */
+export const ROLE_LABELS = { admin: "Admin", editor: "Membre", reader: "Lecture seule" } as const;
