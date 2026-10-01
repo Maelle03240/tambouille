@@ -256,16 +256,16 @@ function Cook({ recipe }: { recipe: Recipe }) {
             </div>
           )}
           <h2 className="px-1.5 pb-2.5 font-heading text-[22px] wide:hidden">Étapes</h2>
-          <ol className="flex max-w-[720px] flex-col gap-2 wide:gap-2.5">
+          <ol className="flex max-w-[720px] flex-col gap-3 pt-2">
             {recipe.steps.map((st, i) => {
               const state = i === s.current ? "current" : i < s.current ? "done" : "todo";
               const L = look[state];
               let timerIdx = 0;
               return (
                 <li key={st.id} data-step={i} onClick={() => onTapStep(i)} className={L.card}>
+                  {state === "current" && <span className={L.label}>En cours</span>}
                   <div className={L.num}>{state === "done" ? <IconCheck size={18} stroke={3.5} /> : i + 1}</div>
-                  <div className="flex min-w-0 flex-1 flex-col gap-1.5">
-                    {state === "current" && <div className={L.label}>En cours · touchez quand c&apos;est fait</div>}
+                  <div className="flex min-w-0 flex-1 flex-col">
                     <p className={L.text}>
                       <StepText
                         text={st.text}
