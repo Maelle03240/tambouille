@@ -13,7 +13,7 @@ import { StepText } from "@/components/recipe/StepText";
 import { IconBack, IconBookmark, IconCart, IconImage, IconPencil } from "@/components/ui/icons";
 import { EmptyState, SectionTitle, Spinner, cx } from "@/components/ui/primitives";
 import { categoryColors, getCategory } from "@/config/categories";
-import { RATINGS, PROTEIN_SOURCES } from "@/config/ui";
+import { PROTEIN_SOURCES, ratingLabel } from "@/config/ui";
 import { tagLabel } from "@/config/tags";
 import { momentLabel } from "@/config/moments";
 import { addToShopping } from "@/lib/data/actions";
@@ -59,6 +59,7 @@ export function RecipeScreen() {
   const colors = categoryColors(recipe.category);
   const tags = displayTags(recipe, settings);
   const toTest = recipe.tags.includes("a-tester");
+  const img = imageUrl(recipe.imagePath);
   const hasNutrition = [recipe.kcal, recipe.proteinG, recipe.fatG, recipe.carbsG, recipe.fiberG].some((v) => v != null);
 
   return (
@@ -75,20 +76,38 @@ export function RecipeScreen() {
             <OfflineBanner compact />
             <span className="text-[13px] font-bold tracking-[.06em] uppercase">{getCategory(recipe.category).label}</span>
           </div>
-          {/* Photo perso > illustration > couverture typographique (le titre sur la couleur) */}
-          {imageUrl(recipe.imagePath) && (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={imageUrl(recipe.imagePath)!}
-              alt=""
-              className={cx(
-                "mt-1 h-52 w-full sm:h-72",
-                // illustration : dessin seul, son fond blanc se fond dans la couleur de la fiche
-                recipe.imageKind === "generated" ? "object-contain mix-blend-multiply" : "rounded-3xl object-cover",
-              )}
-            />
+          {/* Photo perso > illustration > couverture typographique (le titre sur la couleur).
+              Toucher l'image (ou son emplacement vide) ouvre photo / IA / supprimer. */}
+          {(img || canEdit) && (
+            <div className="relative mt-1">
+              <button
+                type="button"
+                aria-label="Image de la recette"
+                disabled={!canEdit || !online}
+                onClick={() => setImageOpen(true)}
+                className="block w-full disabled:cursor-default"
+              >
+                {img ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={img}
+                    alt=""
+                    className={cx(
+                      "h-52 w-full sm:h-72",
+                      // illustration : dessin seul, son fond blanc se fond dans la couleur de la fiche
+                      recipe.imageKind === "generated" ? "object-contain mix-blend-multiply" : "rounded-3xl object-cover",
+                    )}
+                  />
+                ) : (
+                  <span className="flex h-28 w-full items-center justify-center rounded-3xl border-2 border-dashed border-current/25 opacity-60 print:hidden">
+                    <IconImage size={28} />
+                  </span>
+                )}
+              </button>
+              {toTest && <NewSticker size={68} className="absolute -top-2 right-0" />}
+            </div>
           )}
-          {toTest && <NewSticker className="mt-4 -mb-5 self-start" />}
+          {toTest && !img && !canEdit && <NewSticker size={68} className="mt-2 self-start" />}
           <h1 className="pt-6 font-heading text-[40px] leading-[1.02] text-balance sm:text-[52px]">{recipe.title}</h1>
           <div className="flex flex-wrap gap-x-4 gap-y-1 text-[15px] font-bold">
             {yieldLabel(recipe) && <span>{yieldLabel(recipe)}</span>}
@@ -148,16 +167,6 @@ export function RecipeScreen() {
               <IconPencil size={15} /> Modifier
             </Link>
           )}
-          {canEdit && (
-            <button
-              type="button"
-              onClick={() => setImageOpen(true)}
-              disabled={!online}
-              className="flex h-10 items-center gap-1.5 rounded-full border-[1.5px] border-divider px-4 text-sm font-bold text-neutral-800 disabled:opacity-45"
-            >
-              <IconImage size={15} /> Image
-            </button>
-          )}
         </div>
 
         {recipe.personalNotes && (
@@ -166,11 +175,11 @@ export function RecipeScreen() {
           </div>
         )}
 
-        {(recipe.rating || (recipe.moments ?? []).length > 0 || tags.filter((t) => t !== "a-tester").length > 0) && (
+        {(ratingLabel(recipe.rating) || (recipe.moments ?? []).length > 0 || tags.filter((t) => t !== "a-tester").length > 0) && (
           <div className="flex flex-wrap gap-1.5">
-            {recipe.rating && (
+            {ratingLabel(recipe.rating) && (
               <span className="rounded-full bg-accent-200 px-3 py-1 text-[13px] font-bold text-accent-800">
-                {RATINGS.find((r) => r.id === recipe.rating)?.label}
+                {ratingLabel(recipe.rating)}
               </span>
             )}
             {(recipe.moments ?? []).map((m) => (

@@ -89,3 +89,8 @@ Format : date — décision — pourquoi.
 - **« À tester » devient un sticker « Nouveau »** (id `a-tester` inchangé) : posé à l'ajout, retiré dès qu'on note la recette (Réussie / À refaire / Ratée) ; la note s'affiche ensuite sur la carte. Plus de bouton sur la fiche (le tag reste modifiable dans l'éditeur). Filtre « Nouveau » sur l'accueil.
 - Fin du mode cuisine : le bloc « Bon appétit ! » et la notation sont toujours en bas des étapes (on fait défiler, on ne touche pas la dernière étape) ; plus de « Recommencer » / « Retour à la fiche ».
 - Commande vocale : plus d'écho de la phrase entendue ; à l'activation, rappel des mots (« suivant », « précédent », « minuteur 5 minutes », « stop »).
+- Sticker « NEW » en étoile rouge (SVG, `--color-danger`), au lieu de la pastille « Nouveau ».
+- Fin du mode cuisine : seulement « Réussie » (retire NEW) et « À revoir » (demande quoi revoir, ajoute à « À revoir », NEW reste). « À refaire » / « Ratée » ne sont plus proposées (valeurs gardées en base, plus affichées).
+- Fiche : plus de bouton « Image » ; toucher l'image (ou son emplacement vide, en pointillés) ouvre photo / IA / supprimer.
+- Catégorie « Cocktails & mocktails » renommée « Boissons » (id `cocktail` inchangé).
+- Commande vocale : rappel des mots dans une bulle sous le bouton micro (6 s) ; nouveaux mots « pause » / « reprends » pour les minuteurs.

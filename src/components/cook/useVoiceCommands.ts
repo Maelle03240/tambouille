@@ -6,6 +6,7 @@
  *  - « précédent », « retour »           → étape précédente
  *  - « minuteur 10 minutes »             → minuteur de la durée dite
  *  - « lance le minuteur »               → premier minuteur de l'étape en cours
+ *  - « pause » / « reprends »            → met en pause / relance les minuteurs
  *  - « stop », « c'est bon », « arrête » → coupe l'alarme
  * Utilise la reconnaissance vocale du navigateur (Safari, Chrome) ; le
  * bouton micro n'apparaît que si elle existe.
@@ -28,6 +29,8 @@ export type VoiceCommand =
   | { kind: "next" }
   | { kind: "previous" }
   | { kind: "timer"; minutes: number | null }
+  | { kind: "pause" }
+  | { kind: "resume" }
   | { kind: "stop" };
 
 const NUMBERS: Record<string, number> = {
@@ -48,6 +51,8 @@ export function parseVoiceCommand(heard: string): VoiceCommand | null {
     const minutes = parseDuration(`${m[1]} ${m[2]?.startsWith("h") ? "h" : m[2]?.startsWith("s") ? "s" : "min"}`);
     return { kind: "timer", minutes };
   }
+  if (/\bpause\b/.test(t)) return { kind: "pause" };
+  if (/\b(reprends|reprend|reprise|continue)\b/.test(t)) return { kind: "resume" };
   if (/\b(stop|arr[êe]te|c'est bon|silence|ok)\b/.test(t)) return { kind: "stop" };
   if (/(suivant|suivante|c'est fait|fini|d'apr[èe]s)/.test(t)) return { kind: "next" };
   if (/(pr[ée]c[ée]dent|pr[ée]c[ée]dente|retour|avant)/.test(t)) return { kind: "previous" };

@@ -12,7 +12,7 @@ export const CATEGORIES = [
   { id: "dessert", label: "Desserts", singular: "Dessert", hue: 355 },
   { id: "sauce", label: "Sauces", singular: "Sauce", hue: 25 },
   { id: "apero", label: "Apéro", singular: "Apéro", hue: 300 },
-  { id: "cocktail", label: "Cocktails & mocktails", singular: "Cocktail / mocktail", hue: 220 },
+  { id: "cocktail", label: "Boissons", singular: "Boisson", hue: 220 },
   { id: "pain", label: "Pains", singular: "Pain", hue: 75 },
 ] as const;
 

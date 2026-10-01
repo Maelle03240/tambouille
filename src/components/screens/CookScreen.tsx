@@ -28,7 +28,6 @@ import { EmptyState, Spinner, cx } from "@/components/ui/primitives";
 import { getCategory } from "@/config/categories";
 import { UI } from "@/config/ui";
 import { patchRecipe } from "@/lib/data/actions";
-import { RATINGS } from "@/config/ui";
 import { useRecipe } from "@/lib/data/hooks";
 import { useSearchId } from "@/lib/hooks/useSearchId";
 import { formatDuration } from "@/lib/recipes/markers";
@@ -72,6 +71,8 @@ function Cook({ recipe }: { recipe: Recipe }) {
   const [reviewOpen, setReviewOpen] = useState(false);
   const [reviewAdded, setReviewAdded] = useState(false);
   const [aimOpen, setAimOpen] = useState(false);
+  const [voiceHint, setVoiceHint] = useState(false);
+  const voiceHintTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
   const [openedDial, setDial] = useState<{ key: string; stepIndex: number; minutes: number } | null>(null);
   // Un minuteur qui sonne ouvre son cadran
   const ringingTimer = s.ringing ? s.timers[s.ringing] : undefined;
@@ -100,7 +101,12 @@ function Cook({ recipe }: { recipe: Recipe }) {
   const voice = useVoiceCommands((cmd) => {
     if (cmd.kind === "next" && s.current < recipe.steps.length) onTapStep(s.current);
     else if (cmd.kind === "previous" && s.current > 0) onTapStep(s.current - 1);
-    else if (cmd.kind === "stop") {
+    else if (cmd.kind === "pause" || cmd.kind === "resume") {
+      // pause : les minuteurs qui tournent ; reprends : ceux en pause
+      const targets = timerList.filter((t) => !t.rang && (cmd.kind === "pause" ? t.endAt != null : t.endAt == null));
+      targets.forEach((t) => s.togglePause(t.key));
+      if (!targets.length) toast(cmd.kind === "pause" ? "Aucun minuteur en marche" : "Aucun minuteur en pause");
+    } else if (cmd.kind === "stop") {
       if (s.ringing) s.stopTimer(s.ringing);
       s.acknowledge();
       setDial(null);
@@ -148,11 +154,11 @@ function Cook({ recipe }: { recipe: Recipe }) {
     setDial(null);
   }
 
-  async function rate(rating: Recipe["rating"]) {
+  /** « Réussie » : retire le sticker NEW. (« À revoir » ouvre la note à revoir, le NEW reste.) */
+  async function markSuccess() {
     try {
-      // noter retire le sticker « Nouveau » (la recette a été faite)
-      await patchRecipe(recipe.id, { rating, tags: recipe.tags.filter((t) => t !== "a-tester") });
-      toast(RATINGS.find((r) => r.id === rating)?.label ?? "Noté");
+      await patchRecipe(recipe.id, { rating: "reussie", tags: recipe.tags.filter((t) => t !== "a-tester") });
+      toast("Réussie !");
     } catch (e) {
       toast(e instanceof Error ? e.message : "Modification impossible");
     }
@@ -192,21 +198,36 @@ function Cook({ recipe }: { recipe: Recipe }) {
           </div>
           <OfflineBanner compact className="hidden wide:flex" />
           {voice.supported && (
-            <button
-              type="button"
-              onClick={() => {
-                if (!voice.listening) toast("Dis « suivant », « précédent », « minuteur 5 minutes » ou « stop »");
-                voice.toggle();
-              }}
-              aria-label={voice.listening ? "Couper le micro" : "Commande vocale"}
-              aria-pressed={voice.listening}
-              className={cx(
-                "ml-auto flex size-11 flex-none items-center justify-center rounded-full border-[1.5px] wide:ml-0",
-                voice.listening ? "animate-pulse border-transparent bg-accent-600 text-neutral-100" : "border-divider text-neutral-800",
+            <div className="relative ml-auto flex-none wide:ml-0">
+              <button
+                type="button"
+                onClick={() => {
+                  // à l'activation : les mots à dire, juste sous le bouton, quelques secondes
+                  clearTimeout(voiceHintTimer.current);
+                  setVoiceHint(!voice.listening);
+                  if (!voice.listening) voiceHintTimer.current = setTimeout(() => setVoiceHint(false), 6000);
+                  voice.toggle();
+                }}
+                aria-label={voice.listening ? "Couper le micro" : "Commande vocale"}
+                aria-pressed={voice.listening}
+                className={cx(
+                  "flex size-11 items-center justify-center rounded-full border-[1.5px]",
+                  voice.listening ? "animate-pulse border-transparent bg-accent-600 text-neutral-100" : "border-divider text-neutral-800",
+                )}
+              >
+                <IconMic size={20} />
+              </button>
+              {voiceHint && voice.listening && (
+                <div
+                  role="status"
+                  className="absolute top-full right-0 z-30 mt-2 flex w-max flex-col gap-0.5 rounded-2xl bg-accent-600 px-4 py-2.5 text-[15px] font-bold text-neutral-100 shadow-lg"
+                >
+                  <span>« suivant » · « précédent »</span>
+                  <span>« minuteur 5 minutes »</span>
+                  <span>« pause » · « reprends » · « stop »</span>
+                </div>
               )}
-            >
-              <IconMic size={20} />
-            </button>
+            </div>
           )}
           {reviewButton}
         </div>
@@ -326,20 +347,27 @@ function Cook({ recipe }: { recipe: Recipe }) {
             <div className="mt-6 flex max-w-[720px] flex-col items-center gap-3 rounded-[28px] bg-leaf-200 px-5 py-7 text-center text-leaf-900">
               <p className="font-heading text-[30px]">Bon appétit !</p>
               <div className="flex flex-wrap justify-center gap-2">
-                {RATINGS.map((r) => (
-                  <button
-                    key={r.id}
-                    type="button"
-                    disabled={!online}
-                    onClick={() => rate(r.id)}
-                    className={cx(
-                      "h-11 rounded-full border-[1.5px] px-4 font-bold disabled:opacity-45",
-                      recipe.rating === r.id ? "border-leaf-800 bg-leaf-800 text-neutral-100" : "border-leaf-600",
-                    )}
-                  >
-                    {r.label}
-                  </button>
-                ))}
+                <button
+                  type="button"
+                  disabled={!online}
+                  onClick={markSuccess}
+                  className={cx(
+                    "h-12 rounded-full border-[1.5px] px-5 font-bold disabled:opacity-45",
+                    recipe.rating === "reussie" ? "border-leaf-800 bg-leaf-800 text-neutral-100" : "border-leaf-600",
+                  )}
+                >
+                  Réussie
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setReviewOpen(true)}
+                  className={cx(
+                    "h-12 rounded-full border-[1.5px] px-5 font-bold",
+                    reviewAdded ? "border-accent-700 bg-accent-700 text-neutral-100" : "border-leaf-600",
+                  )}
+                >
+                  À revoir
+                </button>
               </div>
             </div>
           )}

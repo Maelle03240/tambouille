@@ -12,6 +12,9 @@ describe("commandes vocales", () => {
     ["minuteur 30 secondes", { kind: "timer", minutes: 0.5 }],
     ["lance le minuteur", { kind: "timer", minutes: null }],
     ["stop", { kind: "stop" }],
+    ["pause", { kind: "pause" }],
+    ["mets en pause", { kind: "pause" }],
+    ["reprends", { kind: "resume" }],
     ["il fait beau", null],
   ])("%s", (heard, expected) => expect(parseVoiceCommand(heard)).toEqual(expected));
 });
