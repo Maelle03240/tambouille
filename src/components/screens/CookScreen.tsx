@@ -299,7 +299,6 @@ function Cook({ recipe }: { recipe: Recipe }) {
               let timerIdx = 0;
               return (
                 <li key={st.id} data-step={i} onClick={() => onTapStep(i)} className={L.card}>
-                  {state === "current" && <span className={L.label}>En cours</span>}
                   <div className={L.num}>{state === "done" ? <IconCheck size={18} stroke={3.5} /> : i + 1}</div>
                   <div className="flex min-w-0 flex-1 flex-col">
                     <p className={L.text}>

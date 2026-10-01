@@ -34,23 +34,25 @@ export function usePlanningWeek(monday: string) {
     [recipes, settings],
   );
 
-  /** Repas actifs de chaque jour (existants en base ou vides). */
+  /**
+   * Repas de chaque jour : ceux planifiés par défaut (réglages) sauf s'ils
+   * ont été retirés ce jour-là, plus ceux ajoutés ce jour-là seulement.
+   */
   const days = useMemo(
     () =>
-      weekDays(monday).map((day) => ({
-        day,
-        slots: meals.map(
-          (meal): MealPlanEntry =>
-            plans?.find((p) => p.day === day && p.meal === meal) ?? {
-              key: entryKey(day, meal),
-              day,
-              meal,
-              recipeId: null,
-              portions: 1,
-              locked: false,
-            },
-        ),
-      })),
+      weekDays(monday).map((day) => {
+        const rows = (plans ?? []).filter((p) => p.day === day);
+        const slots = MOMENTS.map((m) => m.id)
+          .filter((meal) => {
+            const row = rows.find((r) => r.meal === meal);
+            return row ? !row.skipped : (meals as string[]).includes(meal);
+          })
+          .map(
+            (meal): MealPlanEntry =>
+              rows.find((r) => r.meal === meal) ?? emptySlot(day, meal),
+          );
+        return { day, slots };
+      }),
     [monday, meals, plans],
   );
 
@@ -89,6 +91,19 @@ export function usePlanningWeek(monday: string) {
     toggleLock: (slot: MealPlanEntry) => save([{ ...slot, locked: !slot.locked }]),
     setPortions: (slot: MealPlanEntry, portions: number) => save([{ ...slot, portions: Math.max(0.5, portions) }]),
     clear: (slot: MealPlanEntry) => run("Suppression", () => removePlanEntries([slot])),
+    /** Ajoute un repas à une journée et lui tire un plat. */
+    addMeal: (day: string, meal: string) => {
+      const d = days.find((x) => x.day === day);
+      if (!d) return;
+      const slot = { ...emptySlot(day, meal), skipped: false };
+      const drawn = drawDay([...d.slots.map((s) => ({ ...s, locked: true })), slot], ctx);
+      return save([drawn[drawn.length - 1]]);
+    },
+    /** Retire un repas de cette journée seulement. */
+    removeMeal: (slot: MealPlanEntry) =>
+      (meals as string[]).includes(slot.meal)
+        ? save([{ ...slot, recipeId: null, locked: false, skipped: true }])
+        : run("Suppression", () => removePlanEntries([slot])),
     /** Remplit des repas (modèle), en respectant les verrous, puis tire les repas vides. */
     applyMeals: (fills: { day: string; meal: string; recipeId: string | null }[]) => {
       const targeted = new Set(fills.map((f) => f.day));
@@ -112,3 +127,7 @@ export function usePlanningWeek(monday: string) {
 }
 
 export type PlanningWeek = ReturnType<typeof usePlanningWeek>;
+
+function emptySlot(day: string, meal: string): MealPlanEntry {
+  return { key: entryKey(day, meal), day, meal, recipeId: null, portions: 1, locked: false };
+}

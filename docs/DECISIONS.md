@@ -69,3 +69,9 @@ Format : date — décision — pourquoi.
 - **Images** : photo perso ou illustration IA (Cloudflare FLUX, style vieux livre de cuisine — désactivée tant que les variables Cloudflare manquent), WebP 800 px dans Supabase Storage (bucket `recipe-images`, migration 0005), fiche + cartes, « Illustrations automatiques » dans Réglages, images mises en cache hors ligne.
 - **Commande vocale** en option (bouton micro du mode cuisine) : suivant, précédent, minuteur X minutes, stop.
 - Onglets : Recettes, Menu, Courses, Astuces, Réglages ; « À revoir » en haut de l'accueil et dans Réglages.
+
+## 2026-10-01 — Retours V2
+
+- Mode cuisine : plus d'étiquette « En cours » ; l'étape en cours grossit légèrement par un zoom visuel (`transform`), qui ne pousse pas les autres étapes (défilement toujours fluide). Réglage `zoom` dans `src/components/cook/stepStyles.ts`.
+- Planning, vue jour : ajouter un repas à une journée (« + Goûter ») ou en retirer un (« Retirer ce repas de la journée »), sans toucher aux autres jours. Colonne `meal_plans.skipped` (migration 0006).
+- Chiffres en rouge au-dessus de l'objectif pour kcal, lipides, glucides seulement (`warnAbove` dans `src/config/planning.ts`) ; couleur `--color-danger` du thème.

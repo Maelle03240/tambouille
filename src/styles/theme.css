@@ -13,6 +13,8 @@
   --color-accent: #c67139;
   --color-accent-2: #7a8a5e;
   --color-divider: color-mix(in srgb, #201e1d 16%, transparent);
+  /* Alerte : valeur au-dessus de l'objectif (kcal, lipides, glucides). */
+  --color-danger: #c2412d;
 
   --color-neutral-100: #f9f4ed;
   --color-neutral-200: #eee7db;

@@ -54,6 +54,12 @@ export function distance(value: number, t: Target): number {
   return 0;
 }
 
+/** Au-dessus du maximum, pour un nutriment où c'est à surveiller (kcal, lipides, glucides). */
+export function isOver(key: NutrientKey, value: number, t: Target): boolean {
+  const n = NUTRIENTS.find((x) => x.key === key);
+  return !!n?.warnAbove && t?.max != null && Math.round(value) > t.max;
+}
+
 export function isOnTarget(value: number, t: Target, tolerance = 0.05) {
   return t != null && distance(value, t) <= tolerance;
 }

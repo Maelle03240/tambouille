@@ -5,12 +5,16 @@
  */
 import type { MomentId } from "./moments";
 
+/**
+ * Nutriments suivis. warnAbove : le chiffre passe en rouge au-dessus de
+ * l'objectif (pas pour les protéines ni les fibres : en avoir plus n'est pas un souci).
+ */
 export const NUTRIENTS = [
-  { key: "protein", label: "Protéines", unit: "g", field: "proteinG" },
-  { key: "kcal", label: "Kcal", unit: "kcal", field: "kcal" },
-  { key: "fat", label: "Lipides", unit: "g", field: "fatG" },
-  { key: "carbs", label: "Glucides", unit: "g", field: "carbsG" },
-  { key: "fiber", label: "Fibres", unit: "g", field: "fiberG" },
+  { key: "protein", label: "Protéines", unit: "g", field: "proteinG", warnAbove: false },
+  { key: "kcal", label: "Kcal", unit: "kcal", field: "kcal", warnAbove: true },
+  { key: "fat", label: "Lipides", unit: "g", field: "fatG", warnAbove: true },
+  { key: "carbs", label: "Glucides", unit: "g", field: "carbsG", warnAbove: true },
+  { key: "fiber", label: "Fibres", unit: "g", field: "fiberG", warnAbove: false },
 ] as const;
 
 export type NutrientKey = (typeof NUTRIENTS)[number]["key"];

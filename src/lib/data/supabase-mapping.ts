@@ -173,11 +173,12 @@ export function mealPlanFromRow(m: Row): MealPlanEntry {
     recipeId: m.recipe_id,
     portions: Number(m.portions ?? 1),
     locked: m.locked ?? false,
+    skipped: m.skipped ?? false,
   };
 }
 
 export function mealPlanToRow(e: MealPlanEntry, ownerId: string): Row {
-  return { owner_id: ownerId, day: e.day, meal: e.meal, recipe_id: e.recipeId, portions: e.portions, locked: e.locked };
+  return { owner_id: ownerId, day: e.day, meal: e.meal, recipe_id: e.recipeId, portions: e.portions, locked: e.locked, skipped: e.skipped ?? false };
 }
 
 export function templateFromRow(t: Row): MealTemplate {

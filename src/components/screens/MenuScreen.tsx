@@ -15,12 +15,12 @@ import { RecipePicker } from "@/components/planning/RecipePicker";
 import { SlotSheet } from "@/components/planning/SlotSheet";
 import { ApplyTemplateSheet, SaveTemplateSheet } from "@/components/planning/TemplateSheets";
 import { usePlanningWeek } from "@/components/planning/usePlanningWeek";
-import { IconBack, IconCart, IconChevronRight, IconShuffle } from "@/components/ui/icons";
+import { IconBack, IconCart, IconChevronRight, IconPlus, IconShuffle } from "@/components/ui/icons";
 import { EmptyState, Spinner, cx } from "@/components/ui/primitives";
-import { momentLabel } from "@/config/moments";
+import { MOMENTS, momentLabel } from "@/config/moments";
 import { useSettings } from "@/lib/data/hooks";
 import { addDays, longLabel, parseDay, shortLetter, today, weekLabel, weekStart } from "@/lib/planning/dates";
-import { isOnTarget, targetFor, targetValue } from "@/lib/planning/nutrition";
+import { isOnTarget, isOver, targetFor, targetValue } from "@/lib/planning/nutrition";
 import type { MealPlanEntry } from "@/lib/planning/types";
 import { isProteinRich } from "@/lib/recipes/tags";
 import type { Recipe } from "@/lib/recipes/types";
@@ -140,13 +140,15 @@ export function MenuScreen() {
                           {longLabel(d.day).split(" ")[0]} {parseDay(d.day).getDate()}
                         </span>
                         <span className="text-sm font-bold">
-                          {Math.round(sum.protein)} g prot. <span className="font-semibold text-neutral-700">· {Math.round(sum.kcal).toLocaleString("fr-FR")} kcal</span>
+                          {Math.round(sum.protein)} g prot. <span className={cx("font-semibold", isOver("kcal", sum.kcal, kt) ? "font-bold text-danger" : "text-neutral-700")}>
+                            · {Math.round(sum.kcal).toLocaleString("fr-FR")} kcal
+                          </span>
                         </span>
                       </button>
                       {kv && (
                         <div className="mx-1 my-1 h-1.5 overflow-hidden rounded-full bg-neutral-300">
                           <div
-                            className={cx("h-full rounded-full", isOnTarget(sum.kcal, kt, 0.1) ? "bg-leaf-600" : "bg-accent-500")}
+                            className={cx("h-full rounded-full", isOver("kcal", sum.kcal, kt) ? "bg-danger" : isOnTarget(sum.kcal, kt, 0.1) ? "bg-leaf-600" : "bg-accent-500")}
                             style={{ width: `${Math.min(100, (sum.kcal / kv) * 100)}%` }}
                           />
                         </div>
@@ -216,6 +218,20 @@ export function MenuScreen() {
                     />
                   ))}
                 </div>
+                {MOMENTS.some((m) => !current.slots.some((s) => s.meal === m.id)) && (
+                  <div className="flex flex-wrap gap-2">
+                    {MOMENTS.filter((m) => !current.slots.some((s) => s.meal === m.id)).map((m) => (
+                      <button
+                        key={m.id}
+                        type="button"
+                        onClick={() => guard(() => w.addMeal(current.day, m.id))}
+                        className="flex h-10 items-center gap-1.5 rounded-full border-[1.5px] border-dashed border-neutral-500 px-3.5 text-sm font-bold text-neutral-800"
+                      >
+                        <IconPlus size={16} /> {m.label}
+                      </button>
+                    ))}
+                  </div>
+                )}
                 <button
                   type="button"
                   onClick={() => guard(() => w.drawDay(current.day))}
@@ -269,7 +285,7 @@ export function MenuScreen() {
         onPortions={(p) => guard(() => w.setPortions(sheetSlot!, p))}
         onClear={() =>
           guard(async () => {
-            await w.clear(sheetSlot!);
+            await w.removeMeal(sheetSlot!);
             setOpenSlot(null);
           })
         }

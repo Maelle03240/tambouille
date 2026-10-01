@@ -11,6 +11,8 @@ export interface MealPlanEntry {
   /** En portions de la recette (1 = une portion). */
   portions: number;
   locked: boolean;
+  /** Repas retiré ce jour-là (alors qu'il est planifié les autres jours). */
+  skipped?: boolean;
 }
 
 export interface MealTemplate {

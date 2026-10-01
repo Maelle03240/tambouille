@@ -28,6 +28,7 @@ export function SlotSheet({
   onPortions: (p: number) => void;
   onClear: () => void;
 }) {
+  // onClear = retirer ce repas de la journée
   if (!slot) return null;
   return (
     <Sheet open onClose={onClose}>
@@ -100,11 +101,9 @@ export function SlotSheet({
         ) : (
           <span />
         )}
-        {recipe && (
-          <button type="button" onClick={onClear} className="col-span-2 h-10 text-sm font-bold text-neutral-700">
-            Vider ce repas
-          </button>
-        )}
+        <button type="button" onClick={onClear} className="col-span-2 h-10 text-sm font-bold text-neutral-700">
+          Retirer ce repas de la journée
+        </button>
       </div>
     </Sheet>
   );

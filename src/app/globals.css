@@ -21,6 +21,7 @@
   --color-ink: var(--color-text);
   --color-accent: var(--color-accent);
   --color-divider: var(--color-divider);
+  --color-danger: var(--color-danger);
 
   --color-neutral-100: var(--color-neutral-100);
   --color-neutral-200: var(--color-neutral-200);

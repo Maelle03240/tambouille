@@ -5,7 +5,7 @@ import { cx } from "@/components/ui/primitives";
 import { categoryColors } from "@/config/categories";
 import { momentLabel } from "@/config/moments";
 import { NUTRIENTS, type NutrientKey } from "@/config/planning";
-import { isOnTarget, targetFor, targetValue } from "@/lib/planning/nutrition";
+import { isOnTarget, isOver, targetFor, targetValue } from "@/lib/planning/nutrition";
 import type { MealPlanEntry, Nutrition } from "@/lib/planning/types";
 import { formatDecimal } from "@/lib/recipes/quantities";
 import { isProteinRich } from "@/lib/recipes/tags";
@@ -62,18 +62,19 @@ export function NutritionBars({
   const mt = targetFor(main.key, targets);
   const mv = targetValue(mt);
   const diff = mv != null ? mv - sum[main.key] : 0;
+  const mainOver = isOver(main.key, sum[main.key], mt);
   return (
     <div className="flex flex-col gap-2.5 rounded-[28px] bg-neutral-100 p-4 shadow-md">
       <div className="flex items-center justify-between text-[13px]">
         <span className="font-bold tracking-[.06em] text-accent-700 uppercase">{main.label} · priorité</span>
         {mv != null && (
-          <span className="font-semibold text-neutral-700">
+          <span className={cx("font-semibold", mainOver ? "font-bold text-danger" : "text-neutral-700")}>
             {isOnTarget(sum[main.key], mt) ? "Objectif atteint ✓" : diff > 0 ? `Il manque ${fmt(main.key, diff)} ${main.unit}` : `+ ${fmt(main.key, -diff)} ${main.unit}`}
           </span>
         )}
       </div>
       <div className="flex items-baseline gap-1.5">
-        <span className="font-heading text-[46px] leading-none tabular-nums">{fmt(main.key, sum[main.key])}</span>
+        <span className={cx("font-heading text-[46px] leading-none tabular-nums", mainOver && "text-danger")}>{fmt(main.key, sum[main.key])}</span>
         <span className="text-[17px] font-bold text-neutral-700">
           {mv != null ? `/ ${fmt(main.key, mv)} ` : ""}
           {main.unit}
@@ -82,23 +83,25 @@ export function NutritionBars({
       <div className="h-4 overflow-hidden rounded-full bg-neutral-300">
         <div
           className="h-full rounded-full transition-[width] duration-300"
-          style={{ width: `${mv ? Math.min(100, (sum[main.key] / mv) * 100) : 0}%`, background: NUT_COLORS[main.key] }}
+          style={{ width: `${mv ? Math.min(100, (sum[main.key] / mv) * 100) : 0}%`, background: mainOver ? "var(--color-danger)" : NUT_COLORS[main.key] }}
         />
       </div>
       <div className="mt-1.5 flex flex-col gap-2">
         {others.map((n) => {
-          const tv = targetValue(targetFor(n.key, targets));
+          const t = targetFor(n.key, targets);
+          const tv = targetValue(t);
+          const over = isOver(n.key, sum[n.key], t);
           return (
             <div key={n.key} className="grid grid-cols-[72px_minmax(0,1fr)_auto] items-center gap-2.5">
               <span className="text-sm font-bold">{n.label}</span>
               <div className="h-2 overflow-hidden rounded-full bg-neutral-300">
                 <div
                   className="h-full rounded-full transition-[width] duration-300"
-                  style={{ width: `${tv ? Math.min(100, (sum[n.key] / tv) * 100) : 0}%`, background: NUT_COLORS[n.key] }}
+                  style={{ width: `${tv ? Math.min(100, (sum[n.key] / tv) * 100) : 0}%`, background: over ? "var(--color-danger)" : NUT_COLORS[n.key] }}
                 />
               </div>
               <span className="text-[13px] font-semibold whitespace-nowrap text-neutral-800 tabular-nums">
-                {fmt(n.key, sum[n.key])}
+                <span className={cx(over && "font-bold text-danger")}>{fmt(n.key, sum[n.key])}</span>
                 {tv != null ? ` / ${fmt(n.key, tv)}` : ""} {n.unit}
               </span>
             </div>
