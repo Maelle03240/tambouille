@@ -7,6 +7,7 @@ import type { Recipe } from "@/lib/recipes/types";
 import { formatDuration } from "@/lib/recipes/markers";
 import { RATINGS } from "@/config/ui";
 import { imageUrl } from "@/lib/images";
+import { cx } from "@/components/ui/primitives";
 import { totalMinutes } from "@/lib/recipes/tags";
 
 /**
@@ -32,7 +33,10 @@ export function RecipeCard({ recipe }: { recipe: Recipe }) {
         {total ? <span className="normal-case tracking-normal">{formatDuration(total)}</span> : null}
       </div>
       {imageUrl(recipe.imagePath) ? (
-        <div className="min-h-24 flex-1 rounded-[14px] bg-cover bg-center" style={{ backgroundImage: `url("${imageUrl(recipe.imagePath)}")` }} />
+        <div
+          className={cx("min-h-24 flex-1 bg-center", recipe.imageKind === "generated" ? "bg-contain bg-no-repeat mix-blend-multiply" : "rounded-[14px] bg-cover")}
+          style={{ backgroundImage: `url("${imageUrl(recipe.imagePath)}")` }}
+        />
       ) : (
         <div className="flex-1" />
       )}

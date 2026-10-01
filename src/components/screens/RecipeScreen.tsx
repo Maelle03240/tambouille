@@ -87,7 +87,15 @@ export function RecipeScreen() {
           {/* Photo perso > illustration > couverture typographique (le titre sur la couleur) */}
           {imageUrl(recipe.imagePath) && (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={imageUrl(recipe.imagePath)!} alt="" className="mt-1 h-52 w-full rounded-3xl object-cover sm:h-72" />
+            <img
+              src={imageUrl(recipe.imagePath)!}
+              alt=""
+              className={cx(
+                "mt-1 h-52 w-full sm:h-72",
+                // illustration : dessin seul, son fond blanc se fond dans la couleur de la fiche
+                recipe.imageKind === "generated" ? "object-contain mix-blend-multiply" : "rounded-3xl object-cover",
+              )}
+            />
           )}
           <h1 className="pt-6 font-heading text-[40px] leading-[1.02] text-balance sm:text-[52px]">{recipe.title}</h1>
           <div className="flex flex-wrap gap-x-4 gap-y-1 text-[15px] font-bold">

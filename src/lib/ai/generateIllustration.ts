@@ -9,7 +9,7 @@ import { geminiJson } from "./providers/gemini";
 
 /** Style imposé à toutes les illustrations (spec §8). */
 export const ILLUSTRATION_STYLE =
-  "ink and watercolor illustration in the style of an old French cookbook, cream paper background, soft muted colors, hand-drawn, never photorealistic, no text";
+  "simple hand-drawn ink and watercolor drawing in the style of an old French cookbook, soft muted colors, the dish alone, isolated on a plain pure white background, no table, no scenery, no shadow, never photorealistic, no text";
 
 export interface IllustrationGenerator {
   readonly name: string;
@@ -36,8 +36,9 @@ class CloudflareFluxGenerator implements IllustrationGenerator {
       {
         method: "POST",
         headers: { Authorization: `Bearer ${this.token}`, "Content-Type": "application/json" },
-        // le style en tête : sinon une description détaillée tire vers la photo
-        body: JSON.stringify({ prompt: `Hand-drawn ink and watercolor illustration of ${subject}. ${ILLUSTRATION_STYLE}`, steps: 4 }),
+        // le style en tête : sinon une description détaillée tire vers la photo ;
+        // fond blanc uni, fondu dans la couleur de la carte à l'affichage (multiply)
+        body: JSON.stringify({ prompt: `Simple ink and watercolor drawing of ${subject}. ${ILLUSTRATION_STYLE}`, steps: 4 }),
         signal: AbortSignal.timeout(60_000),
       },
     );
@@ -68,7 +69,7 @@ export async function describeDish(title: string, ingredients: string[] = []): P
     const out = (await geminiJson({
       apiKey,
       system:
-        "You write the subject of an illustration of a finished, served dish. Answer in English, one short simple phrase (max 12 words): the dish as served (plate, bowl, glass…) and its main look. Plain food words only (say pie, not tart). Never names of people or places, never quotes.",
+        "You write the subject of an illustration of a finished, served dish. Answer in English, one short simple phrase (max 12 words): the dish as served (plate, bowl, glass…) and its main look, nothing around it. Plain food words only (say pie, not tart). Never names of people or places, never quotes.",
       schema: { type: "OBJECT", properties: { subject: { type: "STRING" } }, required: ["subject"] },
       parts: [{ text: `Recette : ${title}
 Ingrédients : ${ingredients.slice(0, 8).join(", ")}` }],
