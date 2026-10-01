@@ -106,3 +106,25 @@ Format : date — décision — pourquoi.
 ## À faire plus tard (idées validées, pas encore codées)
 
 - **Découverte (swipe)** — usage visé : « je veux faire un gâteau mais je ne sais pas lequel ». Je filtre (ex. Desserts), les recettes défilent une par une : swipe à gauche = écartée, swipe à droite = gardée (« like »). À la fin, la liste de ce que j'ai gardé, pour choisir entre elles. Emplacement proposé : bouton sur l'accueil à côté du frigo (pas un 6ᵉ onglet).
+
+## 2026-10-01 — Famille : comptes, foyers, propositions (validé)
+
+Remplace « ouverture à la famille en écriture » (spec V3). Deux étapes : **1. comptes et foyers**, puis **2. recettes perso et propositions**.
+
+**Comptes et foyers (étape 1)**
+- 1 compte = 1 personne. À la création d'un compte, son foyer est créé automatiquement (« Chez <prénom> ») ; l'admin peut ajouter quelqu'un à un autre foyer. Un compte peut être dans plusieurs foyers ; le sélecteur n'apparaît que dans ce cas ; le dernier foyer utilisé est retenu (sur l'appareil). Le hors ligne ne garde que ce foyer.
+- Inscriptions publiques fermées : l'admin invite par e-mail, la personne choisit son mot de passe une fois.
+- Rôles : admin, membre (`editor`), lecture seule (`reader`).
+- Rattachés au **foyer** : menu, modèles, objectifs (le tirage en dépend), liste de courses (partagée, cochable hors ligne, synchronisée), basiques. Foyer supprimé ⇒ tout ce qui va avec aussi.
+- Le frigo reste sur l'appareil (usage du moment, rien de partagé).
+- Admin : section « Admin » dans Réglages (propositions avec leur nombre, membres et foyers, invitations) — rien sur l'accueil.
+- Toutes les règles appliquées par la RLS Supabase. Routes IA : comptes connectés seulement (déjà le cas). Quota IA épuisé ⇒ simple message.
+
+**Recettes perso et propositions (étape 2)**
+- Bibliothèque commune : ce que l'admin crée ou modifie y va directement.
+- Ce qu'un membre crée ou modifie devient sa version perso (visible par les membres de ses foyers, utilisable tout de suite, il peut y mettre une image et la supprimer) et envoie une proposition. Une seule proposition en cours par personne et par recette (re-modifier met à jour la proposition).
+- Si l'admin a modifié l'originale entre-temps, sa version reste la base : accepter n'applique que les changements de la personne (fusion par champ).
+- Plusieurs propositions sur la même recette : une seule fiche, les versions côte à côte ; accepter l'une, les deux ou aucune.
+- Accepter = fusionner : la version perso rejoint la bibliothèque, menus / courses / « À revoir » qui l'utilisaient pointent vers la recette commune.
+- Refus : la version perso reste chez son auteur (pas de message).
+- Originale supprimée ⇒ les versions perso restent à leurs auteurs. Un membre peut supprimer sa version et revenir à l'originale. Un membre ne supprime rien dans la bibliothèque.
