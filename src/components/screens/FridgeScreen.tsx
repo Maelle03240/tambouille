@@ -9,11 +9,11 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import { OfflineBanner } from "@/components/app/OfflineBanner";
 import { TabBar } from "@/components/app/TabBar";
-import { IconBack, IconCheck, IconPlus, IconTrash } from "@/components/ui/icons";
+import { IconBack, IconPlus, IconTrash } from "@/components/ui/icons";
 import { EmptyState, TextInput, cx } from "@/components/ui/primitives";
 import { categoryColors, getCategory } from "@/config/categories";
-import { FRIDGE_ALWAYS, FRIDGE_STAPLES } from "@/config/fridge";
-import { setFridge } from "@/lib/data/actions";
+import { FRIDGE_ALWAYS, FRIDGE_BASICS } from "@/config/fridge";
+import { setFridge, setFridgeBasics } from "@/lib/data/actions";
 import { useFridge, usePantry, useRecipes } from "@/lib/data/hooks";
 import { fridgeMatches } from "@/lib/recipes/fridge";
 
@@ -23,15 +23,18 @@ export function FridgeScreen() {
   const fridge = useFridge();
   const [draft, setDraft] = useState("");
 
-  const items = useMemo(() => fridge ?? [], [fridge]);
+  const items = useMemo(() => fridge?.items ?? [], [fridge]);
+  const withBasics = fridge?.basics ?? true;
   const matches = useMemo(
-    () => fridgeMatches(recipes ?? [], items, [...FRIDGE_ALWAYS, ...(pantry ?? []).map((b) => b.name)]),
-    [recipes, items, pantry],
+    () =>
+      fridgeMatches(recipes ?? [], items, [
+        ...FRIDGE_ALWAYS,
+        ...(withBasics ? FRIDGE_BASICS : []),
+        ...(pantry ?? []).map((b) => b.name),
+      ]),
+    [recipes, items, withBasics, pantry],
   );
 
-  const staples: readonly string[] = FRIDGE_STAPLES;
-  const others = items.filter((it) => !staples.includes(it));
-  const toggle = (it: string) => setFridge(items.includes(it) ? items.filter((x) => x !== it) : [...items, it]);
 
   function add(e: React.FormEvent) {
     e.preventDefault();
@@ -68,7 +71,7 @@ export function FridgeScreen() {
 
       <main className="mx-auto flex max-w-3xl flex-col gap-3 px-4 pt-3">
         <form onSubmit={add} className="flex gap-2">
-          <TextInput value={draft} onChange={(e) => setDraft(e.target.value)} placeholder="J'ai… ex. œufs, courgettes" enterKeyHint="done" />
+          <TextInput value={draft} onChange={(e) => setDraft(e.target.value)} placeholder="J'ai aussi… ex. courgettes, poulet" enterKeyHint="done" />
           <button
             type="submit"
             aria-label="Ajouter"
@@ -79,31 +82,20 @@ export function FridgeScreen() {
           </button>
         </form>
 
-        {/* classiques : un geste au lieu de tout écrire */}
-        <div className="flex flex-wrap gap-1.5">
-          {staples.map((it) => {
-            const on = items.includes(it);
-            return (
-              <button
-                key={it}
-                type="button"
-                aria-pressed={on}
-                onClick={() => toggle(it)}
-                className={cx(
-                  "flex h-9 items-center gap-1 rounded-full border-[1.5px] px-3.5 text-sm font-bold",
-                  on ? "border-leaf-700 bg-leaf-700 text-neutral-100" : "border-divider text-neutral-800",
-                )}
-              >
-                {on && <IconCheck size={14} stroke={3} />}
-                {it}
-              </button>
-            );
-          })}
-        </div>
+        {/* les basiques d'un seul geste (comme « Masquer les basiques » des courses) */}
+        <button type="button" onClick={() => setFridgeBasics(!withBasics)} className="flex min-h-12 items-center gap-2.5 px-1 text-left">
+          <span className={cx("relative h-7 w-12 flex-none rounded-full transition-colors", withBasics ? "bg-leaf-600" : "bg-neutral-400")}>
+            <span className={cx("absolute top-0.5 size-6 rounded-full bg-white shadow-sm transition-all", withBasics ? "left-[22px]" : "left-0.5")} />
+          </span>
+          <span className="flex flex-col text-sm leading-tight">
+            <span className="font-bold">J&apos;ai les basiques</span>
+            <span className="text-neutral-700">{FRIDGE_BASICS.join(", ")}</span>
+          </span>
+        </button>
 
-        {others.length > 0 && (
+        {items.length > 0 && (
           <div className="flex flex-wrap gap-2">
-            {others.map((it) => (
+            {items.map((it) => (
               <button
                 key={it}
                 type="button"

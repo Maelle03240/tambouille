@@ -100,4 +100,4 @@ Format : date — décision — pourquoi.
 ## 2026-10-01 — V3
 
 - **Mode frigo vide** : bouton frigo à droite de la recherche (accueil) → page « Mon frigo » (`/frigo`, dispo hors ligne). Je tape ce que j'ai (plusieurs à la fois avec des virgules), l'appli liste les recettes qui l'utilisent, celles où il manque le moins d'abord, avec « Il manque : … » ou « Tout y est ✓ ». Les basiques des courses comptent comme présents. Liste gardée sur l'appareil. Logique testée : `src/lib/recipes/fridge.ts` (pluriels, accents, « oeuf » = « œuf »).
-- Mon frigo : produits classiques à cocher (sel, huile, farine, sucre, beurre, œufs, pâtes, riz…, liste dans `src/config/fridge.ts`) ; l'eau compte toujours comme disponible.
+- Mon frigo : interrupteur « J'ai les basiques » (sel, poivre, huile, beurre, farine, sucre, œufs, pâtes, riz, levure, moutarde, épices, lait), le reste s'écrit à la main ; familles (« sucre » couvre cassonade, sucre roux… ; « épices », « pâtes », « fromage »…) ; l'eau toujours disponible ; tri : celles qui utilisent le plus de mes produits d'abord, puis il manque le moins. Réglages : `src/config/fridge.ts`.

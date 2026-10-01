@@ -261,6 +261,10 @@ export async function setFridge(items: string[]) {
   await setMeta("fridge", items);
 }
 
+export async function setFridgeBasics(on: boolean) {
+  await setMeta("fridgeBasics", on);
+}
+
 export async function updateShopping(fn: (s: ShoppingState) => ShoppingState) {
   const cur = { ...EMPTY_SHOPPING, ...((await getMeta("shopping")) ?? {}) };
   await setMeta("shopping", fn(cur));

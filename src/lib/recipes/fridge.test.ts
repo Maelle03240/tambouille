@@ -32,4 +32,23 @@ describe("frigo vide", () => {
     expect(fridgeMatches([curry], ["œufs"], ["sel"])).toEqual([]);
     expect(fridgeMatches([curry], [])).toEqual([]);
   });
+
+  it("un produit couvre sa famille (sucre → cassonade, sucre roux), sans faux amis", () => {
+    const cookies = recipe("Cookies", ["cassonade", "sucre roux", "farine"]);
+    expect(fridgeMatches([cookies], ["sucre", "farine"])[0].missing).toEqual([]);
+    const cake = recipe("Cake", ["olives vertes", "huile"]);
+    expect(fridgeMatches([cake], ["huile"])[0].missing).toEqual(["olives vertes"]);
+  });
+
+  it("celles qui utilisent le plus de mes produits d'abord", () => {
+    const a = recipe("A", ["courgettes", "poulet", "riz", "crème", "curry"]);
+    const b = recipe("B", ["courgettes", "œufs"]);
+    const res = fridgeMatches([b, a], ["courgettes", "poulet"]);
+    expect(res.map((m) => m.recipe.title)).toEqual(["A", "B"]);
+  });
+
+  it("rien de noté : seulement ce qu'on peut faire avec les basiques", () => {
+    const res = fridgeMatches([omelette, curry], [], ["œufs", "beurre", "sel", "poivre"]);
+    expect(res.map((m) => m.recipe.title)).toEqual(["Omelette"]);
+  });
 });

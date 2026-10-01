@@ -22,7 +22,7 @@ export interface MetaEntry {
   value: unknown;
 }
 
-export type MetaKey = "lastSyncAt" | "profile" | "settings" | "features" | "shopping" | "fridge";
+export type MetaKey = "lastSyncAt" | "profile" | "settings" | "features" | "shopping" | "fridge" | "fridgeBasics";
 
 /** Sélection de la liste de courses (sur cet appareil seulement). */
 export interface ShoppingState {
@@ -51,6 +51,8 @@ export type MetaValue = {
   shopping: ShoppingState;
   /** Mode frigo vide : ce que j'ai sous la main (sur cet appareil). */
   fridge: string[];
+  /** « J'ai les basiques » coché (vrai par défaut). */
+  fridgeBasics: boolean;
 };
 
 class CarnetDB extends Dexie {

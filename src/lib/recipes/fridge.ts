@@ -3,6 +3,7 @@
  * recettes je peux faire, et ce qui manque. Les basiques (sel, huile…)
  * comptent comme toujours là. Fonctions pures, testées dans fridge.test.ts.
  */
+import { FRIDGE_FAMILIES } from "@/config/fridge";
 import type { Recipe } from "./types";
 
 export interface FridgeMatch {
@@ -39,13 +40,30 @@ export function ingredientMatches(ingredientName: string, term: string): boolean
   return tw.length > 0 && tw.every((w) => iw.includes(w));
 }
 
+/** Mots-clés couverts par un produit : lui-même + sa famille (« sucre » → cassonade…). */
+function variants(term: string, families: Record<string, string[]>): string[] {
+  const key = Object.keys(families).find((k) => ingredientMatches(k, term) && ingredientMatches(term, k));
+  return key ? [term, ...families[key]] : [term];
+}
+
 /**
- * Recettes qui utilisent au moins un des produits que j'ai, classées par
- * nombre d'ingrédients manquants (0 d'abord), puis par part de ce que j'ai.
+ * Recettes faisables avec ce que j'ai :
+ * - `have` : produits notés à la main ; `basics` : comptés comme présents
+ *   (« J'ai les basiques », mes basiques des courses, l'eau) ;
+ * - une recette apparaît si elle utilise au moins un produit noté (ou, si
+ *   rien n'est noté, s'il ne manque rien) ;
+ * - celles qui utilisent le plus de mes produits d'abord, puis celles où il
+ *   manque le moins.
  */
-export function fridgeMatches(recipes: Recipe[], have: string[], basics: string[] = []): FridgeMatch[] {
-  const terms = have.map((h) => h.trim()).filter(Boolean);
-  if (!terms.length) return [];
+export function fridgeMatches(
+  recipes: Recipe[],
+  have: string[],
+  basics: string[] = [],
+  families: Record<string, string[]> = FRIDGE_FAMILIES,
+): FridgeMatch[] {
+  const mine = have.map((h) => h.trim()).filter(Boolean).flatMap((t) => variants(t, families));
+  const always = basics.flatMap((t) => variants(t, families));
+  if (!mine.length && !always.length) return [];
   const out: (FridgeMatch & { used: number })[] = [];
   for (const recipe of recipes) {
     const names = [...new Set(recipe.ingredients.map((i) => i.name.trim()).filter(Boolean))];
@@ -54,19 +72,19 @@ export function fridgeMatches(recipes: Recipe[], have: string[], basics: string[
     const missing: string[] = [];
     let used = 0;
     for (const name of names) {
-      if (terms.some((t) => ingredientMatches(name, t))) {
+      if (mine.some((t) => ingredientMatches(name, t))) {
         got.push(name);
         used++;
-      } else if (basics.some((b) => ingredientMatches(name, b))) got.push(name);
+      } else if (always.some((b) => ingredientMatches(name, b))) got.push(name);
       else missing.push(name);
     }
-    if (used > 0) out.push({ recipe, have: got, missing, used });
+    if (used > 0 || (!mine.length && missing.length === 0)) out.push({ recipe, have: got, missing, used });
   }
   return out
     .sort(
       (a, b) =>
-        a.missing.length - b.missing.length ||
         b.used - a.used ||
+        a.missing.length - b.missing.length ||
         a.recipe.title.localeCompare(b.recipe.title, "fr"),
     )
     // eslint-disable-next-line @typescript-eslint/no-unused-vars

@@ -54,7 +54,7 @@ export function useShopping() {
 }
 
 export function useFridge() {
-  return useLiveQuery(async () => (await getMeta("fridge")) ?? [], []);
+  return useLiveQuery(async () => ({ items: (await getMeta("fridge")) ?? [], basics: (await getMeta("fridgeBasics")) ?? true }), []);
 }
 
 export function useCustomIngredients() {
