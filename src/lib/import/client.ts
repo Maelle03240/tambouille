@@ -27,3 +27,41 @@ export function extractUrl(text: string): string | null {
   const t = text.trim();
   return /^https?:\/\/\S+$/i.test(t) ? t : null;
 }
+
+/* ───────────── Ingrédients perso / nutrition (V2) ───────────── */
+
+async function postJson<T>(url: string, body: unknown): Promise<T> {
+  const session = await getRepository().getSession();
+  const res = await fetch(url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...(session?.accessToken ? { Authorization: `Bearer ${session.accessToken}` } : {}),
+    },
+    body: JSON.stringify(body),
+  });
+  const json = await res.json().catch(() => ({ error: `Erreur ${res.status}` }));
+  if (!res.ok || !json.data) throw new Error(json.error ?? "La lecture a échoué.");
+  return json.data as T;
+}
+
+export interface LabelResult {
+  name: string;
+  kcal_100g: number | null;
+  protein_100g: number | null;
+  fat_100g: number | null;
+  carbs_100g: number | null;
+  fiber_100g: number | null;
+}
+
+export const requestLabel = (image: { mimeType: string; base64: string }) => postJson<LabelResult>("/api/read-label", image);
+
+export interface PerPortionResult {
+  kcal: number | null;
+  protein_g: number | null;
+  fat_g: number | null;
+  carbs_g: number | null;
+  fiber_g: number | null;
+}
+
+export const requestNutrition = (body: unknown) => postJson<PerPortionResult>("/api/nutrition", body);

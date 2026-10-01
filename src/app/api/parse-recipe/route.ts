@@ -5,22 +5,12 @@
  * Protégée : si Supabase est configuré, il faut être connectée (évite
  * qu'un inconnu consomme le quota gratuit).
  */
-import { createClient } from "@supabase/supabase-js";
+import { isAuthorized } from "@/lib/ai/auth";
 import { ParseError, parseRecipe } from "@/lib/ai/parseRecipe";
 
 export const maxDuration = 60;
 
 const MAX_IMAGE_BYTES = 4 * 1024 * 1024;
-
-async function isAuthorized(req: Request): Promise<boolean> {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  if (!url || !anon) return true; // mode local
-  const token = req.headers.get("authorization")?.replace(/^Bearer\s+/i, "");
-  if (!token) return false;
-  const { data, error } = await createClient(url, anon).auth.getUser(token);
-  return !error && !!data.user;
-}
 
 export async function POST(req: Request) {
   if (!(await isAuthorized(req))) {

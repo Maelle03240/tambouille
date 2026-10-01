@@ -148,3 +148,16 @@ describe("import JSON", () => {
     expect(res.ok).toBe(false);
   });
 });
+
+describe("ingrédients perso", () => {
+  const customs = [
+    { id: "s", name: "Skyr", kcal100: 60, protein100: 11, fat100: 0, carbs100: 4, fiber100: 0 },
+    { id: "w", name: "Whey vanille", kcal100: 380, protein100: 78, fat100: 6, carbs100: 6, fiber100: 0 },
+  ];
+  it("relie par mots entiers", async () => {
+    const { findCustom } = await import("./custom");
+    expect(findCustom("skyr nature", customs)?.id).toBe("s");
+    expect(findCustom("poudre whey saveur vanille", customs)?.id).toBe("w");
+    expect(findCustom("whey chocolat", customs)).toBeUndefined();
+  });
+});

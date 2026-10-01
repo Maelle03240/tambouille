@@ -4,7 +4,7 @@
  */
 import { PLANNING_DEFAULTS } from "@/config/planning";
 import { entryKey, type MealPlanEntry, type MealTemplate, type PantryBasic } from "@/lib/planning/types";
-import type { Ingredient, Profile, Recipe, ReviewItem, Step, UserSettings } from "@/lib/recipes/types";
+import type { CustomIngredient, Ingredient, Profile, Recipe, ReviewItem, Step, UserSettings } from "@/lib/recipes/types";
 import { ingredientIdsIn } from "@/lib/recipes/markers";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -182,6 +182,30 @@ export function mealPlanToRow(e: MealPlanEntry, ownerId: string): Row {
 
 export function templateFromRow(t: Row): MealTemplate {
   return { id: t.id, name: t.name, kind: t.kind, meals: t.meals ?? [] };
+}
+
+export function customIngredientFromRow(c: Row): CustomIngredient {
+  return {
+    id: c.id,
+    name: c.name,
+    kcal100: c.kcal_100g,
+    protein100: c.protein_100g,
+    fat100: c.fat_100g,
+    carbs100: c.carbs_100g,
+    fiber100: c.fiber_100g,
+  };
+}
+
+export function customIngredientToRow(c: CustomIngredient): Row {
+  return {
+    id: c.id,
+    name: c.name,
+    kcal_100g: c.kcal100,
+    protein_100g: c.protein100,
+    fat_100g: c.fat100,
+    carbs_100g: c.carbs100,
+    fiber_100g: c.fiber100,
+  };
 }
 
 export function pantryFromRow(p: Row): PantryBasic {

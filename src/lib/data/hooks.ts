@@ -52,3 +52,7 @@ export function usePantry() {
 export function useShopping() {
   return useLiveQuery(async () => ({ ...EMPTY_SHOPPING, ...((await getMeta("shopping")) ?? {}) }), []);
 }
+
+export function useCustomIngredients() {
+  return useLiveQuery(() => db.customIngredients.orderBy("name").toArray(), []);
+}

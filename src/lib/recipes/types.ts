@@ -100,6 +100,17 @@ export interface UserSettings {
   planning: PlanningSettings;
 }
 
+/** Ingrédient perso (bibliothèque V2) : valeurs réelles de l'étiquette, pour 100 g. */
+export interface CustomIngredient {
+  id: string;
+  name: string;
+  kcal100: number | null;
+  protein100: number | null;
+  fat100: number | null;
+  carbs100: number | null;
+  fiber100: number | null;
+}
+
 export interface Profile {
   id: string;
   displayName: string;

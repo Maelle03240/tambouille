@@ -7,7 +7,7 @@
  * actions.ts (écritures) et hooks.ts (lectures depuis le cache).
  */
 import type { MealPlanEntry, MealTemplate, PantryBasic } from "@/lib/planning/types";
-import type { Profile, Recipe, ReviewItem, UserSettings } from "@/lib/recipes/types";
+import type { CustomIngredient, Profile, Recipe, ReviewItem, UserSettings } from "@/lib/recipes/types";
 
 export interface Session {
   userId: string;
@@ -23,6 +23,7 @@ export interface Snapshot {
   mealPlans: MealPlanEntry[];
   templates: MealTemplate[];
   pantry: PantryBasic[];
+  customIngredients: CustomIngredient[];
 }
 
 export interface Repository {
@@ -51,4 +52,6 @@ export interface Repository {
   deleteTemplate(id: string): Promise<void>;
   savePantryBasic(b: PantryBasic): Promise<void>;
   deletePantryBasic(id: string): Promise<void>;
+  saveCustomIngredient(c: CustomIngredient): Promise<void>;
+  deleteCustomIngredient(id: string): Promise<void>;
 }

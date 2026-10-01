@@ -49,7 +49,7 @@ async function doSync() {
   const pending = await db.outbox.toArray();
   const pendingIds = new Set(pending.map((o) => o.payload.id));
 
-  await db.transaction("rw", [db.recipes, db.reviewItems, db.meta, db.mealPlans, db.templates, db.pantry], async () => {
+  await db.transaction("rw", [db.recipes, db.reviewItems, db.meta, db.mealPlans, db.templates, db.pantry, db.customIngredients], async () => {
     await db.recipes.clear();
     await db.recipes.bulkPut(snap.recipes);
     // on garde les notes locales pas encore envoyées
@@ -62,6 +62,8 @@ async function doSync() {
     await db.templates.bulkPut(snap.templates);
     await db.pantry.clear();
     await db.pantry.bulkPut(snap.pantry);
+    await db.customIngredients.clear();
+    await db.customIngredients.bulkPut(snap.customIngredients);
     if (snap.profile) await setMeta("profile", snap.profile);
     if (snap.settings) await setMeta("settings", snap.settings);
     await setMeta("lastSyncAt", new Date().toISOString());

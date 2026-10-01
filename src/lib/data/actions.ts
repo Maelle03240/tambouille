@@ -7,7 +7,7 @@ import { timersIn } from "@/lib/recipes/markers";
 import { AUTO_REVIEW_RULES, autoReviewNotes } from "@/lib/recipes/review";
 import { PLANNING_DEFAULTS } from "@/config/planning";
 import type { MealPlanEntry, MealTemplate, PantryBasic } from "@/lib/planning/types";
-import type { Recipe, ReviewItem, UserSettings } from "@/lib/recipes/types";
+import type { CustomIngredient, Recipe, ReviewItem, UserSettings } from "@/lib/recipes/types";
 import { getRepository } from ".";
 import { db, getMeta, setMeta, type ShoppingState } from "./db";
 
@@ -193,6 +193,20 @@ export async function removePantryBasic(id: string) {
   requireOnline();
   await getRepository().deletePantryBasic(id);
   await db.pantry.delete(id);
+}
+
+/* ───────────── Ingrédients perso (V2) ───────────── */
+
+export async function saveCustomIngredient(c: CustomIngredient) {
+  requireOnline();
+  await getRepository().saveCustomIngredient(c);
+  await db.customIngredients.put(c);
+}
+
+export async function deleteCustomIngredient(id: string) {
+  requireOnline();
+  await getRepository().deleteCustomIngredient(id);
+  await db.customIngredients.delete(id);
 }
 
 /* ───────────── Liste de courses (locale) ───────────── */

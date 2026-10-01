@@ -14,6 +14,7 @@ import { emptyIngredient } from "@/lib/recipes/factory";
 import type { Doubt } from "@/lib/recipes/import-format";
 import { formatDecimal, parseIngredientLine, withDe } from "@/lib/recipes/quantities";
 import type { Ingredient } from "@/lib/recipes/types";
+import { useCustomIngredients } from "@/lib/data/hooks";
 import { DoubtBox } from "./DoubtBox";
 
 /** Ligne affichée dans le champ pour un ingrédient. */
@@ -50,6 +51,7 @@ export function IngredientsEditor({
     Object.fromEntries(ingredients.map((i) => [i.id, ingredientLine(i)])),
   );
   const [openDetails, setOpenDetails] = useState<string | null>(null);
+  const customs = useCustomIngredients();
 
   const lineOf = (i: Ingredient) => lines[i.id] ?? ingredientLine(i);
 
@@ -184,6 +186,22 @@ export function IngredientsEditor({
                 <Field label="Grammes (estimés)">
                   <NumberInput value={ing.gramsEstimate} onChange={(v) => update(ing.id, { gramsEstimate: v })} />
                 </Field>
+                {!!customs?.length && (
+                  <Field label="Mon ingrédient (valeurs de l'étiquette)" className="col-span-2">
+                    <select
+                      value={ing.customIngredientId ?? ""}
+                      onChange={(e) => update(ing.id, { customIngredientId: e.target.value || null })}
+                      className="min-h-12 rounded-field border-[1.5px] border-divider bg-neutral-100 px-3 text-base"
+                    >
+                      <option value="">— aucun —</option>
+                      {customs.map((c) => (
+                        <option key={c.id} value={c.id}>
+                          {c.name}
+                        </option>
+                      ))}
+                    </select>
+                  </Field>
+                )}
                 <label className="col-span-2 flex items-center gap-2.5 text-[15px]">
                   <input
                     type="checkbox"

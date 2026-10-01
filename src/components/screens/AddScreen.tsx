@@ -15,6 +15,8 @@ import { imageToBase64 } from "@/lib/import/image";
 import { clearPendingImport, peekPendingImport, type PendingImport } from "@/lib/import/pending";
 import { emptyRecipe } from "@/lib/recipes/factory";
 import { importToRecipe, parseImportJson, type Doubt, type ImportData } from "@/lib/recipes/import-format";
+import { linkCustomIngredients } from "@/lib/recipes/custom";
+import { db } from "@/lib/data/db";
 import type { Recipe, SourceType } from "@/lib/recipes/types";
 
 type Phase =
@@ -51,9 +53,11 @@ export function AddScreen() {
   const [text, setText] = useState("");
   const started = useRef(false);
 
-  function toReview(data: ImportData, source: SourceType) {
+  async function toReview(data: ImportData, source: SourceType) {
     const { recipe, doubts } = importToRecipe(data, source);
-    setPhase({ kind: "review", recipe, doubts, sourceLabel: SOURCE_LABELS[source] ?? "", mode: "review" });
+    // les ingrédients reconnus dans « Mes ingrédients » sont reliés tout seuls
+    const linked = linkCustomIngredients(recipe, await db.customIngredients.toArray());
+    setPhase({ kind: "review", recipe: linked, doubts, sourceLabel: SOURCE_LABELS[source] ?? "", mode: "review" });
   }
 
   // Lecture de la photo choisie dans la feuille « Ajouter » (une seule fois)

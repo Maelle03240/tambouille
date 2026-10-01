@@ -79,6 +79,9 @@ export function SettingsScreen() {
         <Link href="/a-revoir" className="flex h-14 items-center justify-between rounded-[28px] bg-surface px-5 font-bold">
           À revoir <span className="text-accent-700">{reviewCount}</span>
         </Link>
+        <Link href="/ingredients" className="flex h-14 items-center justify-between rounded-[28px] bg-surface px-5 font-bold">
+          Mes ingrédients <span className="text-accent-700">→</span>
+        </Link>
         {app.syncError && <p className="rounded-field bg-accent-100 px-4 py-3 text-accent-800">{app.syncError}</p>}
 
         {app.mode === "supabase" && (

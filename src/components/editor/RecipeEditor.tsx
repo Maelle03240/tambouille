@@ -15,6 +15,8 @@ import { MOMENTS } from "@/config/moments";
 import { TAGS } from "@/config/tags";
 import { PROTEIN_SOURCES, RATINGS, YIELD_UNITS } from "@/config/ui";
 import { deleteRecipe, saveRecipe } from "@/lib/data/actions";
+import { db } from "@/lib/data/db";
+import { requestNutrition } from "@/lib/import/client";
 import type { Doubt } from "@/lib/recipes/import-format";
 import { markersToTokens, tokensToMarkers } from "@/lib/recipes/markers";
 import { parseNumber } from "@/lib/recipes/quantities";
@@ -54,6 +56,49 @@ export function RecipeEditor({
   const [doubts, setDoubts] = useState<Doubt[]>(initialDoubts);
   const [saving, setSaving] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [recalculating, setRecalculating] = useState(false);
+  const { features } = useApp();
+  const linkedCount = draft.ingredients.filter((i) => i.customIngredientId).length;
+
+  /** Recalcule les valeurs par portion (IA), avec les vraies valeurs des ingrédients perso liés. */
+  async function recalc() {
+    setRecalculating(true);
+    try {
+      const customs = new Map((await db.customIngredients.toArray()).map((c) => [c.id, c]));
+      const v = await requestNutrition({
+        title: draft.title,
+        yieldQuantity: draft.yieldQuantity,
+        yieldUnit: draft.yieldUnit,
+        portionSize: draft.portionSize,
+        ingredients: draft.ingredients
+          .filter((i) => i.name.trim())
+          .map((i) => {
+            const c = i.customIngredientId ? customs.get(i.customIngredientId) : undefined;
+            return {
+              text: i.rawText || `${i.quantity ?? ""} ${i.unit} ${i.name}`.trim(),
+              gramsEstimate: i.gramsEstimate,
+              label: c
+                ? { kcal_100g: c.kcal100, protein_100g: c.protein100, fat_100g: c.fat100, carbs_100g: c.carbs100, fiber_100g: c.fiber100 }
+                : null,
+            };
+          }),
+      });
+      setDraft((d) => ({
+        ...d,
+        kcal: v.kcal ?? d.kcal,
+        proteinG: v.protein_g ?? d.proteinG,
+        fatG: v.fat_g ?? d.fatG,
+        carbsG: v.carbs_g ?? d.carbsG,
+        fiberG: v.fiber_g ?? d.fiberG,
+        nutritionConfidence: linkedCount ? "from_labels" : "estimated",
+      }));
+      toast("Valeurs recalculées");
+    } catch (e) {
+      toast(e instanceof Error ? e.message : "Calcul impossible");
+    } finally {
+      setRecalculating(false);
+    }
+  }
 
   const set = <K extends keyof Recipe>(k: K, v: Recipe[K]) => {
     setDraft((d) => ({ ...d, [k]: v }));
@@ -260,7 +305,20 @@ export function RecipeEditor({
         </section>
 
         <section className="flex flex-col gap-2.5">
-          <SectionTitle>Par portion</SectionTitle>
+          <div className="flex items-center justify-between gap-2">
+            <SectionTitle>Par portion</SectionTitle>
+            {features.ai && (
+              <button
+                type="button"
+                onClick={recalc}
+                disabled={!online || recalculating || !draft.ingredients.length}
+                className="flex h-10 items-center gap-2 rounded-full border-[1.5px] border-divider px-4 text-sm font-bold disabled:opacity-45"
+              >
+                {recalculating && <Spinner className="size-4" />}
+                {linkedCount ? "Recalculer avec mes étiquettes" : "Recalculer"}
+              </button>
+            )}
+          </div>
           <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3">
             {(
               [

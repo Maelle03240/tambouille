@@ -8,7 +8,7 @@
  */
 import Dexie, { type Table } from "dexie";
 import type { MealPlanEntry, MealTemplate, PantryBasic } from "@/lib/planning/types";
-import type { Profile, Recipe, ReviewItem, UserSettings } from "@/lib/recipes/types";
+import type { CustomIngredient, Profile, Recipe, ReviewItem, UserSettings } from "@/lib/recipes/types";
 
 export interface OutboxOp {
   seq?: number;
@@ -51,6 +51,7 @@ class CarnetDB extends Dexie {
   mealPlans!: Table<MealPlanEntry, string>;
   templates!: Table<MealTemplate, string>;
   pantry!: Table<PantryBasic, string>;
+  customIngredients!: Table<CustomIngredient, string>;
 
   constructor() {
     super("carnet-tambouille");
@@ -66,6 +67,8 @@ class CarnetDB extends Dexie {
       templates: "id",
       pantry: "id, name",
     });
+    // V2 : bibliothèque d'ingrédients perso
+    this.version(3).stores({ customIngredients: "id, name" });
   }
 }
 

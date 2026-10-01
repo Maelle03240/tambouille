@@ -1,9 +1,11 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { addDays, today } from "@/lib/planning/dates";
 import type { MealPlanEntry, MealTemplate, PantryBasic } from "@/lib/planning/types";
-import type { Recipe, ReviewItem, UserSettings } from "@/lib/recipes/types";
+import type { CustomIngredient, Recipe, ReviewItem, UserSettings } from "@/lib/recipes/types";
 import type { Repository, Session, Snapshot } from "./repository";
 import {
+  customIngredientFromRow,
+  customIngredientToRow,
   mealPlanFromRow,
   mealPlanToRow,
   pantryFromRow,
@@ -60,7 +62,7 @@ export class SupabaseRepository implements Repository {
 
   async fetchSnapshot(): Promise<Snapshot> {
     const session = await this.getSession();
-    const [recipes, review, profile, settings, plans, templates, pantry] = await Promise.all([
+    const [recipes, review, profile, settings, plans, templates, pantry, customs] = await Promise.all([
       this.client.from("recipes").select("*, ingredients(*), steps(*)"),
       this.client.from("review_items").select("*"),
       session ? this.client.from("profiles").select("*").eq("id", session.userId).maybeSingle() : null,
@@ -69,6 +71,7 @@ export class SupabaseRepository implements Repository {
       this.client.from("meal_plans").select("*").gte("day", addDays(today(), -35)).lte("day", addDays(today(), 56)),
       this.client.from("meal_templates").select("*"),
       this.client.from("pantry_basics").select("*"),
+      this.client.from("custom_ingredients").select("*"),
     ]);
     fail(recipes.error, "Lecture des recettes");
     fail(review.error, "Lecture de la liste à revoir");
@@ -80,6 +83,7 @@ export class SupabaseRepository implements Repository {
       mealPlans: (plans.data ?? []).map(mealPlanFromRow),
       templates: (templates.data ?? []).map(templateFromRow),
       pantry: (pantry.data ?? []).map(pantryFromRow),
+      customIngredients: (customs.data ?? []).map(customIngredientFromRow),
     };
   }
 
@@ -146,6 +150,16 @@ export class SupabaseRepository implements Repository {
   async deletePantryBasic(id: string) {
     const { error } = await this.client.from("pantry_basics").delete().eq("id", id);
     fail(error, "Basiques");
+  }
+
+  async saveCustomIngredient(c: CustomIngredient) {
+    const { error } = await this.client.from("custom_ingredients").upsert(customIngredientToRow(c));
+    fail(error, "Ingrédient perso");
+  }
+
+  async deleteCustomIngredient(id: string) {
+    const { error } = await this.client.from("custom_ingredients").delete().eq("id", id);
+    fail(error, "Ingrédient perso");
   }
 
   async saveSettings(settings: UserSettings) {

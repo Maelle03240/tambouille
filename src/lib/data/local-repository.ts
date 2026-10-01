@@ -30,6 +30,7 @@ export class LocalRepository implements Repository {
       mealPlans: await db.mealPlans.toArray(),
       templates: await db.templates.toArray(),
       pantry: await db.pantry.toArray(),
+      customIngredients: await db.customIngredients.toArray(),
     };
   }
 
@@ -44,4 +45,6 @@ export class LocalRepository implements Repository {
   async deleteTemplate() {}
   async savePantryBasic() {}
   async deletePantryBasic() {}
+  async saveCustomIngredient() {}
+  async deleteCustomIngredient() {}
 }
