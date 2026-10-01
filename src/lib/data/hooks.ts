@@ -53,6 +53,10 @@ export function useShopping() {
   return useLiveQuery(async () => ({ ...EMPTY_SHOPPING, ...((await getMeta("shopping")) ?? {}) }), []);
 }
 
+export function useFridge() {
+  return useLiveQuery(async () => (await getMeta("fridge")) ?? [], []);
+}
+
 export function useCustomIngredients() {
   return useLiveQuery(() => db.customIngredients.orderBy("name").toArray(), []);
 }

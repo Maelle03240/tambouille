@@ -7,7 +7,7 @@ import { OfflineBanner } from "@/components/app/OfflineBanner";
 import { TabBar } from "@/components/app/TabBar";
 import { AddSheet } from "@/components/recipe/AddSheet";
 import { RecipeCard } from "@/components/recipe/RecipeCard";
-import { IconBookmark, IconPlus, IconSearch } from "@/components/ui/icons";
+import { IconBookmark, IconFridge, IconPlus, IconSearch } from "@/components/ui/icons";
 import { Button, Chip, EmptyState, Spinner, cx } from "@/components/ui/primitives";
 import { CATEGORIES, categoryColors } from "@/config/categories";
 import { MOMENTS } from "@/config/moments";
@@ -64,16 +64,21 @@ export function HomeScreen() {
           )}
         </div>
 
-        <label className="mt-3.5 flex h-12 items-center gap-2.5 rounded-full bg-surface px-[18px] text-neutral-700">
-          <IconSearch size={18} />
-          <input
-            type="search"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Chercher une recette, un ingrédient…"
-            className="min-w-0 flex-1 bg-transparent text-base text-ink placeholder:text-neutral-700 focus:outline-none"
-          />
-        </label>
+        <div className="mt-3.5 flex gap-2">
+          <label className="flex h-12 min-w-0 flex-1 items-center gap-2.5 rounded-full bg-surface px-[18px] text-neutral-700">
+            <IconSearch size={18} />
+            <input
+              type="search"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Recette, ingrédient…"
+              className="min-w-0 flex-1 bg-transparent text-base text-ink placeholder:text-neutral-700 focus:outline-none"
+            />
+          </label>
+          <Link href="/frigo" aria-label="Mon frigo" className="flex size-12 flex-none items-center justify-center rounded-full bg-surface text-neutral-800">
+            <IconFridge size={20} />
+          </Link>
+        </div>
       </header>
 
       <div className="no-scrollbar mx-auto flex max-w-5xl gap-2 overflow-x-auto px-5 pt-3.5 pb-2">

@@ -96,3 +96,7 @@ Format : date — décision — pourquoi.
 - Commande vocale : rappel des mots dans une bulle sous le bouton micro (6 s) ; nouveaux mots « pause » / « reprends » pour les minuteurs.
 - Sticker NEW du même marron que « + Ajouter » (`--color-accent-600`).
 - Mode cuisine : on ne reprend à l'étape où on en était que si on cuisinait vraiment (minuteur en marche ou en pause, ou ingrédients cochés sans être allée au bout) ; sinon on repart du début : étapes, ingrédients décochés et portions d'origine.
+
+## 2026-10-01 — V3
+
+- **Mode frigo vide** : bouton frigo à droite de la recherche (accueil) → page « Mon frigo » (`/frigo`, dispo hors ligne). Je tape ce que j'ai (plusieurs à la fois avec des virgules), l'appli liste les recettes qui l'utilisent, celles où il manque le moins d'abord, avec « Il manque : … » ou « Tout y est ✓ ». Les basiques des courses comptent comme présents. Liste gardée sur l'appareil. Logique testée : `src/lib/recipes/fridge.ts` (pluriels, accents, « oeuf » = « œuf »).

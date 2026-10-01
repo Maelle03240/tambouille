@@ -256,6 +256,11 @@ export async function deleteCustomIngredient(id: string) {
 
 export const EMPTY_SHOPPING: ShoppingState = { extras: [], servings: {}, excluded: [], checked: [], mine: [] };
 
+/** Mode frigo vide : liste de ce que j'ai (sur cet appareil). */
+export async function setFridge(items: string[]) {
+  await setMeta("fridge", items);
+}
+
 export async function updateShopping(fn: (s: ShoppingState) => ShoppingState) {
   const cur = { ...EMPTY_SHOPPING, ...((await getMeta("shopping")) ?? {}) };
   await setMeta("shopping", fn(cur));
