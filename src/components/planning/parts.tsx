@@ -1,6 +1,6 @@
 "use client";
 /** Briques du planning : carré de recette, barres d'objectifs, ligne de repas. */
-import { IconLock, IconShuffle, IconUnlock } from "@/components/ui/icons";
+import { IconClose, IconLock, IconShuffle, IconUnlock } from "@/components/ui/icons";
 import { cx } from "@/components/ui/primitives";
 import { categoryColors } from "@/config/categories";
 import { momentLabel } from "@/config/moments";
@@ -48,15 +48,7 @@ const NUT_COLORS: Record<NutrientKey, string> = {
 const fmt = (key: NutrientKey, v: number) => (key === "kcal" ? Math.round(v).toLocaleString("fr-FR") : String(Math.round(v)));
 
 /** Barres « prévu / objectif » : la priorité en grand, les autres en fin. */
-export function NutritionBars({
-  sum,
-  targets,
-  priority,
-}: {
-  sum: Nutrition;
-  targets: UserSettings["dailyTargets"];
-  priority: NutrientKey;
-}) {
+export function NutritionBars({ sum, targets, priority }: { sum: Nutrition; targets: UserSettings["dailyTargets"]; priority: NutrientKey }) {
   const ordered = [...NUTRIENTS].sort((a, b) => (a.key === priority ? -1 : b.key === priority ? 1 : 0));
   const [main, ...others] = ordered;
   const mt = targetFor(main.key, targets);
@@ -69,7 +61,11 @@ export function NutritionBars({
         <span className="font-bold tracking-[.06em] text-accent-700 uppercase">{main.label} · priorité</span>
         {mv != null && (
           <span className={cx("font-semibold", mainOver ? "font-bold text-danger" : "text-neutral-700")}>
-            {isOnTarget(sum[main.key], mt) ? "Objectif atteint ✓" : diff > 0 ? `Il manque ${fmt(main.key, diff)} ${main.unit}` : `+ ${fmt(main.key, -diff)} ${main.unit}`}
+            {isOnTarget(sum[main.key], mt)
+              ? "Objectif atteint ✓"
+              : diff > 0
+                ? `Il manque ${fmt(main.key, diff)} ${main.unit}`
+                : `+ ${fmt(main.key, -diff)} ${main.unit}`}
           </span>
         )}
       </div>
@@ -83,7 +79,10 @@ export function NutritionBars({
       <div className="h-4 overflow-hidden rounded-full bg-neutral-300">
         <div
           className="h-full rounded-full transition-[width] duration-300"
-          style={{ width: `${mv ? Math.min(100, (sum[main.key] / mv) * 100) : 0}%`, background: mainOver ? "var(--color-danger)" : NUT_COLORS[main.key] }}
+          style={{
+            width: `${mv ? Math.min(100, (sum[main.key] / mv) * 100) : 0}%`,
+            background: mainOver ? "var(--color-danger)" : NUT_COLORS[main.key],
+          }}
         />
       </div>
       <div className="mt-1.5 flex flex-col gap-2">
@@ -97,7 +96,10 @@ export function NutritionBars({
               <div className="h-2 overflow-hidden rounded-full bg-neutral-300">
                 <div
                   className="h-full rounded-full transition-[width] duration-300"
-                  style={{ width: `${tv ? Math.min(100, (sum[n.key] / tv) * 100) : 0}%`, background: over ? "var(--color-danger)" : NUT_COLORS[n.key] }}
+                  style={{
+                    width: `${tv ? Math.min(100, (sum[n.key] / tv) * 100) : 0}%`,
+                    background: over ? "var(--color-danger)" : NUT_COLORS[n.key],
+                  }}
                 />
               </div>
               <span className="text-[13px] font-semibold whitespace-nowrap text-neutral-800 tabular-nums">
@@ -130,6 +132,35 @@ export function RulesIndicators({ recipes, threshold }: { recipes: Recipe[]; thr
     <div className="flex flex-wrap gap-2">
       {pill(rich, "Riche en protéines ✓", "Pas de repas riche en protéines")}
       {pill(veg, "Légumes ✓", "Pas de légumes")}
+    </div>
+  );
+}
+
+/** Un plat ajouté à côté (entrée, dessert, pain…), sous son repas (vue jour). */
+export function ExtraRow({ entry, recipe, onOpen, onRemove }: { entry: MealPlanEntry; recipe?: Recipe; onOpen: () => void; onRemove: () => void }) {
+  return (
+    <div onClick={onOpen} className="ml-6 flex min-h-14 cursor-pointer items-center gap-2.5 rounded-[20px] bg-surface py-1.5 pr-1.5 pl-2.5">
+      <RecipeSquare recipe={recipe} size={36} />
+      <span className="flex min-w-0 flex-1 flex-col">
+        <span className="leading-tight font-bold">{recipe?.title ?? "?"}</span>
+        {recipe && (
+          <span className="text-[13px] text-neutral-800">
+            {Math.round((recipe.proteinG ?? 0) * entry.portions)} g prot. · {Math.round((recipe.kcal ?? 0) * entry.portions)} kcal
+            {entry.portions !== 1 && ` · ${portionLabel(recipe, entry.portions)}`}
+          </span>
+        )}
+      </span>
+      <button
+        type="button"
+        aria-label="Retirer ce plat"
+        onClick={(e) => {
+          e.stopPropagation();
+          onRemove();
+        }}
+        className="flex size-10 flex-none items-center justify-center rounded-full text-neutral-700"
+      >
+        <IconClose size={18} />
+      </button>
     </div>
   );
 }

@@ -206,14 +206,14 @@ export class SupabaseRepository implements Repository {
     const hid = this.requireHousehold();
     const { error } = await this.client
       .from("meal_plans")
-      .upsert(entries.map((e) => mealPlanToRow(e, hid)), { onConflict: "household_id,day,meal" });
+      .upsert(entries.map((e) => mealPlanToRow(e, hid)), { onConflict: "household_id,day,meal,slot" });
     fail(error, "Menu");
   }
 
-  async deleteMealPlans(entries: Pick<MealPlanEntry, "day" | "meal">[]) {
+  async deleteMealPlans(entries: Pick<MealPlanEntry, "day" | "meal" | "slot">[]) {
     const hid = this.requireHousehold();
     for (const e of entries) {
-      const { error } = await this.client.from("meal_plans").delete().match({ household_id: hid, day: e.day, meal: e.meal });
+      const { error } = await this.client.from("meal_plans").delete().match({ household_id: hid, day: e.day, meal: e.meal, slot: e.slot ?? 0 });
       fail(error, "Menu");
     }
   }

@@ -176,7 +176,8 @@ export function settingsToRow(s: UserSettings): Row {
 
 export function mealPlanFromRow(m: Row): MealPlanEntry {
   return {
-    key: entryKey(m.day, m.meal),
+    key: entryKey(m.day, m.meal, m.slot ?? 0),
+    slot: m.slot ?? 0,
     day: m.day,
     meal: m.meal,
     recipeId: m.recipe_id,
@@ -187,7 +188,7 @@ export function mealPlanFromRow(m: Row): MealPlanEntry {
 }
 
 export function mealPlanToRow(e: MealPlanEntry, householdId: string): Row {
-  return { household_id: householdId, day: e.day, meal: e.meal, recipe_id: e.recipeId, portions: e.portions, locked: e.locked, skipped: e.skipped ?? false };
+  return { household_id: householdId, day: e.day, meal: e.meal, slot: e.slot ?? 0, recipe_id: e.recipeId, portions: e.portions, locked: e.locked, skipped: e.skipped ?? false };
 }
 
 export function templateFromRow(t: Row): MealTemplate {

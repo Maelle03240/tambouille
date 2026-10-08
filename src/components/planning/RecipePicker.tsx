@@ -27,9 +27,12 @@ export function RecipePicker({
   byId,
   onClose,
   onPick,
+  adding,
 }: {
   dayEntries: MealPlanEntry[];
   index: number;
+  /** Ajouter un plat à côté (entrée, dessert, pain…) plutôt que remplacer. */
+  adding?: boolean;
   ctx: DrawContext;
   byId: Map<string, Recipe>;
   onClose: () => void;
@@ -37,7 +40,7 @@ export function RecipePicker({
 }) {
   const slot = dayEntries[index];
   const [q, setQ] = useState("");
-  const [filter, setFilter] = useState<Filter>("repas");
+  const [filter, setFilter] = useState<Filter>(adding ? "tout" : "repas");
   const [selected, setSelected] = useState<string | null>(null);
   const prio = NUTRIENTS.find((n) => n.key === ctx.priority)!;
   const current = slot.recipeId ? byId.get(slot.recipeId) : undefined;
@@ -53,7 +56,8 @@ export function RecipePicker({
             (r) =>
               filter === "tout" ||
               (!r.isOccasion &&
-                ((filter === "prot" && isProteinRich(r, { proteinRichThresholdG: ctx.proteinRichThresholdG })) || (filter === "veg" && r.hasVegetables))),
+                ((filter === "prot" && isProteinRich(r, { proteinRichThresholdG: ctx.proteinRichThresholdG })) ||
+                  (filter === "veg" && r.hasVegetables))),
           );
     const words = fold(q).split(/\s+/).filter(Boolean);
     const matching = pool.filter((r) => words.every((w) => fold(r.title).includes(w)));
@@ -67,11 +71,18 @@ export function RecipePicker({
   return (
     <div className="fixed inset-0 z-50 flex flex-col bg-bg">
       <div className="pt-safe flex flex-none items-center gap-3 px-4 pb-2.5">
-        <button type="button" aria-label="Retour" onClick={onClose} className="flex size-12 flex-none items-center justify-center rounded-full bg-surface">
+        <button
+          type="button"
+          aria-label="Retour"
+          onClick={onClose}
+          className="flex size-12 flex-none items-center justify-center rounded-full bg-surface"
+        >
           <IconBack />
         </button>
         <div className="flex min-w-0 flex-col">
-          <span className="font-heading text-2xl leading-tight">Choisir : {momentLabel(slot.meal).toLowerCase()}</span>
+          <span className="font-heading text-2xl leading-tight">
+            {adding ? "Ajouter au" : "Choisir :"} {momentLabel(slot.meal).toLowerCase()}
+          </span>
           <span className="text-[13px] text-neutral-700">{longLabel(slot.day)}</span>
         </div>
       </div>
@@ -153,7 +164,13 @@ export function RecipePicker({
               <span
                 className={cx(
                   "flex-none rounded-full px-2.5 py-1 text-[13px] font-extrabold whitespace-nowrap",
-                  isCurrent ? "bg-surface text-neutral-700" : delta > 0 ? "bg-leaf-200 text-leaf-900" : delta < 0 ? "bg-accent-100 text-accent-800" : "bg-surface",
+                  isCurrent
+                    ? "bg-surface text-neutral-700"
+                    : delta > 0
+                      ? "bg-leaf-200 text-leaf-900"
+                      : delta < 0
+                        ? "bg-accent-100 text-accent-800"
+                        : "bg-surface",
                 )}
               >
                 {isCurrent ? "Actuel" : `${delta >= 0 ? "+" : "−"}${round(Math.abs(delta))} ${prio.unit}`}
@@ -169,7 +186,7 @@ export function RecipePicker({
           onClick={() => selected && onPick(selected)}
           className="h-[60px] w-full truncate rounded-full bg-accent-600 px-4 font-heading text-lg text-neutral-100 disabled:bg-neutral-300 disabled:text-neutral-700"
         >
-          {selected && selected !== slot.recipeId ? `Choisir « ${byId.get(selected)?.title} »` : "Choisis un plat"}
+          {selected && selected !== slot.recipeId ? `${adding ? "Ajouter" : "Choisir"} « ${byId.get(selected)?.title} »` : "Choisis un plat"}
         </button>
       </div>
     </div>

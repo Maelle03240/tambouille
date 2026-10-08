@@ -31,8 +31,8 @@ export function SaveTemplateSheet({
   async function save() {
     const meals =
       kind === "jour"
-        ? day.map((e) => ({ dayOffset: 0, meal: e.meal, recipeId: e.recipeId }))
-        : week.flatMap((d, i) => d.map((e) => ({ dayOffset: i, meal: e.meal, recipeId: e.recipeId })));
+        ? day.map((e) => ({ dayOffset: 0, meal: e.meal, recipeId: e.recipeId, slot: e.slot || undefined }))
+        : week.flatMap((d, i) => d.map((e) => ({ dayOffset: i, meal: e.meal, recipeId: e.recipeId, slot: e.slot || undefined })));
     const t: MealTemplate = { id: newId(), name: name.trim() || (kind === "jour" ? "Journée type" : "Semaine type"), kind, meals };
     try {
       await saveTemplate(t);
@@ -88,7 +88,11 @@ export function ApplyTemplateSheet({
               <span className="truncate text-sm text-neutral-800">
                 {t.meals
                   .filter((m) => m.dayOffset === 0)
-                  .map((m) => `${momentLabel(m.meal)} : ${m.recipeId ? (byId.get(m.recipeId)?.title ?? "?") : "au hasard"}`)
+                  .map((m) =>
+                    m.slot
+                      ? `+ ${byId.get(m.recipeId ?? "")?.title ?? "?"}`
+                      : `${momentLabel(m.meal)} : ${m.recipeId ? (byId.get(m.recipeId)?.title ?? "?") : "au hasard"}`,
+                  )
                   .join(" · ")}
               </span>
             </button>

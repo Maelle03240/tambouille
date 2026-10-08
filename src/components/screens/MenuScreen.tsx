@@ -10,7 +10,7 @@ import { useApp } from "@/components/app/AppProvider";
 import { OfflineBanner } from "@/components/app/OfflineBanner";
 import { TabBar } from "@/components/app/TabBar";
 import { GoalsSheet } from "@/components/planning/GoalsSheet";
-import { NutritionBars, RecipeSquare, RulesIndicators, SlotRow } from "@/components/planning/parts";
+import { ExtraRow, NutritionBars, RecipeSquare, RulesIndicators, SlotRow } from "@/components/planning/parts";
 import { RecipePicker } from "@/components/planning/RecipePicker";
 import { SlotSheet } from "@/components/planning/SlotSheet";
 import { ApplyTemplateSheet, SaveTemplateSheet } from "@/components/planning/TemplateSheets";
@@ -32,7 +32,8 @@ export function MenuScreen() {
   const [view, setView] = useState<"semaine" | "jour">("semaine");
   const [day, setDay] = useState(() => today());
   const [openSlot, setOpenSlot] = useState<MealPlanEntry | null>(null);
-  const [picking, setPicking] = useState<MealPlanEntry | null>(null);
+  // choisir un plat : remplacer celui d'un repas, ou en ajouter un à côté
+  const [picking, setPicking] = useState<{ slot: MealPlanEntry; add?: boolean } | null>(null);
   const [goalsOpen, setGoalsOpen] = useState(false);
   const [saveTpl, setSaveTpl] = useState(false);
   const [applyTpl, setApplyTpl] = useState(false);
@@ -57,7 +58,7 @@ export function MenuScreen() {
   };
 
   const recipesOf = (slots: MealPlanEntry[]) => slots.map((s) => (s.recipeId ? w.byId.get(s.recipeId) : undefined)).filter(Boolean) as Recipe[];
-  const liveSlot = (s: MealPlanEntry | null) => (s ? w.days.flatMap((d) => d.slots).find((x) => x.key === s.key) ?? s : null);
+  const liveSlot = (s: MealPlanEntry | null) => (s ? (w.days.flatMap((d) => [...d.slots, ...d.extras]).find((x) => x.key === s.key) ?? s) : null);
   const sheetSlot = liveSlot(openSlot);
 
   if (w.loading) {
@@ -80,11 +81,21 @@ export function MenuScreen() {
         </div>
         <div className="mt-2 flex items-center justify-between gap-2">
           <div className="flex items-center gap-1">
-            <button type="button" aria-label="Semaine précédente" onClick={() => moveWeek(-1)} className="flex size-10 items-center justify-center rounded-full">
+            <button
+              type="button"
+              aria-label="Semaine précédente"
+              onClick={() => moveWeek(-1)}
+              className="flex size-10 items-center justify-center rounded-full"
+            >
               <IconBack size={20} />
             </button>
             <span className="text-[15px] font-bold">{weekLabel(monday)}</span>
-            <button type="button" aria-label="Semaine suivante" onClick={() => moveWeek(1)} className="flex size-10 items-center justify-center rounded-full">
+            <button
+              type="button"
+              aria-label="Semaine suivante"
+              onClick={() => moveWeek(1)}
+              className="flex size-10 items-center justify-center rounded-full"
+            >
               <IconChevronRight size={20} />
             </button>
           </div>
@@ -109,7 +120,11 @@ export function MenuScreen() {
         ) : (
           <>
             {noGoals && (
-              <button type="button" onClick={() => setGoalsOpen(true)} className="rounded-3xl bg-accent-100 px-4 py-3 text-left font-bold text-accent-800">
+              <button
+                type="button"
+                onClick={() => setGoalsOpen(true)}
+                className="rounded-3xl bg-accent-100 px-4 py-3 text-left font-bold text-accent-800"
+              >
                 Fixe tes objectifs (kcal, protéines) pour un tirage sur mesure →
               </button>
             )}
@@ -123,7 +138,7 @@ export function MenuScreen() {
                   <IconCart size={20} /> Liste de courses de la semaine
                 </Link>
                 {w.days.map((d) => {
-                  const sum = w.nutritionOf(d.slots);
+                  const sum = w.nutritionOf(d);
                   const kt = targetFor("kcal", settings.dailyTargets);
                   const kv = targetValue(kt);
                   return (
@@ -140,7 +155,8 @@ export function MenuScreen() {
                           {longLabel(d.day).split(" ")[0]} {parseDay(d.day).getDate()}
                         </span>
                         <span className="text-sm font-bold">
-                          {Math.round(sum.protein)} g prot. <span className={cx("font-semibold", isOver("kcal", sum.kcal, kt) ? "font-bold text-danger" : "text-neutral-700")}>
+                          {Math.round(sum.protein)} g prot.{" "}
+                          <span className={cx("font-semibold", isOver("kcal", sum.kcal, kt) ? "font-bold text-danger" : "text-neutral-700")}>
                             · {Math.round(sum.kcal).toLocaleString("fr-FR")} kcal
                           </span>
                         </span>
@@ -148,13 +164,18 @@ export function MenuScreen() {
                       {kv && (
                         <div className="mx-1 my-1 h-1.5 overflow-hidden rounded-full bg-neutral-300">
                           <div
-                            className={cx("h-full rounded-full", isOver("kcal", sum.kcal, kt) ? "bg-danger" : isOnTarget(sum.kcal, kt, 0.1) ? "bg-leaf-600" : "bg-accent-500")}
+                            className={cx(
+                              "h-full rounded-full",
+                              isOver("kcal", sum.kcal, kt) ? "bg-danger" : isOnTarget(sum.kcal, kt, 0.1) ? "bg-leaf-600" : "bg-accent-500",
+                            )}
                             style={{ width: `${Math.min(100, (sum.kcal / kv) * 100)}%` }}
                           />
                         </div>
                       )}
                       {d.slots.map((s) => {
                         const r = s.recipeId ? w.byId.get(s.recipeId) : undefined;
+                        const extras = d.extras.filter((e) => e.meal === s.meal);
+                        const all = [s, ...extras].map((e) => ({ r: e.recipeId ? w.byId.get(e.recipeId) : undefined, p: e.portions }));
                         return (
                           <button
                             key={s.key}
@@ -168,10 +189,16 @@ export function MenuScreen() {
                                 {momentLabel(s.meal)} {s.locked && "· gardé"}
                               </span>
                               <span className="leading-tight font-bold">{r?.title ?? "À choisir"}</span>
+                              {extras.map((e) => (
+                                <span key={e.key} className="text-sm leading-tight text-neutral-800">
+                                  + {w.byId.get(e.recipeId!)?.title ?? "?"}
+                                </span>
+                              ))}
                             </span>
-                            {r && (
+                            {all.some((x) => x.r) && (
                               <span className="text-sm font-bold whitespace-nowrap text-neutral-800">
-                                {Math.round((r.proteinG ?? 0) * s.portions)} g · {Math.round((r.kcal ?? 0) * s.portions)} kcal
+                                {Math.round(all.reduce((n, x) => n + (x.r?.proteinG ?? 0) * x.p, 0))} g ·{" "}
+                                {Math.round(all.reduce((n, x) => n + (x.r?.kcal ?? 0) * x.p, 0))} kcal
                               </span>
                             )}
                           </button>
@@ -185,7 +212,7 @@ export function MenuScreen() {
               <>
                 <div className="flex gap-1.5">
                   {w.days.map((d) => {
-                    const rs = recipesOf(d.slots);
+                    const rs = recipesOf([...d.slots, ...d.extras]);
                     const good =
                       rs.some((r) => isProteinRich(r, { proteinRichThresholdG: settings.proteinRichThresholdG })) && rs.some((r) => r.hasVegetables);
                     const sel = d.day === current.day;
@@ -194,7 +221,10 @@ export function MenuScreen() {
                         key={d.day}
                         type="button"
                         onClick={() => setDay(d.day)}
-                        className={cx("flex h-[62px] flex-1 flex-col items-center justify-center gap-px rounded-[20px]", sel ? "bg-ink text-bg" : "bg-surface")}
+                        className={cx(
+                          "flex h-[62px] flex-1 flex-col items-center justify-center gap-px rounded-[20px]",
+                          sel ? "bg-ink text-bg" : "bg-surface",
+                        )}
                       >
                         <span className="text-xs font-bold opacity-80">{shortLetter(d.day)}</span>
                         <span className="font-heading text-[19px] leading-none">{parseDay(d.day).getDate()}</span>
@@ -204,18 +234,39 @@ export function MenuScreen() {
                   })}
                 </div>
                 <div className="px-1 font-heading text-[23px]">{longLabel(current.day)}</div>
-                <NutritionBars sum={w.nutritionOf(current.slots)} targets={settings.dailyTargets} priority={settings.planning.priority} />
-                <RulesIndicators recipes={recipesOf(current.slots)} threshold={settings.proteinRichThresholdG} />
+                <NutritionBars sum={w.nutritionOf(current)} targets={settings.dailyTargets} priority={settings.planning.priority} />
+                <RulesIndicators recipes={recipesOf([...current.slots, ...current.extras])} threshold={settings.proteinRichThresholdG} />
                 <div className="flex flex-col gap-2">
                   {current.slots.map((s, i) => (
-                    <SlotRow
-                      key={s.key}
-                      slot={s}
-                      recipe={s.recipeId ? w.byId.get(s.recipeId) : undefined}
-                      onOpen={() => setOpenSlot(s)}
-                      onLock={() => guard(() => w.toggleLock(s))}
-                      onSwap={() => guard(() => w.reroll(current.day, i))}
-                    />
+                    <div key={s.key} className="flex flex-col gap-1.5">
+                      <SlotRow
+                        slot={s}
+                        recipe={s.recipeId ? w.byId.get(s.recipeId) : undefined}
+                        onOpen={() => setOpenSlot(s)}
+                        onLock={() => guard(() => w.toggleLock(s))}
+                        onSwap={() => guard(() => w.reroll(current.day, i))}
+                      />
+                      {current.extras
+                        .filter((e) => e.meal === s.meal)
+                        .map((e) => (
+                          <ExtraRow
+                            key={e.key}
+                            entry={e}
+                            recipe={w.byId.get(e.recipeId!)}
+                            onOpen={() => setOpenSlot(e)}
+                            onRemove={() => guard(() => w.removeMeal(e))}
+                          />
+                        ))}
+                      {s.recipeId && (
+                        <button
+                          type="button"
+                          onClick={() => setPicking({ slot: s, add: true })}
+                          className="ml-3 flex h-9 items-center gap-1.5 self-start rounded-full px-2 text-sm font-bold text-neutral-700"
+                        >
+                          <IconPlus size={16} /> Ajouter au {momentLabel(s.meal).toLowerCase()}
+                        </button>
+                      )}
+                    </div>
                   ))}
                 </div>
                 {MOMENTS.some((m) => !current.slots.some((s) => s.meal === m.id)) && (
@@ -240,10 +291,18 @@ export function MenuScreen() {
                   <IconShuffle size={18} /> Tirer cette journée
                 </button>
                 <div className="grid grid-cols-2 gap-2">
-                  <button type="button" onClick={() => setSaveTpl(true)} className="min-h-14 rounded-[20px] border-[1.5px] border-divider px-3 text-sm font-bold">
+                  <button
+                    type="button"
+                    onClick={() => setSaveTpl(true)}
+                    className="min-h-14 rounded-[20px] border-[1.5px] border-divider px-3 text-sm font-bold"
+                  >
                     Enregistrer comme modèle
                   </button>
-                  <button type="button" onClick={() => setApplyTpl(true)} className="min-h-14 rounded-[20px] border-[1.5px] border-divider px-3 text-sm font-bold">
+                  <button
+                    type="button"
+                    onClick={() => setApplyTpl(true)}
+                    className="min-h-14 rounded-[20px] border-[1.5px] border-divider px-3 text-sm font-bold"
+                  >
                     Appliquer un modèle
                   </button>
                 </div>
@@ -273,12 +332,19 @@ export function MenuScreen() {
         onRandom={() =>
           guard(async () => {
             const d = w.days.find((x) => x.day === sheetSlot!.day)!;
-            await w.reroll(d.day, d.slots.findIndex((x) => x.key === sheetSlot!.key));
+            await w.reroll(
+              d.day,
+              d.slots.findIndex((x) => x.key === sheetSlot!.key),
+            );
             setOpenSlot(null);
           })
         }
         onChoose={() => {
-          setPicking(sheetSlot);
+          setPicking({ slot: sheetSlot! });
+          setOpenSlot(null);
+        }}
+        onAdd={() => {
+          setPicking({ slot: sheetSlot!, add: true });
           setOpenSlot(null);
         }}
         onLock={() => guard(() => w.toggleLock(sheetSlot!))}
@@ -293,17 +359,22 @@ export function MenuScreen() {
 
       {picking &&
         (() => {
-          const d = w.days.find((x) => x.day === picking.day)!;
+          const d = w.days.find((x) => x.day === picking.slot.day)!;
+          const entries = [...d.slots, ...d.extras];
+          // ajout : un plat vide en plus dans la journée, pour voir son effet sur les barres
+          const added: MealPlanEntry = { ...picking.slot, key: "nouveau", slot: 99, recipeId: null, portions: 1, locked: false };
           return (
             <RecipePicker
-              dayEntries={d.slots}
-              index={d.slots.findIndex((x) => x.key === picking.key)}
+              dayEntries={picking.add ? [...entries, added] : entries}
+              index={picking.add ? entries.length : entries.findIndex((x) => x.key === picking.slot.key)}
+              adding={picking.add}
               ctx={w.ctx}
               byId={w.byId}
               onClose={() => setPicking(null)}
               onPick={(id) =>
                 guard(async () => {
-                  await w.setRecipe(liveSlot(picking)!, id);
+                  if (picking.add) await w.addExtra(d.day, picking.slot.meal, id);
+                  else await w.setRecipe(liveSlot(picking.slot)!, id);
                   setPicking(null);
                 })
               }
@@ -312,7 +383,12 @@ export function MenuScreen() {
         })()}
 
       {goalsOpen && <GoalsSheet settings={settings} open onClose={() => setGoalsOpen(false)} />}
-      <SaveTemplateSheet open={saveTpl} onClose={() => setSaveTpl(false)} day={current.slots} week={w.days.map((d) => d.slots)} />
+      <SaveTemplateSheet
+        open={saveTpl}
+        onClose={() => setSaveTpl(false)}
+        day={[...current.slots, ...current.extras]}
+        week={w.days.map((d) => [...d.slots, ...d.extras])}
+      />
       <ApplyTemplateSheet
         open={applyTpl}
         onClose={() => setApplyTpl(false)}
@@ -323,10 +399,11 @@ export function MenuScreen() {
             const fills = targetDays.flatMap((dday, i) =>
               t.meals
                 .filter((m) => (t.kind === "jour" ? m.dayOffset === 0 : m.dayOffset === i))
-                .map((m) => ({ day: dday, meal: m.meal, recipeId: m.recipeId })),
+                .map((m) => ({ day: dday, meal: m.meal, recipeId: m.recipeId, slot: m.slot })),
             );
             // un jour sans aucune ligne dans le modèle est quand même rempli (tirage)
-            for (const dday of targetDays) if (!fills.some((f) => f.day === dday)) fills.push({ day: dday, meal: "", recipeId: null });
+            for (const dday of targetDays)
+              if (!fills.some((f) => f.day === dday)) fills.push({ day: dday, meal: "", recipeId: null, slot: undefined });
             await w.applyMeals(fills);
             setApplyTpl(false);
             toast(`« ${t.name} » appliqué`);

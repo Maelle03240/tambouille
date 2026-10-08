@@ -1,7 +1,9 @@
 "use client";
 /**
  * La semaine affichée dans le planning : repas actifs de chaque jour (plat
- * choisi ou vide), valeurs prévues, et actions (tirage, changer, verrouiller…).
+ * choisi ou vide), plats ajoutés à côté (entrée, dessert, pain…), valeurs
+ * prévues, et actions (tirage, changer, verrouiller…). Le tirage ne touche
+ * qu'au plat principal ; les ajouts comptent dans les valeurs du jour.
  */
 import { useMemo } from "react";
 import { useApp } from "@/components/app/AppProvider";
@@ -20,10 +22,7 @@ export function usePlanningWeek(monday: string) {
   const allRecipes = useAllRecipes();
   const plans = useMealPlans(monday, addDays(monday, 6));
 
-  const meals = useMemo(
-    () => MOMENTS.map((m) => m.id).filter((id) => settings.planning.meals.includes(id)),
-    [settings.planning.meals],
-  );
+  const meals = useMemo(() => MOMENTS.map((m) => m.id).filter((id) => settings.planning.meals.includes(id)), [settings.planning.meals]);
   const byId = useMemo(() => new Map((allRecipes ?? []).map((r) => [r.id, r])), [allRecipes]);
 
   const ctx: DrawContext = useMemo(
@@ -43,22 +42,24 @@ export function usePlanningWeek(monday: string) {
   const days = useMemo(
     () =>
       weekDays(monday).map((day) => {
-        const rows = (plans ?? []).filter((p) => p.day === day);
+        const all = (plans ?? []).filter((p) => p.day === day);
+        const rows = all.filter((p) => !p.slot);
+        const extras = all.filter((p) => p.slot && p.recipeId).sort((a, b) => a.slot! - b.slot!);
         const slots = MOMENTS.map((m) => m.id)
           .filter((meal) => {
             const row = rows.find((r) => r.meal === meal);
             return row ? !row.skipped : (meals as string[]).includes(meal);
           })
-          .map(
-            (meal): MealPlanEntry =>
-              rows.find((r) => r.meal === meal) ?? emptySlot(day, meal),
-          );
-        return { day, slots };
+          .map((meal): MealPlanEntry => rows.find((r) => r.meal === meal) ?? emptySlot(day, meal));
+        return { day, slots, extras: extras.filter((e) => slots.some((s) => s.meal === e.meal)) };
       }),
     [monday, meals, plans],
   );
 
-  const nutritionOf = (slots: MealPlanEntry[]) => dayNutrition(slots, byId);
+  type Day = (typeof days)[number];
+  const nutritionOf = (d: Day) => dayNutrition([...d.slots, ...d.extras], byId);
+  /** Plats du jour pour le tirage : les ajouts comptent, mais restent en place. */
+  const withExtras = (d: Day, slots = d.slots) => [...slots, ...d.extras.map((e) => ({ ...e, locked: true }))];
 
   async function run(label: string, fn: () => Promise<void>) {
     try {
@@ -79,15 +80,27 @@ export function usePlanningWeek(monday: string) {
     nutritionOf,
     hasRecipes: (recipes ?? []).length > 0,
 
-    drawWeek: () => save(drawWeek(days.map((d) => d.slots), ctx).flat()),
+    drawWeek: () =>
+      save(
+        drawWeek(
+          days.map((d) => withExtras(d)),
+          ctx,
+        ).flatMap((entries, i) => entries.slice(0, days[i].slots.length)),
+      ),
     drawDay: (day: string) => {
       const d = days.find((x) => x.day === day);
-      if (d) return save(drawDay(d.slots, ctx));
+      if (d) return save(drawDay(withExtras(d), ctx).slice(0, d.slots.length));
     },
     reroll: (day: string, index: number) => {
       const d = days.find((x) => x.day === day);
       if (!d || d.slots[index].locked) return;
-      return save([{ ...d.slots[index], recipeId: rerollSlot(d.slots, index, ctx) }]);
+      return save([{ ...d.slots[index], recipeId: rerollSlot(withExtras(d), index, ctx) }]);
+    },
+    /** Ajoute un plat à côté (entrée, dessert, pain…) dans ce repas. */
+    addExtra: (day: string, meal: string, recipeId: string) => {
+      const d = days.find((x) => x.day === day);
+      const slot = Math.max(0, ...(d?.extras ?? []).filter((e) => e.meal === meal).map((e) => e.slot!)) + 1;
+      return save([{ key: entryKey(day, meal, slot), slot, day, meal, recipeId, portions: 1, locked: false }]);
     },
     setRecipe: (slot: MealPlanEntry, recipeId: string | null) => save([{ ...slot, recipeId }]),
     toggleLock: (slot: MealPlanEntry) => save([{ ...slot, locked: !slot.locked }]),
@@ -102,13 +115,34 @@ export function usePlanningWeek(monday: string) {
       return save([drawn[drawn.length - 1]]);
     },
     /** Retire un repas de cette journée seulement. */
-    removeMeal: (slot: MealPlanEntry) =>
-      (meals as string[]).includes(slot.meal)
-        ? save([{ ...slot, recipeId: null, locked: false, skipped: true }])
-        : run("Suppression", () => removePlanEntries([slot])),
+    removeMeal: (slot: MealPlanEntry) => {
+      // un plat ajouté à côté : on l'enlève ; le repas : retiré avec ses ajouts
+      if (slot.slot) return run("Suppression", () => removePlanEntries([slot]));
+      const extras = days.find((d) => d.day === slot.day)?.extras.filter((e) => e.meal === slot.meal) ?? [];
+      return (meals as string[]).includes(slot.meal)
+        ? save([{ ...slot, recipeId: null, locked: false, skipped: true }]).then(() => {
+            if (extras.length) return run("Suppression", () => removePlanEntries(extras));
+          })
+        : run("Suppression", () => removePlanEntries([slot, ...extras]));
+    },
     /** Remplit des repas (modèle), en respectant les verrous, puis tire les repas vides. */
-    applyMeals: (fills: { day: string; meal: string; recipeId: string | null }[]) => {
+    applyMeals: async (all: { day: string; meal: string; recipeId: string | null; slot?: number }[]) => {
+      const fills = all.filter((f) => !f.slot);
       const targeted = new Set(fills.map((f) => f.day));
+      // plats à côté : ceux du modèle remplacent ceux des jours visés
+      const oldExtras = days.filter((d) => targeted.has(d.day)).flatMap((d) => d.extras);
+      const newExtras = all
+        .filter((f) => f.slot && f.recipeId)
+        .map((f): MealPlanEntry => ({
+          key: entryKey(f.day, f.meal, f.slot),
+          slot: f.slot,
+          day: f.day,
+          meal: f.meal,
+          recipeId: f.recipeId,
+          portions: 1,
+          locked: false,
+        }));
+      if (oldExtras.length) await run("Suppression", () => removePlanEntries(oldExtras));
       const updated = days
         .filter((d) => targeted.has(d.day))
         .map((d) =>
@@ -123,7 +157,7 @@ export function usePlanningWeek(monday: string) {
         updated.map((slots) => slots.map((s) => (s.recipeId ? { ...s, locked: true } : s))),
         ctx,
       ).map((slots, i) => slots.map((s, j) => ({ ...s, locked: updated[i][j].locked })));
-      return save(drawn.flat());
+      return save([...drawn.flat(), ...newExtras]);
     },
   };
 }

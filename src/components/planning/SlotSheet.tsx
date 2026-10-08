@@ -18,6 +18,7 @@ export function SlotSheet({
   onLock,
   onPortions,
   onClear,
+  onAdd,
 }: {
   slot: MealPlanEntry | null;
   recipe?: Recipe;
@@ -27,9 +28,11 @@ export function SlotSheet({
   onLock: () => void;
   onPortions: (p: number) => void;
   onClear: () => void;
+  onAdd: () => void;
 }) {
   // onClear = retirer ce repas de la journée
   if (!slot) return null;
+  const extra = !!slot.slot; // plat ajouté à côté : pas de tirage ni de verrou
   return (
     <Sheet open onClose={onClose}>
       <div className="text-[13px] font-bold tracking-[.06em] text-accent-700 uppercase">
@@ -42,18 +45,20 @@ export function SlotSheet({
         </div>
       )}
 
-      <button
-        type="button"
-        onClick={onRandom}
-        disabled={slot.locked}
-        className="flex min-h-[76px] items-center gap-3.5 rounded-[26px] bg-accent-600 px-4 py-3 text-left text-neutral-100 disabled:opacity-40"
-      >
-        <IconShuffle size={26} />
-        <span className="flex flex-col">
-          <span className="font-heading text-xl">Autre plat au hasard</span>
-          <span className="text-[13px] opacity-90">Tiré pour coller à tes objectifs du jour</span>
-        </span>
-      </button>
+      {!extra && (
+        <button
+          type="button"
+          onClick={onRandom}
+          disabled={slot.locked}
+          className="flex min-h-[76px] items-center gap-3.5 rounded-[26px] bg-accent-600 px-4 py-3 text-left text-neutral-100 disabled:opacity-40"
+        >
+          <IconShuffle size={26} />
+          <span className="flex flex-col">
+            <span className="font-heading text-xl">Autre plat au hasard</span>
+            <span className="text-[13px] opacity-90">Tiré pour coller à tes objectifs du jour</span>
+          </span>
+        </button>
+      )}
       <button type="button" onClick={onChoose} className="flex min-h-[76px] items-center gap-3.5 rounded-[26px] bg-surface px-4 py-3 text-left">
         <IconSearch size={26} />
         <span className="flex flex-col">
@@ -86,14 +91,28 @@ export function SlotSheet({
         </div>
       )}
 
-      <div className="mt-1 mb-2 grid grid-cols-2 gap-2">
+      {!extra && (
         <button
           type="button"
-          onClick={onLock}
-          className="flex h-12 items-center justify-center gap-2 rounded-full border-[1.5px] border-divider font-bold"
+          onClick={onAdd}
+          className="flex h-12 items-center justify-center gap-2 rounded-full border-[1.5px] border-dashed border-neutral-500 font-bold"
         >
-          <IconLock size={18} /> {slot.locked ? "Déverrouiller" : "Garder ce plat"}
+          <IconPlus size={18} /> Ajouter un plat à ce repas
         </button>
+      )}
+
+      <div className="mt-1 mb-2 grid grid-cols-2 gap-2">
+        {extra ? (
+          <span />
+        ) : (
+          <button
+            type="button"
+            onClick={onLock}
+            className="flex h-12 items-center justify-center gap-2 rounded-full border-[1.5px] border-divider font-bold"
+          >
+            <IconLock size={18} /> {slot.locked ? "Déverrouiller" : "Garder ce plat"}
+          </button>
+        )}
         {recipe ? (
           <Link href={`/recette?id=${recipe.id}`} className="flex h-12 items-center justify-center rounded-full font-bold text-accent-700">
             Voir la recette
@@ -102,7 +121,7 @@ export function SlotSheet({
           <span />
         )}
         <button type="button" onClick={onClear} className="col-span-2 h-10 text-sm font-bold text-neutral-700">
-          Retirer ce repas de la journée
+          {extra ? "Retirer ce plat" : "Retirer ce repas de la journée"}
         </button>
       </div>
     </Sheet>
