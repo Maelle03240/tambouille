@@ -2,7 +2,7 @@ import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { PLANNING_DEFAULTS } from "@/config/planning";
 import { addDays, today } from "@/lib/planning/dates";
 import type { MealPlanEntry, MealTemplate, PantryBasic } from "@/lib/planning/types";
-import type { CustomIngredient, Household, Recipe, ReviewItem, Role, UserSettings } from "@/lib/recipes/types";
+import type { CustomIngredient, Household, Recipe, RecipeIdea, ReviewItem, Role, UserSettings } from "@/lib/recipes/types";
 import { shoppingFromRows, type ShoppingOp } from "@/lib/shopping/state";
 import type { AdminApi, Repository, Session, Snapshot } from "./repository";
 import {
@@ -107,7 +107,7 @@ export class SupabaseRepository implements Repository {
     const hid = current?.id ?? "00000000-0000-0000-0000-000000000000";
 
     const myHouseholds = rows.map((h) => h.id);
-    const [recipes, review, profile, settings, plans, templates, pantry, customs, shopRecipes, shopChecks, shopItems, mates, people] = await Promise.all([
+    const [recipes, review, profile, settings, plans, templates, pantry, customs, shopRecipes, shopChecks, shopItems, mates, people, ideas] = await Promise.all([
       this.client.from("recipes").select("*, ingredients(*), steps(*)"),
       this.client.from("review_items").select("*"),
       uid ? this.client.from("profiles").select("*").eq("id", uid).maybeSingle() : null,
@@ -124,6 +124,7 @@ export class SupabaseRepository implements Repository {
         ? this.client.from("household_members").select("user_id").in("household_id", myHouseholds)
         : Promise.resolve({ data: [] as { user_id: string }[], error: null }),
       this.client.from("profiles").select("id, display_name, role"),
+      uid ? this.client.from("recipe_ideas").select("id, text").eq("owner_id", uid).order("created_at") : null,
     ]);
     fail(recipes.error, "Lecture des recettes");
     fail(review.error, "Lecture de la liste à revoir");
@@ -148,6 +149,7 @@ export class SupabaseRepository implements Repository {
       templates: (templates.data ?? []).map(templateFromRow),
       pantry: (pantry.data ?? []).map(pantryFromRow),
       customIngredients: (customs.data ?? []).map(customIngredientFromRow),
+      ideas: (ideas?.data ?? []) as RecipeIdea[],
       shopping: current
         ? shoppingFromRows(
             (shopRecipes.data ?? []).map((r) => ({
@@ -291,6 +293,16 @@ export class SupabaseRepository implements Repository {
   async deleteCustomIngredient(id: string) {
     const { error } = await this.client.from("custom_ingredients").delete().eq("id", id);
     fail(error, "Ingrédient perso");
+  }
+
+  async saveIdea(idea: RecipeIdea) {
+    const { error } = await this.client.from("recipe_ideas").upsert({ id: idea.id, text: idea.text });
+    fail(error, "Idée de recette");
+  }
+
+  async deleteIdea(id: string) {
+    const { error } = await this.client.from("recipe_ideas").delete().eq("id", id);
+    fail(error, "Idée de recette");
   }
 
   /** Réglages perso dans `settings`, objectifs et planning dans le foyer affiché. */

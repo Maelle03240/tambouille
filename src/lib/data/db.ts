@@ -8,7 +8,7 @@
  */
 import Dexie, { type Table } from "dexie";
 import type { MealPlanEntry, MealTemplate, PantryBasic } from "@/lib/planning/types";
-import type { CustomIngredient, Household, Profile, Recipe, ReviewItem, UserSettings } from "@/lib/recipes/types";
+import type { CustomIngredient, Household, Profile, Recipe, RecipeIdea, ReviewItem, UserSettings } from "@/lib/recipes/types";
 import type { ShoppingOp, ShoppingState } from "@/lib/shopping/state";
 
 /** Écritures faites hors ligne, envoyées au retour du réseau (sync.ts). */
@@ -21,7 +21,7 @@ export interface MetaEntry {
   value: unknown;
 }
 
-export type MetaKey = "lastSyncAt" | "profile" | "settings" | "features" | "shopping" | "fridge" | "fridgeBasics" | "households" | "householdId" | "housemates" | "people";
+export type MetaKey = "lastSyncAt" | "profile" | "settings" | "features" | "shopping" | "fridge" | "fridgeBasics" | "households" | "householdId" | "housemates" | "people" | "ideas";
 
 // Liste de courses du foyer (cache local ; envoyée au serveur par la file d'attente)
 export type { PersonalItem, ShoppingState } from "@/lib/shopping/state";
@@ -40,6 +40,8 @@ export type MetaValue = {
   householdId: string | null;
   housemates: string[];
   people: Profile[];
+  /** Mes idées de recettes à ajouter. */
+  ideas: RecipeIdea[];
 };
 
 class CarnetDB extends Dexie {

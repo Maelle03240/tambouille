@@ -18,13 +18,16 @@ import { importToRecipe, parseImportJson, type Doubt, type ImportData } from "@/
 import { linkCustomIngredients } from "@/lib/recipes/custom";
 import { db } from "@/lib/data/db";
 import type { Recipe, SourceType } from "@/lib/recipes/types";
+import { deleteIdea } from "@/lib/data/actions";
+import { IdeasList } from "@/components/recipe/IdeasList";
 
 type Phase =
   | { kind: "choose" }
-  | { kind: "input"; mode: "texte" | "json" }
+  | { kind: "input"; mode: "texte" | "json"; hint?: string }
+  | { kind: "ideas" }
   | { kind: "loading"; label: string; preview?: string }
   | { kind: "error"; message: string }
-  | { kind: "review"; recipe: Recipe; doubts: Doubt[]; sourceLabel: string; mode: "review" | "create" };
+  | { kind: "review"; recipe: Recipe; doubts: Doubt[]; sourceLabel: string; mode: "review" | "create"; ideaId?: string };
 
 const SOURCE_LABELS: Record<string, string> = {
   photo: "Lu depuis ta photo",
@@ -39,6 +42,7 @@ function initialPhase(mode: string | null, pending: PendingImport | null): Phase
     return { kind: "loading", label: "Lecture de la recette…", preview: URL.createObjectURL(pending.file) };
   }
   if (mode === "texte" || mode === "json") return { kind: "input", mode };
+  if (mode === "idees") return { kind: "ideas" };
   if (mode === "manuel") return { kind: "review", recipe: emptyRecipe(), doubts: [], sourceLabel: "", mode: "create" };
   return { kind: "choose" };
 }
@@ -82,6 +86,24 @@ export function AddScreen() {
     }
   }
 
+  /** L'IA de l'appli n'y arrive pas : on passe par Claude ou Gemini (consignes + texte copiés). */
+  async function viaChat() {
+    const withText = !pending && text.trim();
+    try {
+      await navigator.clipboard.writeText(claudeImportPrompt() + (withText ? text.trim() : ""));
+    } catch {
+      return toast("Copie impossible sur cet appareil");
+    }
+    setText("");
+    setPhase({
+      kind: "input",
+      mode: "json",
+      hint: withText
+        ? "Consignes et recette copiées : colle-les dans Claude ou Gemini, puis colle sa réponse ici."
+        : "Consignes copiées : colle-les dans Claude ou Gemini avec ta photo, puis colle sa réponse ici.",
+    });
+  }
+
   function readJson() {
     const res = parseImportJson(text);
     if (!res.ok) return toast(res.error);
@@ -101,8 +123,22 @@ export function AddScreen() {
         mode={phase.mode}
         doubts={phase.doubts}
         sourceLabel={phase.sourceLabel}
-        onSaved={(r) => router.replace(`/recette?id=${r.id}`)}
+        onSaved={(r) => {
+          if (phase.ideaId) void deleteIdea(phase.ideaId).catch(() => {});
+          router.replace(`/recette?id=${r.id}`);
+        }}
         headerLeft={cancel}
+      />
+    );
+  }
+
+  if (phase.kind === "ideas") {
+    return (
+      <IdeasList
+        header={cancel}
+        onWrite={(idea) =>
+          setPhase({ kind: "review", recipe: { ...emptyRecipe(), title: idea.text }, doubts: [], sourceLabel: "", mode: "create", ideaId: idea.id })
+        }
       />
     );
   }
@@ -136,6 +172,7 @@ export function AddScreen() {
           <Button variant="primary" onClick={() => setPhase({ kind: "choose" })}>
             Réessayer
           </Button>
+          <Button onClick={viaChat}>Faire avec Claude ou Gemini</Button>
           <Button onClick={() => setPhase({ kind: "review", recipe: emptyRecipe(), doubts: [], sourceLabel: "", mode: "create" })}>
             Saisir à la main
           </Button>
@@ -155,19 +192,29 @@ export function AddScreen() {
       {phase.kind === "input" && phase.mode === "json" && (
         <>
           <h1 className="font-heading text-[28px] leading-tight">Coller du JSON</h1>
-          <Button
-            onClick={async () => {
-              try {
-                await navigator.clipboard.writeText(claudeImportPrompt());
-                toast("Consignes copiées");
-              } catch {
-                toast("Copie impossible sur cet appareil");
-              }
-            }}
-          >
-            Copier les consignes pour Claude
-          </Button>
-          <TextArea value={text} onChange={(e) => setText(e.target.value)} rows={12} placeholder='{ "title": "…", … }' className="font-mono text-sm" />
+          {phase.hint ? (
+            <p className="rounded-field bg-leaf-100 px-4 py-3 text-leaf-900">{phase.hint}</p>
+          ) : (
+            <Button
+              onClick={async () => {
+                try {
+                  await navigator.clipboard.writeText(claudeImportPrompt());
+                  toast("Consignes copiées");
+                } catch {
+                  toast("Copie impossible sur cet appareil");
+                }
+              }}
+            >
+              Copier les consignes pour Claude
+            </Button>
+          )}
+          <TextArea
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            rows={12}
+            placeholder='{ "title": "…", … }'
+            className="font-mono text-sm"
+          />
           <Button variant="primary" size="lg" onClick={readJson} disabled={!text.trim()}>
             Importer
           </Button>

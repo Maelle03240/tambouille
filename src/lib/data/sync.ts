@@ -111,6 +111,7 @@ async function doSync() {
     await setMeta("householdId", snap.householdId);
     await setMeta("housemates", snap.housemates);
     await setMeta("people", snap.people);
+    await setMeta("ideas", snap.ideas);
     if (snap.shopping) await setMeta("shopping", applyShoppingOps(snap.shopping, pendingShopping));
     else await db.meta.delete("shopping");
     await setMeta("lastSyncAt", new Date().toISOString());

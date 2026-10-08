@@ -88,6 +88,10 @@ export function useFridge() {
   return useLiveQuery(async () => ({ items: (await getMeta("fridge")) ?? [], basics: (await getMeta("fridgeBasics")) ?? true }), []);
 }
 
+export function useIdeas() {
+  return useLiveQuery(async () => (await getMeta("ideas")) ?? [], []);
+}
+
 export function useCustomIngredients() {
   return useLiveQuery(() => db.customIngredients.orderBy("name").toArray(), []);
 }

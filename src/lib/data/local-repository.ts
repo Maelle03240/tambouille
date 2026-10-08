@@ -49,6 +49,7 @@ export class LocalRepository implements Repository {
       templates: await db.templates.toArray(),
       pantry: await db.pantry.toArray(),
       customIngredients: await db.customIngredients.toArray(),
+      ideas: (await getMeta("ideas")) ?? [],
     };
   }
 
@@ -76,4 +77,6 @@ export class LocalRepository implements Repository {
   }
   async deleteImage() {}
   async deleteCustomIngredient() {}
+  async saveIdea() {}
+  async deleteIdea() {}
 }

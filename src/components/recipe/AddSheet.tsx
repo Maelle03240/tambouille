@@ -6,7 +6,8 @@
 import { useRouter } from "next/navigation";
 import { useRef, type ReactNode } from "react";
 import { useApp } from "@/components/app/AppProvider";
-import { IconBraces, IconCamera, IconImage, IconPencil, IconText } from "@/components/ui/icons";
+import { IconBraces, IconCamera, IconImage, IconLightbulb, IconPencil, IconText } from "@/components/ui/icons";
+import { useIdeas } from "@/lib/data/hooks";
 import { Sheet } from "@/components/ui/primitives";
 import { setPendingImport } from "@/lib/import/pending";
 
@@ -47,6 +48,7 @@ export function AddSheet({ open, onClose }: { open: boolean; onClose: () => void
   const photoInput = useRef<HTMLInputElement>(null);
   const captureInput = useRef<HTMLInputElement>(null);
   const aiOff = !features.ai;
+  const ideas = useIdeas();
 
   const onFile = (source: "photo" | "capture") => (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -65,9 +67,7 @@ export function AddSheet({ open, onClose }: { open: boolean; onClose: () => void
   return (
     <Sheet open={open} onClose={onClose} title="Ajouter une recette">
       {!online ? (
-        <p className="rounded-field bg-neutral-200 px-4 py-3">
-          Pas de réseau.
-        </p>
+        <p className="rounded-field bg-neutral-200 px-4 py-3">Pas de réseau.</p>
       ) : (
         <>
           <Option
@@ -107,6 +107,13 @@ export function AddSheet({ open, onClose }: { open: boolean; onClose: () => void
             title="Écrire à la main"
             subtitle="Fiche vide, sans IA"
             onClick={() => go("manuel")}
+          />
+          <Option
+            icon={<IconLightbulb />}
+            iconClass="bg-accent-100 text-accent-800"
+            title={`Idées à ajouter (${ideas?.length ?? 0})`}
+            subtitle="Les recettes que tu veux ajouter plus tard"
+            onClick={() => go("idees")}
           />
           <div className="h-2" />
           <input ref={photoInput} type="file" accept="image/*" capture="environment" hidden onChange={onFile("photo")} />

@@ -299,6 +299,19 @@ export async function saveCustomIngredient(c: CustomIngredient) {
   await db.customIngredients.put(c);
 }
 
+/** Idées de recettes à ajouter : enregistrées tout de suite sur l'appareil. */
+export async function addIdea(text: string) {
+  const idea = { id: newId(), text: text.trim() };
+  if (!idea.text) return;
+  await setMeta("ideas", [...((await getMeta("ideas")) ?? []), idea]);
+  await getRepository().saveIdea(idea);
+}
+
+export async function deleteIdea(id: string) {
+  await setMeta("ideas", ((await getMeta("ideas")) ?? []).filter((x) => x.id !== id));
+  await getRepository().deleteIdea(id);
+}
+
 export async function deleteCustomIngredient(id: string) {
   requireOnline();
   await getRepository().deleteCustomIngredient(id);

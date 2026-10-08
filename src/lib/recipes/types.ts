@@ -130,6 +130,12 @@ export interface CustomIngredient {
   fiber100: number | null;
 }
 
+/** Idée de recette à ajouter plus tard (juste un nom), propre à chacun. */
+export interface RecipeIdea {
+  id: string;
+  text: string;
+}
+
 /** Foyer : partage menu, modèles, objectifs, basiques et liste de courses. */
 export interface Household {
   id: string;

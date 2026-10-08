@@ -7,7 +7,7 @@
  * actions.ts (écritures) et hooks.ts (lectures depuis le cache).
  */
 import type { MealPlanEntry, MealTemplate, PantryBasic } from "@/lib/planning/types";
-import type { CustomIngredient, Household, Profile, Recipe, ReviewItem, Role, UserSettings } from "@/lib/recipes/types";
+import type { CustomIngredient, Household, Profile, Recipe, RecipeIdea, ReviewItem, Role, UserSettings } from "@/lib/recipes/types";
 import type { ShoppingOp, ShoppingState } from "@/lib/shopping/state";
 
 export interface Session {
@@ -34,6 +34,7 @@ export interface Snapshot {
   templates: MealTemplate[];
   pantry: PantryBasic[];
   customIngredients: CustomIngredient[];
+  ideas: RecipeIdea[];
 }
 
 export interface Repository {
@@ -85,6 +86,9 @@ export interface Repository {
   uploadImage(path: string, blob: Blob): Promise<string>;
   deleteImage(imagePath: string): Promise<void>;
   deleteCustomIngredient(id: string): Promise<void>;
+  /** Idées de recettes à ajouter (les miennes). */
+  saveIdea(idea: RecipeIdea): Promise<void>;
+  deleteIdea(id: string): Promise<void>;
 }
 
 export interface AdminOverview {

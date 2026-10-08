@@ -152,3 +152,7 @@ Remplace « ouverture à la famille en écriture » (spec V3). Deux étapes : **
 - Pastilles (filtres, ingrédients à insérer) : défilent sur le côté à la molette, fine barre visible à la souris.
 - Minuteur « 1 min 30 » ; virgules acceptées dans tous les champs nombre ; JSON : `options` en nombres acceptées.
 - IA : 75 s max (la route a 90 s), essai sur le modèle léger si Gemini est lent ou surchargé, message clair au lieu de « 504 ».
+- Illustrations : consignes précisées (cake = moule rectangulaire, ingrédients visibles comme les pépites, rien saupoudré sans raison, plat farci montré ouvert).
+- **Astuces → Saisons** : fruits et légumes du mois (mois en cours d'abord, on peut changer de mois). Contenu : `src/config/seasons.ts`. Rien d'autre (pas de tag « de saison », pas d'effet sur le tirage).
+- **Idées à ajouter** (Ajouter → « Idées à ajouter (n) ») : juste des noms de recettes, à moi seule (table `recipe_ideas`, migration 0012). Toucher une idée ouvre une fiche vide avec ce titre ; enregistrée, l'idée disparaît.
+- **Secours si l'IA échoue** : bouton « Faire avec Claude ou Gemini » sur l'erreur : copie les consignes (et le texte collé s'il y en a), puis ouvre « Coller du JSON » avec la marche à suivre.
