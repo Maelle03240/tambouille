@@ -15,7 +15,9 @@ export type OvenSymbol = {
 export type GuideBlock =
   | { kind: "table"; title?: string; head: string[]; rows: string[][]; note?: string }
   | { kind: "list"; title?: string; items: [string, string][]; note?: string }
-  | { kind: "oven"; symbols: OvenSymbol[]; note?: string };
+  | { kind: "oven"; symbols: OvenSymbol[]; note?: string }
+  /** Calendrier des fruits et légumes (contenu : src/config/seasons.ts). */
+  | { kind: "seasons"; note?: string };
 
 export interface GuideSection {
   id: string;
@@ -24,6 +26,11 @@ export interface GuideSection {
 }
 
 export const KITCHEN_GUIDE: GuideSection[] = [
+  {
+    id: "saisons",
+    title: "Saisons",
+    blocks: [{ kind: "seasons", note: "France métropolitaine. Pommes, courges, carottes… se gardent : on les trouve encore après la récolte." }],
+  },
   {
     id: "mesures",
     title: "Mesures",

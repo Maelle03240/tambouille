@@ -4,10 +4,63 @@
  * remplacements). Le contenu est dans src/config/kitchen-guide.ts.
  * Page statique : disponible hors ligne comme le reste.
  */
+import type { ReactNode } from "react";
 import { OfflineBanner } from "@/components/app/OfflineBanner";
 import { TabBar } from "@/components/app/TabBar";
-import { SectionTitle } from "@/components/ui/primitives";
+import { useLayoutEffect, useRef, useState, useSyncExternalStore } from "react";
+import { SectionTitle, cx } from "@/components/ui/primitives";
 import { KITCHEN_GUIDE, type GuideBlock, type OvenSymbol } from "@/config/kitchen-guide";
+import { MONTHS, SEASONAL } from "@/config/seasons";
+
+const noSubscribe = () => () => {};
+
+/** Fruits et légumes du mois (le mois en cours d'abord). */
+function Seasons({ note }: { note: ReactNode }) {
+  // mois en cours lu côté navigateur (la page est générée à l'avance)
+  const today = useSyncExternalStore(noSubscribe, () => new Date().getMonth() + 1, () => null);
+  const [picked, setPicked] = useState<number | null>(null);
+  const month = picked ?? today ?? 1;
+  const row = useRef<HTMLDivElement>(null);
+  // le mois en cours visible dans la rangée
+  useLayoutEffect(() => {
+    const chip = row.current?.children[(today ?? 1) - 1] as HTMLElement | undefined;
+    if (row.current && chip) row.current.scrollLeft = chip.offsetLeft - row.current.offsetLeft - 20;
+  }, [today]);
+  const list = (kind: "legume" | "fruit") => SEASONAL.filter((p) => p.kind === kind && p.months.includes(month));
+  return (
+    <div className="flex flex-col gap-2.5">
+      <div ref={row} className="no-scrollbar -mx-5 flex gap-1.5 overflow-x-auto px-5 pb-1">
+        {MONTHS.map((name, i) => (
+          <button
+            key={name}
+            type="button"
+            onClick={() => setPicked(i + 1)}
+            className={cx(
+              "h-10 flex-none rounded-full border-[1.5px] px-3.5 text-[15px] font-bold",
+              month === i + 1 ? "border-ink bg-ink text-bg" : "border-divider bg-neutral-100",
+            )}
+          >
+            {name}
+          </button>
+        ))}
+      </div>
+      <div className="grid gap-2.5 sm:grid-cols-2">
+        {(
+          [
+            ["Légumes", list("legume")],
+            ["Fruits", list("fruit")],
+          ] as const
+        ).map(([title, items]) => (
+          <div key={title} className="rounded-3xl bg-surface p-4">
+            <h3 className="mb-2 text-[17px] font-bold">{title}</h3>
+            <p className="leading-relaxed text-pretty">{items.map((p) => p.name).join(" · ")}</p>
+          </div>
+        ))}
+      </div>
+      {note}
+    </div>
+  );
+}
 
 /** Pictogramme de four dessiné à partir de ses éléments. */
 function OvenIcon({ draw }: { draw: OvenSymbol["draw"] }) {
@@ -87,6 +140,8 @@ function Block({ block }: { block: GuideBlock }) {
       </div>
     );
   }
+
+  if (block.kind === "seasons") return <Seasons note={note} />;
 
   return (
     <div className="flex flex-col gap-2">
