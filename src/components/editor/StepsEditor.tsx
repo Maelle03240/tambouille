@@ -96,7 +96,7 @@ function StepField({
           />
         </DoubtBox>
         {focused && (
-          <div className="flex flex-wrap gap-1.5 pb-1" onMouseDown={(e) => e.preventDefault()}>
+          <div className="no-scrollbar flex gap-1.5 overflow-x-auto pb-1" onMouseDown={(e) => e.preventDefault()}>
             <button
               type="button"
               onClick={() => insert("{10 min}")}

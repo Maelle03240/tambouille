@@ -3,6 +3,7 @@
  * État global de l'appli : connexion, réseau, synchro, rôle, fonctions IA
  * disponibles, et petits messages (toasts).
  */
+import { installWheelHScroll } from "@/components/ui/hscroll";
 import { useLiveQuery } from "dexie-react-hooks";
 import {
   createContext,
@@ -96,6 +97,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
       .finally(() => setAuthReady(true));
     return repo.onAuthChange(setSession);
   }, [repo]);
+
+  // Molette sur les rangées de pastilles (ordi)
+  useEffect(() => installWheelHScroll(), []);
 
   // Profil en mode local
   useEffect(() => {

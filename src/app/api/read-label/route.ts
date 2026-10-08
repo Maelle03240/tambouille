@@ -2,7 +2,7 @@
 import { errorResponse, isAuthorized, unauthorized } from "@/lib/ai/auth";
 import { readLabel } from "@/lib/ai/nutrition";
 
-export const maxDuration = 300;
+export const maxDuration = 90;
 
 export async function POST(req: Request) {
   if (!(await isAuthorized(req))) return unauthorized();

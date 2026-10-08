@@ -96,11 +96,31 @@ button:disabled {
   background: color-mix(in srgb, var(--color-accent) 30%, transparent);
 }
 
+/* Rangées qui défilent sur le côté (pastilles) : sans barre au doigt,
+   barre fine à la souris ; la molette les fait défiler (src/components/ui/hscroll.ts). */
 .no-scrollbar {
   scrollbar-width: none;
 }
 .no-scrollbar::-webkit-scrollbar {
   display: none;
+}
+@media (pointer: fine) {
+  .no-scrollbar {
+    scrollbar-width: auto;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: block;
+    height: 5px;
+  }
+  .no-scrollbar::-webkit-scrollbar-track,
+  .no-scrollbar::-webkit-scrollbar-button {
+    display: none;
+    background: transparent;
+  }
+  .no-scrollbar::-webkit-scrollbar-thumb {
+    background: var(--color-neutral-400);
+    border-radius: 3px;
+  }
 }
 
 /* Marges des encoches iPhone (safe areas). */
