@@ -85,10 +85,15 @@ export async function describeDish(dish: DishInfo): Promise<string> {
     const out = (await geminiJson({
       apiKey,
       system:
-        "You write the subject of an illustration of a finished dish. Answer in English, one visual phrase (max 25 words): the dish and how it is served (plate, bowl, glass, baking paper…), its look, colors, garnish and viewing angle. Plain food words only (say pie, not tart). Never names of people or places, never quotes, nothing else around it." +
+        "You write the subject of an illustration of a finished dish. Answer in English, one visual phrase (max 25 words): the dish and how it is served (plate, bowl, glass, baking paper…), its look, colors, garnish and viewing angle. Plain food words only (say pie, not tart). Never names of people or places, never quotes, nothing else around it. " +
+        // retours après usage : cakes ronds, cookies sans pépites, brownie saupoudré, œuf posé sur la brick
+        "Keep the real shape: a French « cake » (sweet or savory) is a rectangular loaf baked in a loaf pan, shown as a loaf with one slice cut. " +
+        "Show the key visible ingredients (chocolate chips in cookies, olives and ham pieces in a savory cake…). " +
+        "Nothing sprinkled on top (no powdered sugar, salt or seeds) unless an ingredient says so. " +
+        "A filled or wrapped dish (brick, samosa, crêpe, burrito) is shown cut open with its filling inside, not on top." +
         (dish.mealPrep ? ` The dish is served ${MEAL_PREP}.` : ""),
       schema: { type: "OBJECT", properties: { subject: { type: "STRING" } }, required: ["subject"] },
-      parts: [{ text: `Recette : ${dish.title}\nIngrédients : ${(dish.ingredients ?? []).slice(0, 8).join(", ")}` }],
+      parts: [{ text: `Recette : ${dish.title}\nIngrédients : ${(dish.ingredients ?? []).slice(0, 14).join(", ")}` }],
     })) as { subject?: string } | null;
     const subject = out?.subject?.replace(/["«»“”]/g, "").trim();
     return subject || plain;
