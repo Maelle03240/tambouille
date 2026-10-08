@@ -39,6 +39,9 @@ Elle parle français : interface, textes, commentaires et messages de commit en 
 | Foyers, invitations, rôles (admin) | `supabase/migrations/0008_foyers.sql`, écran `src/components/screens/AdminScreen.tsx`, route `src/app/api/admin/invite/route.ts` |
 | Liste de courses partagée (opérations, hors ligne) | `src/lib/shopping/state.ts` (testée) |
 | Versions perso, propositions, fusion | `src/lib/recipes/proposals.ts` + `visibility.ts` (testées), écran `src/components/admin/Proposals.tsx`, migration `0010_versions_perso.sql` |
+| Calendrier des saisons (Astuces) | `src/config/seasons.ts` |
+| Ce qu'est une portion, valeurs pour 100 g | `src/lib/recipes/portions.ts` (testée) |
+| Parties d'ingrédients / d'étapes, glisser-déposer | `src/lib/recipes/sections.ts` (testée), `src/components/ui/useSortable.ts` |
 | Pages disponibles hors ligne | `ROUTES` dans `scripts/build-sw.mjs` |
 
 ## Architecture (couches, du bas vers le haut)

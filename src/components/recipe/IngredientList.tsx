@@ -1,4 +1,5 @@
 "use client";
+import Link from "next/link";
 import { formatIngredient } from "@/lib/recipes/quantities";
 import type { Ingredient } from "@/lib/recipes/types";
 import { IconCheck } from "@/components/ui/icons";
@@ -31,7 +32,14 @@ export function IngredientList({ ingredients, factor = 1 }: { ingredients: Ingre
             return (
               <div key={ing.id} className="flex min-h-10 items-center border-b border-divider py-1.5 text-[17px]">
                 <span>
-                  {amount && <strong className="font-bold">{amount}</strong>} {rest}
+                  {amount && <strong className="font-bold">{amount}</strong>}{" "}
+                  {ing.linkedRecipeId ? (
+                    <Link href={`/recette?id=${ing.linkedRecipeId}`} className="font-bold text-accent-700 underline decoration-accent-300 underline-offset-4">
+                      {rest} →
+                    </Link>
+                  ) : (
+                    rest
+                  )}
                 </span>
               </div>
             );

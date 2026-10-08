@@ -55,8 +55,8 @@ export function ShoppingScreen() {
   }, [plans, shopping, byId]);
 
   const items = useMemo(
-    () => [...aggregate(sources, (pantry ?? []).map((b) => b.name)), ...personalItems(shopping?.mine ?? [])],
-    [sources, pantry, shopping],
+    () => [...aggregate(sources, (pantry ?? []).map((b) => b.name), byId), ...personalItems(shopping?.mine ?? [])],
+    [sources, pantry, shopping, byId],
   );
   const visible = items.filter((i) => showBasics || !i.basic);
   const checked = new Set(shopping?.checked ?? []);

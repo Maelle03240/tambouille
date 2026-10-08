@@ -27,6 +27,8 @@ export interface Ingredient {
   scalable: boolean;
   rawText: string;
   customIngredientId: string | null;
+  /** Recette de cet ingrédient (« pâte à crêpes ») : lien vers sa fiche, ses ingrédients vont dans les courses. */
+  linkedRecipeId?: string | null;
 }
 
 export interface Step {

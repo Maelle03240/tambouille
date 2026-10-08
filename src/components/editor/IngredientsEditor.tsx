@@ -4,7 +4,7 @@
  * (« 200 g de farine »), lue automatiquement en quantité / unité / nom.
  * Coller plusieurs lignes crée plusieurs ingrédients ; une ligne finissant
  * par « : » devient un titre de groupe (« Vinaigrette : »).
- * Le bouton « ⋯ » ouvre les détails (rayon, grammes, ajustable).
+ * Le bouton « ⋯ » ouvre les détails (rayon, grammes, ajustable, recette liée).
  * Poignée ⠿ pour déplacer ; « + Partie » pour grouper (« Pâte », « Garniture »).
  */
 import { useState } from "react";
@@ -15,7 +15,7 @@ import { emptyIngredient } from "@/lib/recipes/factory";
 import type { Doubt } from "@/lib/recipes/import-format";
 import { formatDecimal, parseIngredientLine, withDe } from "@/lib/recipes/quantities";
 import type { Ingredient } from "@/lib/recipes/types";
-import { useCustomIngredients } from "@/lib/data/hooks";
+import { useCustomIngredients, useRecipes } from "@/lib/data/hooks";
 import { useSortable } from "@/components/ui/useSortable";
 import { addSection, moveRow, removeSection, renameSection, toRows } from "@/lib/recipes/sections";
 import { AddButtons, DragHandle, SectionHeader, focusSoon } from "./SortableParts";
@@ -49,7 +49,10 @@ export function IngredientsEditor({
   onRename,
   doubts,
   resolveDoubt,
+  selfId,
 }: {
+  /** La recette éditée (on ne peut pas la lier à elle-même). */
+  selfId?: string;
   ingredients: Ingredient[];
   onChange: (next: Ingredient[]) => void;
   /** Nom changé : l'éditeur d'étapes met ses jetons {nom} à jour. */
@@ -60,6 +63,14 @@ export function IngredientsEditor({
   const [lines, setLines] = useState<Record<string, string>>(() => Object.fromEntries(ingredients.map((i) => [i.id, ingredientLine(i)])));
   const [openDetails, setOpenDetails] = useState<string | null>(null);
   const customs = useCustomIngredients();
+  const recipes = useRecipes();
+  // recettes proposées pour un lien : celles dont le titre ressemble au nom d'abord
+  const fold = (s: string) => s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").trim();
+  const linkable = (name: string) =>
+    (recipes ?? [])
+      .filter((r) => r.id !== selfId)
+      .map((r) => ({ r, close: !!name.trim() && (fold(r.title).includes(fold(name)) || fold(name).includes(fold(r.title))) }))
+      .sort((a, b) => Number(b.close) - Number(a.close) || a.r.title.localeCompare(b.r.title, "fr"));
 
   const lineOf = (i: Ingredient) => lines[i.id] ?? ingredientLine(i);
 
@@ -220,7 +231,21 @@ export function IngredientsEditor({
                       </select>
                     </Field>
                   )}
-                  <label className="col-span-2 flex items-center gap-2.5 text-[15px]">
+                  <Field label="Recette de cet ingrédient (ex. pâte à crêpes)" className="col-span-2">
+                  <select
+                    value={ing.linkedRecipeId ?? ""}
+                    onChange={(e) => update(ing.id, { linkedRecipeId: e.target.value || null })}
+                    className="min-h-12 rounded-field border-[1.5px] border-divider bg-neutral-100 px-3 text-base"
+                  >
+                    <option value="">— aucune —</option>
+                    {linkable(ing.name).map(({ r }) => (
+                      <option key={r.id} value={r.id}>
+                        {r.title}
+                      </option>
+                    ))}
+                  </select>
+                </Field>
+                <label className="col-span-2 flex items-center gap-2.5 text-[15px]">
                     <input
                       type="checkbox"
                       checked={ing.scalable}

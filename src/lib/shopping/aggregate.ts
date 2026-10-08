@@ -55,13 +55,23 @@ export function isBasic(name: string, basics: string[]): boolean {
   });
 }
 
-export function aggregate(sources: ShoppingSource[], basics: string[] = []): ShoppingItem[] {
+/**
+ * `recipes` : pour les ingrédients liés à une recette (« 1 pâte à crêpes ») ;
+ * on achète alors les ingrédients de cette recette, une fournée par unité
+ * (« ½ pâte » = une demi-fournée ; avec une unité, « 500 ml de pâte » = une fournée).
+ */
+export function aggregate(sources: ShoppingSource[], basics: string[] = [], recipes: Map<string, Recipe> = new Map()): ShoppingItem[] {
   type Acc = { name: string; unit: string; total: number | null; aisle: string; from: Set<string> };
   const acc = new Map<string, Acc>();
 
-  for (const { recipe, servings } of sources) {
-    const factor = recipe.yieldQuantity ? servings / recipe.yieldQuantity : 1;
+  const add = (recipe: Recipe, factor: number, title: string, depth: number) => {
     for (const ing of recipe.ingredients) {
+      const linked = ing.linkedRecipeId ? recipes.get(ing.linkedRecipeId) : undefined;
+      if (linked && depth < 2 && linked.id !== recipe.id) {
+        const batches = !ing.unit && ing.quantity ? ing.quantity : 1;
+        add(linked, factor * (ing.scalable ? batches : 1), title, depth + 1);
+        continue;
+      }
       const name = ing.name.trim();
       if (!name) continue;
       const base = BASE[ing.unit];
@@ -72,12 +82,14 @@ export function aggregate(sources: ShoppingSource[], basics: string[] = []): Sho
       const cur = acc.get(key);
       if (cur) {
         if (qty != null) cur.total = (cur.total ?? 0) + qty;
-        cur.from.add(recipe.title);
+        cur.from.add(title);
       } else {
-        acc.set(key, { name, unit, total: qty, aisle: ing.aisle || guessAisle(name), from: new Set([recipe.title]) });
+        acc.set(key, { name, unit, total: qty, aisle: ing.aisle || guessAisle(name), from: new Set([title]) });
       }
     }
-  }
+  };
+
+  for (const { recipe, servings } of sources) add(recipe, recipe.yieldQuantity ? servings / recipe.yieldQuantity : 1, recipe.title, 0);
 
   return [...acc.entries()]
     .map(([key, a]) => {

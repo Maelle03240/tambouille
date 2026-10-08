@@ -62,6 +62,7 @@ function ingredientFromRow(i: Row): Ingredient {
     scalable: i.scalable ?? true,
     rawText: i.raw_text ?? "",
     customIngredientId: i.custom_ingredient_id,
+    linkedRecipeId: i.linked_recipe_id ?? null,
   };
 }
 
@@ -115,6 +116,7 @@ export function recipeToPayload(r: Recipe): Row {
       scalable: i.scalable,
       raw_text: i.rawText,
       custom_ingredient_id: i.customIngredientId,
+      linked_recipe_id: i.linkedRecipeId ?? null,
     })),
     steps: r.steps.map((s, position) => ({
       id: s.id,

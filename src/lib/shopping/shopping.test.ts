@@ -45,6 +45,14 @@ describe("liste de courses", () => {
     const half = aggregate([{ recipe: gateau, servings: 4 }]);
     expect(half.find((i) => i.label.includes("farine"))!.amount).toBe("130 g");
   });
+  it("recette liée : ses ingrédients, une fournée par unité", () => {
+    const pate = { ...recipe("Pâte à crêpes", 15, [ing("farine", 250, "g"), ing("lait", 50, "cl")]), id: "pate" };
+    const crepes = recipe("Crêpes jambon", 4, [ing("pâte à crêpes", 1, "", { linkedRecipeId: "pate" }), ing("jambon", 4)]);
+    const list = aggregate([{ recipe: crepes, servings: 8 }], [], new Map([["pate", pate]]));
+    expect(list.find((i) => i.label.includes("farine"))!.amount).toBe("500 g");
+    expect(list.find((i) => i.label.includes("farine"))!.from).toEqual(["Crêpes jambon"]);
+    expect(list.some((i) => i.label.includes("pâte"))).toBe(false);
+  });
   it("texte à partager groupé par rayon", () => {
     const t = toShareText(items.filter((i) => !i.basic));
     expect(t).toContain("FRUITS & LÉGUMES\n- 4 oignons");

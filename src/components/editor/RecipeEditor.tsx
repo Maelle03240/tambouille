@@ -318,6 +318,7 @@ export function RecipeEditor({
         <section id="field-ingredients" className="flex scroll-mt-24 flex-col gap-2">
           <SectionTitle>Ingrédients</SectionTitle>
           <IngredientsEditor
+            selfId={draft.id}
             ingredients={draft.ingredients}
             onChange={(ings) => set("ingredients", ings)}
             onRename={onRename}

@@ -34,8 +34,8 @@ export type BlockKey = (typeof BLOCKS)[number]["key"];
 const comparable = (r: Recipe, field: keyof Recipe): unknown => {
   if (field === "tags") return r.tags.filter((t) => t !== "a-tester").sort();
   if (field === "ingredients")
-    return r.ingredients.map(({ id, section, name, quantity, unit, gramsEstimate, aisle, scalable, customIngredientId }) => ({
-      id, section, name, quantity, unit, gramsEstimate, aisle, scalable, customIngredientId,
+    return r.ingredients.map(({ id, section, name, quantity, unit, gramsEstimate, aisle, scalable, customIngredientId, linkedRecipeId }) => ({
+      id, section, name, quantity, unit, gramsEstimate, aisle, scalable, customIngredientId, linkedRecipeId: linkedRecipeId ?? null,
     }));
   if (field === "steps") return r.steps.map(({ id, section, text }) => ({ id, section: section ?? null, text }));
   return r[field] ?? null;
