@@ -26,17 +26,6 @@ export const PLANNING_DEFAULTS = {
   priority: "protein" as NutrientKey,
 };
 
-/**
- * Recettes sans « moment » renseigné : dans quels repas peuvent-elles être
- * tirées, selon leur catégorie.
- */
-export const MEAL_FALLBACK_CATEGORIES: Record<string, string[]> = {
-  "petit-dejeuner": [],
-  dejeuner: ["plat", "entree"],
-  gouter: ["dessert"],
-  diner: ["plat", "entree"],
-};
-
 /** Poids du score du tirage (plus = plus important). */
 export const DRAW_WEIGHTS = {
   /** Règle ferme : au moins un repas riche en protéines par jour. */

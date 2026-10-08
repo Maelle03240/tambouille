@@ -240,7 +240,9 @@ export function RecipeEditor({
         </div>
 
         <div id="field-moments" className="scroll-mt-24">
-          <span className="text-[13px] font-bold text-neutral-700">Moments</span>
+          <span className="text-[13px] font-bold text-neutral-700">
+            Moments <span className="font-normal">· pour le tirage du menu{(draft.moments ?? []).length ? "" : " — vide : jamais tirée"}</span>
+          </span>
           <div className="mt-1.5 flex flex-wrap gap-2">
             {MOMENTS.map((m) => {
               const on = (draft.moments ?? []).includes(m.id);

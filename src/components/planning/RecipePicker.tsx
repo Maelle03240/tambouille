@@ -51,10 +51,9 @@ export function RecipePicker({
         ? candidatesFor(slot.meal, ctx.recipes)
         : ctx.recipes.filter(
             (r) =>
-              !r.isOccasion &&
-              (filter === "tout" ||
-                (filter === "prot" && isProteinRich(r, { proteinRichThresholdG: ctx.proteinRichThresholdG })) ||
-                (filter === "veg" && r.hasVegetables)),
+              filter === "tout" ||
+              (!r.isOccasion &&
+                ((filter === "prot" && isProteinRich(r, { proteinRichThresholdG: ctx.proteinRichThresholdG })) || (filter === "veg" && r.hasVegetables))),
           );
     const words = fold(q).split(/\s+/).filter(Boolean);
     const matching = pool.filter((r) => words.every((w) => fold(r.title).includes(w)));

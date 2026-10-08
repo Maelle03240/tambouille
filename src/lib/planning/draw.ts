@@ -9,7 +9,7 @@
  * meilleure (simple, rapide pour quelques centaines de recettes).
  * Poids et nombre d'essais : src/config/planning.ts.
  */
-import { DRAW_WEIGHTS, MEAL_FALLBACK_CATEGORIES, NUTRIENTS, type NutrientKey } from "@/config/planning";
+import { DRAW_WEIGHTS, NUTRIENTS, type NutrientKey } from "@/config/planning";
 import { isProteinRich } from "@/lib/recipes/tags";
 import type { Recipe, UserSettings } from "@/lib/recipes/types";
 import { addNutrition, distance, recipeNutrition, targetFor, ZERO } from "./nutrition";
@@ -28,9 +28,8 @@ export interface DrawContext {
 /** La recette peut-elle être servie à ce repas ? */
 export function isEligible(r: Recipe, meal: string): boolean {
   if (r.isOccasion) return false;
-  const moments = r.moments ?? [];
-  if (moments.length) return moments.includes(meal);
-  return !!r.category && (MEAL_FALLBACK_CATEGORIES[meal] ?? []).includes(r.category);
+  // sans moment : jamais tirée (pâtisserie de fête, base, sauce, boisson…)
+  return (r.moments ?? []).includes(meal);
 }
 
 export function candidatesFor(meal: string, recipes: Recipe[]) {

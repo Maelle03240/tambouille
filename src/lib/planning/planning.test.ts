@@ -50,8 +50,8 @@ describe("éligibilité", () => {
     expect(isEligible(RECIPES[5], "petit-dejeuner")).toBe(true);
     expect(isEligible(RECIPES[5], "diner")).toBe(false);
   });
-  it("sans moment : repli sur la catégorie", () => {
-    expect(isEligible(RECIPES[6], "gouter")).toBe(true);
+  it("sans moment : jamais tirée", () => {
+    expect(isEligible(RECIPES[6], "gouter")).toBe(false);
     expect(isEligible(RECIPES[6], "diner")).toBe(false);
   });
   it("candidats du dîner", () => expect(candidatesFor("diner", RECIPES).map((r) => r.id)).toEqual(["poulet", "ratatouille", "pates", "saumon-brocoli"]));
