@@ -24,7 +24,7 @@ export const UI = {
 };
 
 /** Unités de rendement proposées dans l'éditeur (le champ reste libre). */
-export const YIELD_UNITS = ["personnes", "parts", "cookies", "crêpes", "pièces", "verres", "pots", "tranches"];
+export const YIELD_UNITS = ["personnes", "parts", "cookies", "crêpes", "pièces", "verres", "pots", "tranches", "c. à soupe"];
 
 /** Rayons : voir src/config/aisles.ts (ordre, couleurs, mots-clés). */
 export { AISLES } from "./aisles";

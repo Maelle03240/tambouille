@@ -6,7 +6,7 @@
  *  - la modification d'une recette existante (mode "edit").
  * Chaque champ a un id `field-<clé>` : la liste « à revoir » y amène directement.
  */
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useApp } from "@/components/app/AppProvider";
 import { IconTrash } from "@/components/ui/icons";
 import { Button, Chip, Field, NumberInput, SectionTitle, Sheet, Spinner, TextArea, TextInput, cx } from "@/components/ui/primitives";
@@ -21,6 +21,7 @@ import { requestNutrition } from "@/lib/import/client";
 import type { Doubt } from "@/lib/recipes/import-format";
 import { markersToTokens, tokensToMarkers } from "@/lib/recipes/markers";
 import { parseNumber } from "@/lib/recipes/quantities";
+import { isPerPerson, portionCount, portionTitle, rescaleNutrition, unitFor } from "@/lib/recipes/portions";
 import type { Recipe } from "@/lib/recipes/types";
 import { DoubtBox } from "./DoubtBox";
 import { cleanSection } from "@/lib/recipes/sections";
@@ -30,6 +31,9 @@ import { StepsEditor, toSteps, type EditableStep } from "./StepsEditor";
 export type EditorMode = "create" | "review" | "edit";
 
 const MANUAL_TAGS = TAGS.filter((t) => t.kind === "manual");
+
+/** Champs du rendement seulement (pour comparer deux rendements). */
+const pick = (r: Recipe) => ({ yieldQuantity: r.yieldQuantity, yieldUnit: r.yieldUnit, portionSize: r.portionSize });
 
 export function RecipeEditor({
   initial,
@@ -103,8 +107,17 @@ export function RecipeEditor({
     }
   }
 
+  // dernier rendement valide : les valeurs par portion y correspondent
+  const yieldBase = useRef<Recipe>(initial);
   const set = <K extends keyof Recipe>(k: K, v: Recipe[K]) => {
-    setDraft((d) => ({ ...d, [k]: v }));
+    const next: Recipe = { ...draft, [k]: v };
+    if ((k === "yieldQuantity" || k === "portionSize" || k === "yieldUnit") && portionCount(next)) {
+      const scaled = rescaleNutrition({ ...next, ...pick(yieldBase.current) }, next);
+      yieldBase.current = scaled;
+      setDraft(scaled);
+    } else {
+      setDraft((d) => ({ ...d, [k]: v }));
+    }
     resolve(String(k));
   };
   const resolve = (key: string) => setDoubts((ds) => ds.filter((d) => d.key !== key));
@@ -263,7 +276,7 @@ export function RecipeEditor({
         <div className="grid grid-cols-2 gap-2.5">
           <div id="field-yieldQuantity" className="scroll-mt-24">
             <DoubtBox doubt={doubtFor("yieldQuantity")} onPick={(o) => set("yieldQuantity", parseNumber(o))} onResolve={() => resolve("yieldQuantity")}>
-              <Field label="Rendement">
+              <Field label="Ça fait">
                 <NumberInput value={draft.yieldQuantity} onChange={(v) => set("yieldQuantity", v)} placeholder="4" />
               </Field>
             </DoubtBox>
@@ -276,9 +289,14 @@ export function RecipeEditor({
               ))}
             </datalist>
           </Field>
-          {draft.yieldUnit && !/^pers|^part/.test(draft.yieldUnit) && (
-            <Field label={`1 portion = combien de ${draft.yieldUnit} ?`} className="col-span-2">
-              <NumberInput value={draft.portionSize} onChange={(v) => set("portionSize", v)} placeholder="1" />
+          {!isPerPerson(draft.yieldUnit) && (
+            <Field label="1 portion =" className="col-span-2">
+              <span className="flex items-center gap-2.5">
+                <span className="w-28 flex-none">
+                  <NumberInput value={draft.portionSize} onChange={(v) => set("portionSize", v)} placeholder="1" />
+                </span>
+                <span className="font-bold">{unitFor(draft.portionSize || 1, draft.yieldUnit)}</span>
+              </span>
             </Field>
           )}
           <div id="field-prepMinutes" className="scroll-mt-24">
@@ -315,7 +333,7 @@ export function RecipeEditor({
 
         <section className="flex flex-col gap-2.5">
           <div className="flex items-center justify-between gap-2">
-            <SectionTitle>Par portion</SectionTitle>
+            <SectionTitle>{portionTitle(draft)}</SectionTitle>
             {features.ai && (
               <button
                 type="button"

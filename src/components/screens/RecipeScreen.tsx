@@ -21,8 +21,11 @@ import { addToShopping } from "@/lib/data/actions";
 import { useRecipe, useSettings } from "@/lib/data/hooks";
 import { useSearchId } from "@/lib/hooks/useSearchId";
 import { formatDuration } from "@/lib/recipes/markers";
+import { per100g, portionGrams, portionTitle } from "@/lib/recipes/portions";
 import { displayTags } from "@/lib/recipes/tags";
 import type { Recipe } from "@/lib/recipes/types";
+
+const fmt100 = (v: number | null) => (v == null ? "–" : Math.round(v));
 
 function yieldLabel(r: Recipe) {
   if (!r.yieldQuantity) return null;
@@ -195,14 +198,18 @@ export function RecipeScreen() {
 
         {hasNutrition && (
           <div className="flex flex-col gap-3 rounded-3xl bg-surface p-4">
+            <span className="text-[15px] font-bold">
+              {portionTitle(recipe)}
+              {portionGrams(recipe) != null && <span className="font-normal text-neutral-700"> · ≈ {Math.round(portionGrams(recipe)!)} g</span>}
+            </span>
             <div className="flex items-end justify-between gap-2.5">
               <div className="flex flex-col gap-0.5">
-                <span className="text-xs font-bold tracking-[.06em] text-accent-700 uppercase">Protéines / portion</span>
+                <span className="text-xs font-bold tracking-[.06em] text-accent-700 uppercase">Protéines</span>
                 <span className="font-heading text-[44px] leading-none">{recipe.proteinG != null ? `${Math.round(recipe.proteinG)} g` : "–"}</span>
               </div>
               <div className="flex flex-col items-end gap-0.5">
                 <span className="font-heading text-2xl leading-none">{recipe.kcal != null ? Math.round(recipe.kcal) : "–"}</span>
-                <span className="text-xs font-bold text-neutral-700">kcal / portion</span>
+                <span className="text-xs font-bold text-neutral-700">kcal</span>
               </div>
             </div>
             <div className="grid grid-cols-3 gap-1.5 border-t border-divider pt-2.5">
@@ -219,6 +226,12 @@ export function RecipeScreen() {
                 </div>
               ))}
             </div>
+            {per100g(recipe) && (
+              <p className="border-t border-divider pt-2.5 text-sm text-neutral-800">
+                <strong>Pour 100 g</strong> : {fmt100(per100g(recipe)!.kcal)} kcal · {fmt100(per100g(recipe)!.proteinG)} g prot. ·{" "}
+                {fmt100(per100g(recipe)!.fatG)} g lip. · {fmt100(per100g(recipe)!.carbsG)} g gluc.
+              </p>
+            )}
             <p className="text-xs text-neutral-700">
               {recipe.nutritionConfidence === "from_labels" ? "Calculé depuis les étiquettes" : "Valeurs estimées"}
               {recipe.proteinSource && ` · protéines : ${PROTEIN_SOURCES.find((p) => p.id === recipe.proteinSource)?.label.toLowerCase()}`}
