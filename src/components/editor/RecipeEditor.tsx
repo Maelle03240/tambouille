@@ -23,6 +23,7 @@ import { markersToTokens, tokensToMarkers } from "@/lib/recipes/markers";
 import { parseNumber } from "@/lib/recipes/quantities";
 import type { Recipe } from "@/lib/recipes/types";
 import { DoubtBox } from "./DoubtBox";
+import { cleanSection } from "@/lib/recipes/sections";
 import { IngredientsEditor } from "./IngredientsEditor";
 import { StepsEditor, toSteps, type EditableStep } from "./StepsEditor";
 
@@ -52,7 +53,7 @@ export function RecipeEditor({
   const { toast, online, isAdmin, profile } = useApp();
   const [draft, setDraft] = useState<Recipe>(initial);
   const [steps, setSteps] = useState<EditableStep[]>(() =>
-    initial.steps.map((s) => ({ id: s.id, tokens: markersToTokens(s.text, initial.ingredients) })),
+    initial.steps.map((s) => ({ id: s.id, section: s.section ?? null, tokens: markersToTokens(s.text, initial.ingredients) })),
   );
   const [doubts, setDoubts] = useState<Doubt[]>(initialDoubts);
   const [saving, setSaving] = useState(false);
@@ -146,7 +147,7 @@ export function RecipeEditor({
     try {
       const recipe: Recipe = {
         ...draft,
-        ingredients: draft.ingredients.filter((i) => i.name.trim()),
+        ingredients: draft.ingredients.filter((i) => i.name.trim()).map((i) => ({ ...i, section: cleanSection(i.section) })),
         steps: toSteps(steps, draft.ingredients),
       };
       const saved = await saveRecipe(recipe, {

@@ -58,5 +58,5 @@ export function emptyIngredient(position: number, section: string | null = null)
 }
 
 export function emptyStep(position: number): Step {
-  return { id: newId(), position, text: "", timerMinutes: null };
+  return { id: newId(), position, section: null, text: "", timerMinutes: null };
 }

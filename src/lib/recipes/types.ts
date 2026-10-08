@@ -32,6 +32,8 @@ export interface Ingredient {
 export interface Step {
   id: string;
   position: number;
+  /** Partie facultative (« Pour le biscuit »), comme les groupes d'ingrédients. */
+  section: string | null;
   /** Texte avec marqueurs {{ing:<id>}} et {{timer:<minutes>}}. */
   text: string;
   /** Premier minuteur de l'étape (déduit des marqueurs). */

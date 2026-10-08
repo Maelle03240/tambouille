@@ -8,7 +8,7 @@
  * - portrait : une colonne ; iPad / paysage : ingrédients à gauche, étapes à droite.
  */
 import Link from "next/link";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import { useApp } from "@/components/app/AppProvider";
 import { OfflineBanner } from "@/components/app/OfflineBanner";
 import { unlockAudio } from "@/components/cook/alarm";
@@ -20,7 +20,7 @@ import { useWakeLock } from "@/components/cook/useWakeLock";
 import { AimSheet } from "@/components/cook/AimSheet";
 import { useVoiceCommands } from "@/components/cook/useVoiceCommands";
 import { timersIn } from "@/lib/recipes/markers";
-import { CheckableIngredients } from "@/components/recipe/IngredientList";
+import { CheckableIngredients, SectionHead } from "@/components/recipe/IngredientList";
 import { ReviewNoteSheet } from "@/components/recipe/ReviewNoteSheet";
 import { StepText, stepPlainText } from "@/components/recipe/StepText";
 import { IconBack, IconBookmark, IconCheck, IconChevronDown, IconMic, IconMinus, IconPlus } from "@/components/ui/icons";
@@ -75,11 +75,19 @@ function Cook({ recipe }: { recipe: Recipe }) {
   const [aimOpen, setAimOpen] = useState(false);
   const [voiceHint, setVoiceHint] = useState(false);
   const voiceHintTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
-  const [openedDial, setDial] = useState<{ key: string; stepIndex: number; minutes: number } | null>(null);
+  const [openedDial, setDial] = useState<{
+    key: string;
+    stepIndex: number;
+    minutes: number;
+  } | null>(null);
   // Un minuteur qui sonne ouvre son cadran
   const ringingTimer = s.ringing ? s.timers[s.ringing] : undefined;
   const dial = ringingTimer
-    ? { key: ringingTimer.key, stepIndex: ringingTimer.stepIndex, minutes: ringingTimer.minutes }
+    ? {
+        key: ringingTimer.key,
+        stepIndex: ringingTimer.stepIndex,
+        minutes: ringingTimer.minutes,
+      }
     : openedDial;
 
   const timerList = useMemo(() => Object.values(s.timers).sort((a, b) => a.stepIndex - b.stepIndex), [s.timers]);
@@ -87,7 +95,11 @@ function Cook({ recipe }: { recipe: Recipe }) {
 
   // L'étape en cours suit le défilement…
   const stepsColumn = useRef<HTMLElement>(null);
-  const follow = useFollowScroll({ container: stepsColumn, enabled: !allDone, onStep: s.followStep });
+  const follow = useFollowScroll({
+    container: stepsColumn,
+    enabled: !allDone,
+    onStep: s.followStep,
+  });
 
   const scrollToStep = follow.scrollToStep;
 
@@ -162,12 +174,13 @@ function Cook({ recipe }: { recipe: Recipe }) {
     try {
       // un membre ne retouche pas la bibliothèque (ça créerait sa version juste pour ça)
       if (!(await writesInPlace(recipe))) return;
-      await patchRecipe(recipe.id, { tags: recipe.tags.filter((t) => t !== "a-tester") });
+      await patchRecipe(recipe.id, {
+        tags: recipe.tags.filter((t) => t !== "a-tester"),
+      });
     } catch (e) {
       toast(e instanceof Error ? e.message : "Modification impossible");
     }
   }
-
 
   const reviewButton = (
     <button
@@ -295,12 +308,7 @@ function Cook({ recipe }: { recipe: Recipe }) {
               </span>
             </button>
             <div className={cx("px-2 pb-2.5 wide:block wide:px-0", !ingOpen && "hidden")}>
-              <CheckableIngredients
-                ingredients={recipe.ingredients}
-                factor={factor}
-                checked={s.checked}
-                onToggle={s.toggleChecked}
-              />
+              <CheckableIngredients ingredients={recipe.ingredients} factor={factor} checked={s.checked} onToggle={s.toggleChecked} />
               <Link href="/astuces" className="mt-2 flex h-11 items-center justify-center rounded-full text-sm font-bold text-accent-700">
                 Mesures, four, cuissons →
               </Link>
@@ -322,29 +330,29 @@ function Cook({ recipe }: { recipe: Recipe }) {
               const L = look[state];
               let timerIdx = 0;
               return (
-                <li key={st.id} data-step={i} onClick={() => onTapStep(i)} className={L.card}>
-                  <div className={L.num}>{state === "done" ? <IconCheck size={18} stroke={3.5} /> : i + 1}</div>
-                  <div className="flex min-w-0 flex-1 flex-col">
-                    <p className={L.text}>
-                      <StepText
-                        text={st.text}
-                        ingredients={recipe.ingredients}
-                        factor={factor}
-                        renderTimer={(minutes) => {
-                          const key = `${st.id}:${timerIdx++}`;
-                          return (
-                            <TimerPill
-                              minutes={minutes}
-                              timer={s.timers[key]}
-                              now={s.now}
-                              onOpen={() => openDial(key, i, minutes)}
-                            />
-                          );
-                        }}
-                      />
-                    </p>
-                  </div>
-                </li>
+                <Fragment key={st.id}>
+                  {st.section && st.section !== recipe.steps[i - 1]?.section && (
+                    <li className="list-none">
+                      <SectionHead className="px-1.5">{st.section}</SectionHead>
+                    </li>
+                  )}
+                  <li data-step={i} onClick={() => onTapStep(i)} className={L.card}>
+                    <div className={L.num}>{state === "done" ? <IconCheck size={18} stroke={3.5} /> : i + 1}</div>
+                    <div className="flex min-w-0 flex-1 flex-col">
+                      <p className={L.text}>
+                        <StepText
+                          text={st.text}
+                          ingredients={recipe.ingredients}
+                          factor={factor}
+                          renderTimer={(minutes) => {
+                            const key = `${st.id}:${timerIdx++}`;
+                            return <TimerPill minutes={minutes} timer={s.timers[key]} now={s.now} onOpen={() => openDial(key, i, minutes)} />;
+                          }}
+                        />
+                      </p>
+                    </div>
+                  </li>
+                </Fragment>
               );
             })}
           </ol>
@@ -385,10 +393,14 @@ function Cook({ recipe }: { recipe: Recipe }) {
         </main>
       </div>
 
-      <TimersBar timers={timerList} now={s.now} onOpen={(key) => {
-        const t = s.timers[key];
-        if (t) openDial(key, t.stepIndex, t.minutes);
-      }} />
+      <TimersBar
+        timers={timerList}
+        now={s.now}
+        onOpen={(key) => {
+          const t = s.timers[key];
+          if (t) openDial(key, t.stepIndex, t.minutes);
+        }}
+      />
 
       {dial && (
         <TimerDial
@@ -432,4 +444,3 @@ function Cook({ recipe }: { recipe: Recipe }) {
     </div>
   );
 }
-

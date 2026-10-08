@@ -1,10 +1,10 @@
 "use client";
 /** Fiche recette (maquette écran 06). */
 import Link from "next/link";
-import { useState } from "react";
+import { Fragment, useState } from "react";
 import { useApp } from "@/components/app/AppProvider";
 import { OfflineBanner } from "@/components/app/OfflineBanner";
-import { IngredientList } from "@/components/recipe/IngredientList";
+import { IngredientList, SectionHead } from "@/components/recipe/IngredientList";
 import { ReviewNoteSheet } from "@/components/recipe/ReviewNoteSheet";
 import { ImageSheet } from "@/components/recipe/ImageSheet";
 import { NewSticker } from "@/components/recipe/NewSticker";
@@ -67,10 +67,7 @@ export function RecipeScreen() {
 
   return (
     <div className="pb-16">
-      <header
-        className="pt-safe rounded-b-[36px] px-[22px] pb-6"
-        style={{ background: colors.bg, color: colors.ink }}
-      >
+      <header className="pt-safe rounded-b-[36px] px-[22px] pb-6" style={{ background: colors.bg, color: colors.ink }}>
         <div className="mx-auto flex max-w-3xl flex-col gap-3.5">
           <div className="flex items-center justify-between gap-3 pt-1">
             <Link href="/" aria-label="Retour" className="flex size-12 items-center justify-center rounded-full bg-white/45 print:invisible">
@@ -201,9 +198,7 @@ export function RecipeScreen() {
             <div className="flex items-end justify-between gap-2.5">
               <div className="flex flex-col gap-0.5">
                 <span className="text-xs font-bold tracking-[.06em] text-accent-700 uppercase">Protéines / portion</span>
-                <span className="font-heading text-[44px] leading-none">
-                  {recipe.proteinG != null ? `${Math.round(recipe.proteinG)} g` : "–"}
-                </span>
+                <span className="font-heading text-[44px] leading-none">{recipe.proteinG != null ? `${Math.round(recipe.proteinG)} g` : "–"}</span>
               </div>
               <div className="flex flex-col items-end gap-0.5">
                 <span className="font-heading text-2xl leading-none">{recipe.kcal != null ? Math.round(recipe.kcal) : "–"}</span>
@@ -244,12 +239,15 @@ export function RecipeScreen() {
           <section className="mt-[22px] flex flex-col gap-3 wide:mt-0 print:mt-0">
             <SectionTitle>Étapes</SectionTitle>
             {recipe.steps.map((s, i) => (
-              <div key={s.id} className="flex gap-3 text-[17px] leading-[1.45]">
-                <span className="min-w-4 font-heading text-accent-700">{i + 1}</span>
-                <p className="text-pretty">
-                  <StepText text={s.text} ingredients={recipe.ingredients} />
-                </p>
-              </div>
+              <Fragment key={s.id}>
+                {s.section && s.section !== recipe.steps[i - 1]?.section && <SectionHead className="px-0">{s.section}</SectionHead>}
+                <div className="flex gap-3 text-[17px] leading-[1.45]">
+                  <span className="min-w-4 font-heading text-accent-700">{i + 1}</span>
+                  <p className="text-pretty">
+                    <StepText text={s.text} ingredients={recipe.ingredients} />
+                  </p>
+                </div>
+              </Fragment>
             ))}
             {!recipe.steps.length && <p className="text-neutral-700">Aucune étape pour l&apos;instant.</p>}
           </section>

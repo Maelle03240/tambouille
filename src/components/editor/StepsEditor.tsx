@@ -3,19 +3,25 @@
  * Édition des étapes, en texte lisible : {farine} pour citer un ingrédient
  * (sa quantité s'affichera et suivra les portions), {8 min} pour un minuteur.
  * Pastilles sous le champ pour insérer sans taper les accolades.
+ * Poignée ⠿ pour déplacer ; « + Partie » pour grouper (« Biscuit », « Crème »).
  */
 import { useRef, useState } from "react";
 import { StepText } from "@/components/recipe/StepText";
-import { IconArrowDown, IconArrowUp, IconPlus, IconTimer, IconTrash } from "@/components/ui/icons";
+import { IconTimer, IconTrash } from "@/components/ui/icons";
 import { TextArea, cx } from "@/components/ui/primitives";
+import { useSortable } from "@/components/ui/useSortable";
 import { emptyStep } from "@/lib/recipes/factory";
 import type { Doubt } from "@/lib/recipes/import-format";
 import { tokensToMarkers } from "@/lib/recipes/markers";
+import { addSection, cleanSection, moveRow, removeSection, renameSection, toRows } from "@/lib/recipes/sections";
 import type { Ingredient, Step } from "@/lib/recipes/types";
 import { DoubtBox } from "./DoubtBox";
+import { AddButtons, DragHandle, SectionHeader, focusSoon } from "./SortableParts";
 
 export interface EditableStep {
   id: string;
+  /** Partie (« Biscuit ») ; "" = pas encore nommée. */
+  section: string | null;
   /** Texte avec jetons lisibles {nom} / {8 min}. */
   tokens: string;
 }
@@ -27,23 +33,21 @@ function tokenName(ingredients: Ingredient[], ing: Ingredient) {
 
 function StepField({
   step,
-  index,
-  count,
+  number,
   ingredients,
   doubt,
+  handle,
   onText,
-  onMove,
   onRemove,
   onSplitPaste,
   resolveDoubt,
 }: {
   step: EditableStep;
-  index: number;
-  count: number;
+  number: number;
   ingredients: Ingredient[];
   doubt?: Doubt;
+  handle: ReturnType<typeof useSortable>["handle"];
   onText: (t: string) => void;
-  onMove: (delta: number) => void;
   onRemove: () => void;
   onSplitPaste: (lines: string[]) => void;
   resolveDoubt: () => void;
@@ -69,8 +73,9 @@ function StepField({
   }
 
   return (
-    <div id={`field-step:${step.id}`} className="flex scroll-mt-24 gap-3">
-      <span className="min-w-5 pt-3 font-heading text-lg text-accent-700">{index + 1}</span>
+    <div className="flex gap-1.5">
+      <DragHandle {...handle} />
+      <span className="min-w-5 pt-3 font-heading text-lg text-accent-700">{number}</span>
       <div className="flex min-w-0 flex-1 flex-col gap-1.5">
         <DoubtBox doubt={doubt} onResolve={resolveDoubt}>
           <TextArea
@@ -85,7 +90,10 @@ function StepField({
             }}
             onPaste={(e) => {
               const text = e.clipboardData.getData("text");
-              const lines = text.split(/\r?\n/).map((l) => l.replace(/^\s*(\d+[.)]|[-•*])\s*/, "").trim()).filter(Boolean);
+              const lines = text
+                .split(/\r?\n/)
+                .map((l) => l.replace(/^\s*(\d+[.)]|[-•*])\s*/, "").trim())
+                .filter(Boolean);
               if (lines.length > 1 && !step.tokens.trim()) {
                 e.preventDefault();
                 onSplitPaste(lines);
@@ -128,18 +136,15 @@ function StepField({
             Pas trouvé dans les ingrédients : {preview.unresolved.map((u) => `« ${u} »`).join(", ")}
           </p>
         )}
-        <div className="flex justify-end gap-1">
-          <button type="button" aria-label="Monter" disabled={index === 0} onClick={() => onMove(-1)} className="flex size-9 items-center justify-center rounded-full disabled:opacity-30">
-            <IconArrowUp size={18} />
-          </button>
-          <button type="button" aria-label="Descendre" disabled={index === count - 1} onClick={() => onMove(1)} className="flex size-9 items-center justify-center rounded-full disabled:opacity-30">
-            <IconArrowDown size={18} />
-          </button>
-          <button type="button" aria-label="Supprimer l'étape" onClick={onRemove} className="flex size-9 items-center justify-center rounded-full text-accent-800">
-            <IconTrash size={18} />
-          </button>
-        </div>
       </div>
+      <button
+        type="button"
+        aria-label="Supprimer l'étape"
+        onClick={onRemove}
+        className="flex size-9 flex-none items-center justify-center self-start rounded-full text-accent-800"
+      >
+        <IconTrash size={18} />
+      </button>
     </div>
   );
 }
@@ -157,50 +162,63 @@ export function StepsEditor({
   doubts: Doubt[];
   resolveDoubt: (key: string) => void;
 }) {
-  const newStep = (tokens = ""): EditableStep => ({ id: emptyStep(0).id, tokens });
-
-  function move(i: number, delta: number) {
-    const j = i + delta;
-    if (j < 0 || j >= steps.length) return;
-    const next = [...steps];
-    [next[i], next[j]] = [next[j], next[i]];
-    onChange(next);
-  }
+  const newStep = (tokens = "", section: string | null = null): EditableStep => ({ id: emptyStep(0).id, section, tokens });
+  const { container: sortBox, handle: dragHandle, dragging } = useSortable((from, to) => onChange(moveRow(steps, from, to)));
+  const rows = toRows(steps);
+  let number = 0;
 
   return (
     <div className="flex flex-col gap-3">
       <p className="text-[13px] text-neutral-700">
         <strong>{"{beurre}"}</strong> = quantité · <strong>{"{8 min}"}</strong> = minuteur
       </p>
-      {steps.map((s, i) => (
-        <StepField
-          key={s.id}
-          step={s}
-          index={i}
-          count={steps.length}
-          ingredients={ingredients}
-          doubt={doubts.find((d) => d.key === `step:${s.id}`)}
-          onText={(t) => onChange(steps.map((x) => (x.id === s.id ? { ...x, tokens: t } : x)))}
-          onMove={(d) => move(i, d)}
-          onRemove={() => onChange(steps.filter((x) => x.id !== s.id))}
-          onSplitPaste={(lines) => {
-            const created = lines.map((l) => newStep(l));
-            const next = [...steps];
-            next.splice(i, 1, ...created);
-            onChange(next);
-          }}
-          resolveDoubt={() => resolveDoubt(`step:${s.id}`)}
-        />
-      ))}
-      <button
-        type="button"
-        onClick={() => onChange([...steps, newStep()])}
-        className={cx(
-          "flex h-12 items-center justify-center gap-2 rounded-full border-[1.5px] border-dashed border-neutral-500 font-bold text-neutral-800",
+      <div ref={sortBox} className="relative flex flex-col gap-3">
+        {rows.map((row, r) =>
+          row.kind === "section" ? (
+            <div key={row.key} data-sort>
+              <SectionHeader
+                id={row.key}
+                name={row.name}
+                onRename={(name) => onChange(renameSection(steps, row.firstId, name))}
+                onRemove={() => onChange(removeSection(steps, row.firstId))}
+              />
+            </div>
+          ) : (
+            <div
+              key={row.item.id}
+              data-sort
+              id={`field-step:${row.item.id}`}
+              className={cx("scroll-mt-24 rounded-2xl", dragging === r && "relative z-10 bg-bg shadow-lg")}
+            >
+              <StepField
+                step={row.item}
+                number={++number}
+                ingredients={ingredients}
+                doubt={doubts.find((d) => d.key === `step:${row.item.id}`)}
+                handle={dragHandle}
+                onText={(t) => onChange(steps.map((x) => (x.id === row.item.id ? { ...x, tokens: t } : x)))}
+                onRemove={() => onChange(steps.filter((x) => x.id !== row.item.id))}
+                onSplitPaste={(lines) => {
+                  const i = steps.findIndex((x) => x.id === row.item.id);
+                  const next = [...steps];
+                  next.splice(i, 1, ...lines.map((l) => newStep(l, row.item.section)));
+                  onChange(next);
+                }}
+                resolveDoubt={() => resolveDoubt(`step:${row.item.id}`)}
+              />
+            </div>
+          ),
         )}
-      >
-        <IconPlus size={18} /> Ajouter une étape
-      </button>
+      </div>
+      <AddButtons
+        label="Ajouter une étape"
+        onAdd={() => onChange([...steps, newStep("", steps.at(-1)?.section ?? null)])}
+        onAddSection={() => {
+          const { items, focusId } = addSection(steps, (section) => newStep("", section));
+          onChange(items);
+          focusSoon(focusId);
+        }}
+      />
     </div>
   );
 }
@@ -209,5 +227,11 @@ export function StepsEditor({
 export function toSteps(steps: EditableStep[], ingredients: Ingredient[]): Step[] {
   return steps
     .filter((s) => s.tokens.trim())
-    .map((s, position) => ({ id: s.id, position, text: tokensToMarkers(s.tokens.trim(), ingredients).text, timerMinutes: null }));
+    .map((s, position) => ({
+      id: s.id,
+      position,
+      section: cleanSection(s.section),
+      text: tokensToMarkers(s.tokens.trim(), ingredients).text,
+      timerMinutes: null,
+    }));
 }

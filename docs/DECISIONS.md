@@ -143,3 +143,12 @@ Remplace « ouverture à la famille en écriture » (spec V3). Deux étapes : **
 - Accueil : « À revoir » réduit à l'icône + le nombre.
 - Lecture d'étiquette en photo testée (Gemini) : nom, kcal, protéines, lipides, glucides, fibres lus correctement.
 - Courses : bouton corbeille « Tout enlever » (avec confirmation) : retire les recettes du menu, les ajouts, les articles perso et les cases cochées. Une recette remise au menu revient dans la liste.
+
+## 2026-10-08 — Retours après quelques jours d'utilisation (validé)
+
+- **Moments = tirage du menu** : une recette sans moment n'est **jamais tirée** (avant : repli selon sa catégorie) ; elle reste choisissable à la main (« Tout » dans le choix d'un plat inclut aussi les recettes de fête). Indiqué sous le champ (« pour le tirage du menu — vide : jamais tirée ») et dans la consigne de l'IA (vide pour pâtisserie de fête, bases, sauces, pains, boissons). Les recettes déjà sans moment étaient justement celles-là : aucune donnée modifiée.
+- **Parties dans les étapes** (« Biscuit », « Crème »), comme pour les ingrédients : titre au-dessus des étapes, affiché sur la fiche et en mode cuisine ; numérotation continue. Migration 0011 (`steps.section`, `save_recipe` v5). L'IA et le format JSON renvoient `steps: [{ text, section }]` (une simple chaîne reste acceptée).
+- **Éditeur** : poignée ⠿ pour glisser une étape ou un ingrédient (souris et doigt, la page défile près des bords) ; glisser sous un autre titre change de partie ; bouton « + Partie » (la première fois, le titre se place au-dessus de ce qui est déjà écrit) ; titre renommable sur place, × pour le retirer. Fini les flèches et le champ « Groupe » dans « ⋯ ». Logique : `src/lib/recipes/sections.ts` (testée), `src/components/ui/useSortable.ts`.
+- Pastilles (filtres, ingrédients à insérer) : défilent sur le côté à la molette, fine barre visible à la souris.
+- Minuteur « 1 min 30 » ; virgules acceptées dans tous les champs nombre ; JSON : `options` en nombres acceptées.
+- IA : 75 s max (la route a 90 s), essai sur le modèle léger si Gemini est lent ou surchargé, message clair au lieu de « 504 ».

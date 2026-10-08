@@ -15,7 +15,7 @@ function cake(): Recipe {
     title: "Cake",
     tags: ["a-tester"],
     ingredients: [farine, sucre],
-    steps: [{ id: "s1", position: 0, text: "Mélanger {{ing:farine}} et {{ing:sucre}}.", timerMinutes: null }],
+    steps: [{ id: "s1", position: 0, section: null, text: "Mélanger {{ing:farine}} et {{ing:sucre}}.", timerMinutes: null }],
   };
 }
 

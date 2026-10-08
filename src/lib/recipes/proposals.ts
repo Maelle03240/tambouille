@@ -37,7 +37,7 @@ const comparable = (r: Recipe, field: keyof Recipe): unknown => {
     return r.ingredients.map(({ id, section, name, quantity, unit, gramsEstimate, aisle, scalable, customIngredientId }) => ({
       id, section, name, quantity, unit, gramsEstimate, aisle, scalable, customIngredientId,
     }));
-  if (field === "steps") return r.steps.map(({ id, text }) => ({ id, text }));
+  if (field === "steps") return r.steps.map(({ id, section, text }) => ({ id, section: section ?? null, text }));
   return r[field] ?? null;
 };
 

@@ -51,7 +51,7 @@ export const importSchema = z.object({
   cook_minutes: num,
   ingredients: z.array(importIngredientSchema).default([]),
   /** Étapes avec jetons {nom d'ingrédient} et {8 min}. */
-  steps: z.array(z.union([z.string(), z.object({ text: z.string() })])).default([]),
+  steps: z.array(z.union([z.string(), z.object({ text: z.string(), section: z.string().nullish() })])).default([]),
   nutrition_per_portion: z
     .object({ kcal: num, protein_g: num, fat_g: num, carbs_g: num, fiber_g: num })
     .nullish(),
@@ -133,8 +133,9 @@ export function importToRecipe(data: ImportData, sourceType: SourceType): { reci
 
   const steps: Step[] = data.steps.map((s, i) => {
     const source = typeof s === "string" ? s : s.text;
+    const section = (typeof s === "string" ? null : s.section?.trim()) || null;
     const { text } = tokensToMarkers(stripArticlesBeforeTokens(source.trim()), ingredients);
-    return { id: newId(), position: i, text, timerMinutes: timersIn(text)[0] ?? null };
+    return { id: newId(), position: i, section, text, timerMinutes: timersIn(text)[0] ?? null };
   });
 
   // Anciennes catégories « goûter » / « petit-déj » → moment + type de plat

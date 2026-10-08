@@ -15,7 +15,7 @@ export function groupBySection(ingredients: Ingredient[]) {
   return groups;
 }
 
-function SectionHead({ children, className = "px-3" }: { children: string; className?: string }) {
+export function SectionHead({ children, className = "px-3" }: { children: string; className?: string }) {
   return <div className={cx("pt-3.5 pb-0.5 text-[13px] font-bold tracking-[.06em] text-neutral-700 uppercase", className)}>{children}</div>;
 }
 

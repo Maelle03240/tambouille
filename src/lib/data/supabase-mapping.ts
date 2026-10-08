@@ -66,7 +66,7 @@ function ingredientFromRow(i: Row): Ingredient {
 }
 
 function stepFromRow(s: Row): Step {
-  return { id: s.id, position: s.position, text: s.text, timerMinutes: s.timer_minutes };
+  return { id: s.id, position: s.position, section: s.section ?? null, text: s.text, timerMinutes: s.timer_minutes };
 }
 
 /** Charge utile de la fonction SQL `save_recipe` (enregistrement atomique). */
@@ -119,6 +119,7 @@ export function recipeToPayload(r: Recipe): Row {
     steps: r.steps.map((s, position) => ({
       id: s.id,
       position,
+      section: s.section,
       text: s.text,
       timer_minutes: s.timerMinutes,
     })),
