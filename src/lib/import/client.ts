@@ -17,9 +17,15 @@ export async function requestParse(body: ParseRequest): Promise<ImportData> {
     },
     body: JSON.stringify(body),
   });
-  const json = await res.json().catch(() => ({ error: `Erreur ${res.status}` }));
+  const json = await res.json().catch(() => ({ error: errorFor(res.status) }));
   if (!res.ok || !json.data) throw new Error(json.error ?? "La lecture a échoué.");
   return importSchema.parse(json.data);
+}
+
+/** Réponse non JSON (délai dépassé côté Vercel…) → message lisible. */
+function errorFor(status: number) {
+  if (status === 504) return "L'IA a mis trop de temps à répondre. Réessaie dans un moment.";
+  return `Erreur ${status}`;
 }
 
 /** Le texte collé est-il juste un lien ? */
@@ -40,7 +46,7 @@ async function postJson<T>(url: string, body: unknown): Promise<T> {
     },
     body: JSON.stringify(body),
   });
-  const json = await res.json().catch(() => ({ error: `Erreur ${res.status}` }));
+  const json = await res.json().catch(() => ({ error: errorFor(res.status) }));
   if (!res.ok || !json.data) throw new Error(json.error ?? "La lecture a échoué.");
   return json.data as T;
 }

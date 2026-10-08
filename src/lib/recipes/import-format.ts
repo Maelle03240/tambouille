@@ -65,7 +65,7 @@ export const importSchema = z.object({
       z.object({
         field: z.string(),
         question: z.string().nullish(),
-        options: z.array(z.string()).nullish(),
+        options: z.array(z.union([z.string(), z.number()]).transform(String)).nullish(),
       }),
     )
     .nullish(),

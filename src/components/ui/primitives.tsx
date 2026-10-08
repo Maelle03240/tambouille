@@ -4,7 +4,7 @@
  * les boutons / champs d'un coup, c'est ici (et les couleurs dans theme.css).
  */
 import Link from "next/link";
-import { useEffect, type ButtonHTMLAttributes, type ComponentProps, type InputHTMLAttributes, type ReactNode } from "react";
+import { useEffect, useState, type ButtonHTMLAttributes, type ComponentProps, type InputHTMLAttributes, type ReactNode } from "react";
 import { IconBack, IconClose } from "./icons";
 
 export function cx(...classes: (string | false | null | undefined)[]) {
@@ -121,16 +121,21 @@ export function NumberInput({
   value: number | null;
   onChange: (v: number | null) => void;
 }) {
+  // texte tapé gardé tel quel (« 1, » en cours de saisie) tant qu'il vaut la même chose
+  const shown = value == null ? "" : String(value).replace(".", ",");
+  const [text, setText] = useState(shown);
+  const parse = (t: string) => (t.trim() === "" ? null : Number(t.replace(",", ".").trim()));
+  const display = parse(text) === value ? text : shown;
   return (
     <input
       inputMode="decimal"
       {...rest}
-      value={value == null ? "" : String(value).replace(".", ",")}
+      value={display}
       onChange={(e) => {
-        const raw = e.target.value.replace(",", ".").trim();
-        if (raw === "") return onChange(null);
-        const n = Number(raw);
-        if (isFinite(n)) onChange(n);
+        const n = parse(e.target.value);
+        if (n !== null && !isFinite(n)) return;
+        setText(e.target.value);
+        onChange(n);
       }}
       className={cx(inputBase, "min-h-12", className)}
     />

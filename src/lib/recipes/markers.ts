@@ -43,9 +43,11 @@ export function ingredientIdsIn(text: string): string[] {
 
 /* ───────────── Durées ───────────── */
 
-/** 8 → « 8 min » ; 90 → « 1 h 30 » ; 60 → « 1 h » ; 0.5 → « 30 s ». */
+/** 8 → « 8 min » ; 1.5 → « 1 min 30 » ; 90 → « 1 h 30 » ; 60 → « 1 h » ; 0.5 → « 30 s ». */
 export function formatDuration(minutes: number): string {
   if (minutes < 1) return `${Math.round(minutes * 60)} s`;
+  const secs = Math.round(minutes * 60);
+  if (secs < 3600 && secs % 60) return `${Math.floor(secs / 60)} min ${String(secs % 60).padStart(2, "0")}`;
   const m = Math.round(minutes);
   if (m < 60) return `${m} min`;
   const h = Math.floor(m / 60);
@@ -58,6 +60,8 @@ export function parseDuration(input: string): number | null {
   const s = input.trim().toLowerCase().replace(",", ".");
   let m = s.match(/^(\d+(?:\.\d+)?)\s*(?:h|heures?)\s*(\d+)?\s*(?:min|mn|m)?$/);
   if (m) return Number(m[1]) * 60 + (m[2] ? Number(m[2]) : 0);
+  m = s.match(/^(\d+)\s*(?:min|mn|minutes?|m)\s*(\d+)\s*(?:s|sec|secondes?)?$/);
+  if (m) return Number(m[1]) + Number(m[2]) / 60;
   m = s.match(/^(\d+(?:\.\d+)?)\s*(?:min|mn|minutes?|m)$/);
   if (m) return Number(m[1]);
   m = s.match(/^(\d+)\s*(?:s|sec|secondes?)$/);

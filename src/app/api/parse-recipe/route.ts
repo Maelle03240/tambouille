@@ -8,7 +8,7 @@
 import { isAuthorized } from "@/lib/ai/auth";
 import { ParseError, parseRecipe } from "@/lib/ai/parseRecipe";
 
-export const maxDuration = 60;
+export const maxDuration = 300;
 
 const MAX_IMAGE_BYTES = 4 * 1024 * 1024;
 

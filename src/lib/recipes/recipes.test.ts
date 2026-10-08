@@ -60,13 +60,14 @@ describe("formatIngredient", () => {
 });
 
 describe("durées", () => {
-  it.each([["8 min", 8], ["1 h 30", 90], ["1h30", 90], ["2 h", 120], ["45 s", 0.75], ["farine", null]])("%s", (s, m) =>
+  it.each([["8 min", 8], ["1 h 30", 90], ["1h30", 90], ["2 h", 120], ["45 s", 0.75], ["1 min 30", 1.5], ["1min30s", 1.5], ["farine", null]])("%s", (s, m) =>
     expect(parseDuration(s)).toBe(m),
   );
   it("format", () => {
     expect(formatDuration(8)).toBe("8 min");
     expect(formatDuration(90)).toBe("1 h 30");
     expect(formatDuration(60)).toBe("1 h");
+    expect(formatDuration(1.5)).toBe("1 min 30");
   });
 });
 
