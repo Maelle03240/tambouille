@@ -24,7 +24,7 @@ export function ProposalsScreen() {
   const pending = usePendingProposals();
   const all = useAllRecipes();
   const people = usePeople();
-  const nameOf = (uid: string | null) => people?.find((p) => p.id === uid)?.displayName || "?";
+  const nameOf = (uid: string | null) => people?.find((p) => p.id === uid)?.displayName || "Compte supprimé";
 
   const byId = useMemo(() => new Map((all ?? []).map((r) => [r.id, r])), [all]);
   const isFork = (r: Recipe) => !!r.forkedFromId && byId.has(r.forkedFromId);

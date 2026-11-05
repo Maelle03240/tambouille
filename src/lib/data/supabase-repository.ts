@@ -74,6 +74,11 @@ export class SupabaseRepository implements Repository {
     fail(error, "E-mail");
   }
 
+  async updateMyName(name: string) {
+    const { error } = await this.client.rpc("set_my_name", { new_name: name });
+    fail(error, "Prénom");
+  }
+
   setHousehold(id: string | null) {
     this.household = id;
   }

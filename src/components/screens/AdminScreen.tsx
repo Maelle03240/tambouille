@@ -12,7 +12,7 @@ import { ROLE_LABELS } from "@/config/ui";
 import { getRepository } from "@/lib/data";
 import type { AdminOverview } from "@/lib/data/repository";
 import { syncNow } from "@/lib/data/sync";
-import { requestInvite } from "@/lib/import/client";
+import { requestAccountAction, requestAccounts, requestInvite, type AccountInfo } from "@/lib/import/client";
 import type { Role } from "@/lib/recipes/types";
 
 export function AdminScreen() {
@@ -20,6 +20,7 @@ export function AdminScreen() {
   const admin = getRepository().admin;
   const [data, setData] = useState<AdminOverview | null>(null);
   const [newHousehold, setNewHousehold] = useState("");
+  const [accounts, setAccounts] = useState<AccountInfo[]>([]);
 
   // incrémenté après chaque action pour relire
   const [version, setVersion] = useState(0);
@@ -30,10 +31,15 @@ export function AdminScreen() {
       .overview()
       .then((d) => alive && setData(d))
       .catch((e) => toast(e instanceof Error ? e.message : "Lecture impossible"));
+    if (features.invites) {
+      requestAccounts()
+        .then((a) => alive && setAccounts(a))
+        .catch((e) => toast(e instanceof Error ? e.message : "Lecture impossible"));
+    }
     return () => {
       alive = false;
     };
-  }, [online, admin, toast, version]);
+  }, [online, admin, toast, version, features.invites]);
 
   /** Une action admin, puis on relit (et on resynchronise : mes foyers ont pu changer). */
   async function act(fn: () => Promise<unknown>, done?: string) {
@@ -71,124 +77,162 @@ export function AdminScreen() {
         {/* gestion des comptes : Supabase seulement (pas en mode local) */}
         {admin && (
           <>
-          <InviteForm households={data?.households ?? []} enabled={!!features.invites && online} onDone={() => act(async () => {}, "Invitation envoyée")} />
+            <InviteForm
+              households={data?.households ?? []}
+              enabled={!!features.invites && online}
+              onDone={() => act(async () => {}, "Invitation envoyée")}
+            />
 
-          <section className="flex flex-col gap-3">
-            <SectionTitle>Foyers</SectionTitle>
-            {!data ? (
-              <Spinner />
-            ) : (
-              data.households.map((h) => {
-                const others = data.people.filter((p) => !h.memberIds.includes(p.id));
-                return (
-                  <div key={h.id} className="flex flex-col gap-2.5 rounded-[26px] bg-surface p-4">
-                    <div className="flex items-center gap-2">
-                      <span className="flex-1 font-heading text-[20px]">{h.name}</span>
-                      <button
-                        type="button"
-                        aria-label={`Supprimer ${h.name}`}
-                        disabled={!online}
-                        onClick={() =>
-                          confirm(`Supprimer « ${h.name} » avec son menu, ses modèles et sa liste de courses ?`) &&
-                          act(() => admin.deleteHousehold(h.id), "Foyer supprimé")
-                        }
-                        className="flex size-10 items-center justify-center rounded-full text-neutral-700 disabled:opacity-45"
-                      >
-                        <IconTrash size={18} />
-                      </button>
-                    </div>
-                    <div className="flex flex-wrap gap-2">
-                      {h.memberIds.map((id) => (
-                        <span key={id} className="flex h-10 items-center gap-1 rounded-full bg-neutral-100 pr-1 pl-4 font-bold">
-                          {nameOf(id)}
-                          <button
-                            type="button"
-                            aria-label={`Retirer ${nameOf(id)}`}
-                            disabled={!online}
-                            onClick={() => act(() => admin.removeMember(h.id, id))}
-                            className="flex size-8 items-center justify-center rounded-full text-neutral-700"
-                          >
-                            <IconClose size={15} />
-                          </button>
-                        </span>
-                      ))}
-                      {others.length > 0 && (
-                        <select
-                          value=""
+            <section className="flex flex-col gap-3">
+              <SectionTitle>Foyers</SectionTitle>
+              {!data ? (
+                <Spinner />
+              ) : (
+                data.households.map((h) => {
+                  const others = data.people.filter((p) => !h.memberIds.includes(p.id));
+                  return (
+                    <div key={h.id} className="flex flex-col gap-2.5 rounded-[26px] bg-surface p-4">
+                      <div className="flex items-center gap-2">
+                        <span className="flex-1 font-heading text-[20px]">{h.name}</span>
+                        <button
+                          type="button"
+                          aria-label={`Supprimer ${h.name}`}
                           disabled={!online}
-                          aria-label="Ajouter un membre"
-                          onChange={(e) => e.target.value && act(() => admin.addMember(h.id, e.target.value))}
-                          className="h-10 rounded-full border-[1.5px] border-dashed border-divider bg-transparent px-3 font-bold text-neutral-700"
+                          onClick={() =>
+                            confirm(`Supprimer « ${h.name} » avec son menu, ses modèles et sa liste de courses ?`) &&
+                            act(() => admin.deleteHousehold(h.id), "Foyer supprimé")
+                          }
+                          className="flex size-10 items-center justify-center rounded-full text-neutral-700 disabled:opacity-45"
                         >
-                          <option value="">+ Ajouter</option>
-                          {others.map((p) => (
-                            <option key={p.id} value={p.id}>
-                              {p.displayName}
-                            </option>
-                          ))}
-                        </select>
+                          <IconTrash size={18} />
+                        </button>
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        {h.memberIds.map((id) => (
+                          <span key={id} className="flex h-10 items-center gap-1 rounded-full bg-neutral-100 pr-1 pl-4 font-bold">
+                            {nameOf(id)}
+                            <button
+                              type="button"
+                              aria-label={`Retirer ${nameOf(id)}`}
+                              disabled={!online}
+                              onClick={() => {
+                                // son dernier foyer : plus de menu ni de courses pour cette personne
+                                const last = data.households.filter((x) => x.memberIds.includes(id)).length === 1;
+                                if (last && !confirm(`${nameOf(id)} n'aura plus aucun foyer, donc ni menu ni courses. La retirer quand même ?`))
+                                  return;
+                                act(() => admin.removeMember(h.id, id));
+                              }}
+                              className="flex size-8 items-center justify-center rounded-full text-neutral-700"
+                            >
+                              <IconClose size={15} />
+                            </button>
+                          </span>
+                        ))}
+                        {others.length > 0 && (
+                          <select
+                            value=""
+                            disabled={!online}
+                            aria-label="Ajouter un membre"
+                            onChange={(e) => e.target.value && act(() => admin.addMember(h.id, e.target.value))}
+                            className="h-10 rounded-full border-[1.5px] border-dashed border-divider bg-transparent px-3 font-bold text-neutral-700"
+                          >
+                            <option value="">+ Ajouter</option>
+                            {others.map((p) => (
+                              <option key={p.id} value={p.id}>
+                                {p.displayName}
+                              </option>
+                            ))}
+                          </select>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+              <form
+                className="flex gap-2"
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  act(() => admin.createHousehold(newHousehold.trim()), "Foyer créé").then(() => setNewHousehold(""));
+                }}
+              >
+                <TextInput value={newHousehold} onChange={(e) => setNewHousehold(e.target.value)} placeholder="Nouveau foyer, ex. Chez Maman" />
+                <button
+                  type="submit"
+                  aria-label="Créer le foyer"
+                  disabled={!online || !newHousehold.trim()}
+                  className="flex size-12 flex-none items-center justify-center rounded-full bg-accent-600 text-neutral-100 disabled:opacity-45"
+                >
+                  <IconPlus size={20} />
+                </button>
+              </form>
+            </section>
+
+            <section className="flex flex-col gap-3">
+              <SectionTitle>Comptes</SectionTitle>
+              {data?.people.map((p) => {
+                const account = accounts.find((a) => a.id === p.id);
+                return (
+                  <div key={p.id} className="flex flex-col gap-2 rounded-[26px] bg-surface px-4 py-3">
+                    <div className="flex items-start gap-2">
+                      <span className="flex min-w-0 flex-1 flex-col">
+                        <span className="font-bold">{p.displayName || "?"}</span>
+                        {account && <span className="truncate text-sm text-neutral-700">{account.email}</span>}
+                      </span>
+                      {account && p.id !== profile?.id && p.role !== "admin" && (
+                        <button
+                          type="button"
+                          aria-label={`Supprimer le compte de ${p.displayName}`}
+                          disabled={!online}
+                          onClick={() =>
+                            confirm(
+                              `Supprimer le compte de ${p.displayName} ? C'est définitif. Ses recettes perso restent dans Propositions ; son foyer est supprimé si personne d'autre n'y est.`,
+                            ) && act(() => requestAccountAction("delete", p.id), "Compte supprimé")
+                          }
+                          className="flex size-10 flex-none items-center justify-center rounded-full text-neutral-700 disabled:opacity-45"
+                        >
+                          <IconTrash size={18} />
+                        </button>
                       )}
+                    </div>
+                    {account?.pending && (
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="rounded-full bg-accent-100 px-3 py-1 text-[13px] font-bold text-accent-800">Invitation en attente</span>
+                        <button
+                          type="button"
+                          disabled={!online}
+                          onClick={() => act(() => requestAccountAction("resend", p.id), "Invitation renvoyée")}
+                          className="h-9 rounded-full border-[1.5px] border-divider px-3 text-sm font-bold disabled:opacity-45"
+                        >
+                          Renvoyer
+                        </button>
+                      </div>
+                    )}
+                    <div className="flex flex-wrap gap-1.5">
+                      {(Object.keys(ROLE_LABELS) as Role[]).map((r) => (
+                        <Chip
+                          key={r}
+                          selected={p.role === r}
+                          // on ne se retire pas soi-même le rôle admin
+                          disabled={!online || p.id === profile?.id}
+                          onClick={() => p.role !== r && act(() => admin.setRole(p.id, r))}
+                        >
+                          {ROLE_LABELS[r]}
+                        </Chip>
+                      ))}
                     </div>
                   </div>
                 );
-              })
-            )}
-            <form
-              className="flex gap-2"
-              onSubmit={(e) => {
-                e.preventDefault();
-                act(() => admin.createHousehold(newHousehold.trim()), "Foyer créé").then(() => setNewHousehold(""));
-              }}
-            >
-              <TextInput value={newHousehold} onChange={(e) => setNewHousehold(e.target.value)} placeholder="Nouveau foyer, ex. Chez Maman" />
-              <button
-                type="submit"
-                aria-label="Créer le foyer"
-                disabled={!online || !newHousehold.trim()}
-                className="flex size-12 flex-none items-center justify-center rounded-full bg-accent-600 text-neutral-100 disabled:opacity-45"
-              >
-                <IconPlus size={20} />
-              </button>
-            </form>
-          </section>
-
-          <section className="flex flex-col gap-3">
-            <SectionTitle>Comptes</SectionTitle>
-            {data?.people.map((p) => (
-              <div key={p.id} className="flex flex-col gap-2 rounded-[26px] bg-surface px-4 py-3">
-                <span className="font-bold">{p.displayName || "?"}</span>
-                <div className="flex flex-wrap gap-1.5">
-                  {(Object.keys(ROLE_LABELS) as Role[]).map((r) => (
-                    <Chip
-                      key={r}
-                      selected={p.role === r}
-                      // on ne se retire pas soi-même le rôle admin
-                      disabled={!online || p.id === profile?.id}
-                      onClick={() => p.role !== r && act(() => admin.setRole(p.id, r))}
-                    >
-                      {ROLE_LABELS[r]}
-                    </Chip>
-                  ))}
-                </div>
-              </div>
-            ))}
-          </section>
-        </>
+              })}
+            </section>
+          </>
         )}
       </main>
     </div>
   );
 }
 
-function InviteForm({
-  households,
-  enabled,
-  onDone,
-}: {
-  households: AdminOverview["households"];
-  enabled: boolean;
-  onDone: () => void;
-}) {
+function InviteForm({ households, enabled, onDone }: { households: AdminOverview["households"]; enabled: boolean; onDone: () => void }) {
   const { toast, features } = useApp();
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");

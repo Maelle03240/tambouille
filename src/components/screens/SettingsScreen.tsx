@@ -8,7 +8,7 @@ import { TabBar } from "@/components/app/TabBar";
 import { Button, Field, NumberInput, SectionTitle, Spinner, TextInput, cx } from "@/components/ui/primitives";
 import { householdColors } from "@/config/households";
 import { BRAND } from "@/config/brand";
-import { exportAll, renameHousehold, saveSettings, switchHousehold } from "@/lib/data/actions";
+import { exportAll, renameHousehold, saveSettings, setMyName, setPassword, switchHousehold } from "@/lib/data/actions";
 import { getMeta } from "@/lib/data/db";
 import { useHouseholds, usePendingProposals, useSettings } from "@/lib/data/hooks";
 import { ROLE_LABELS } from "@/config/ui";
@@ -20,6 +20,46 @@ function Row({ label, value }: { label: string; value: React.ReactNode }) {
       <span className="text-neutral-700">{label}</span>
       <span className="text-right font-bold">{value}</span>
     </div>
+  );
+}
+
+/** Mon compte : prénom et mot de passe (l'e-mail se lit au-dessus). */
+function MyAccount({ run }: { run: (fn: () => Promise<unknown>, done?: string) => Promise<void> }) {
+  const { profile, online } = useApp();
+  const [nameDraft, setNameDraft] = useState<string | null>(null);
+  const [password, setPw] = useState("");
+  const name = nameDraft ?? profile?.displayName ?? "";
+  return (
+    <section className="flex flex-col gap-3">
+      <SectionTitle>Mon compte</SectionTitle>
+      <Field label="Prénom">
+        <div className="flex gap-2">
+          <TextInput value={name} maxLength={60} onChange={(e) => setNameDraft(e.target.value)} />
+          <Button
+            variant="primary"
+            disabled={!online || !name.trim() || name === profile?.displayName}
+            onClick={() => run(() => setMyName(name), "Prénom enregistré").then(() => setNameDraft(null))}
+          >
+            OK
+          </Button>
+        </div>
+      </Field>
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          void run(() => setPassword(password), "Mot de passe changé").then(() => setPw(""));
+        }}
+      >
+        <Field label="Nouveau mot de passe" hint="8 caractères minimum">
+          <div className="flex gap-2">
+            <TextInput type="password" autoComplete="new-password" value={password} onChange={(e) => setPw(e.target.value)} />
+            <Button type="submit" variant="primary" disabled={!online || password.length < 8}>
+              OK
+            </Button>
+          </div>
+        </Field>
+      </form>
+    </section>
   );
 }
 
@@ -89,6 +129,7 @@ export function SettingsScreen() {
             }
           />
         </section>
+        {app.mode === "supabase" && <MyAccount run={run} />}
         {app.mode === "supabase" && (
           <section className="flex flex-col gap-3">
             <SectionTitle>Foyer</SectionTitle>
@@ -114,7 +155,7 @@ export function SettingsScreen() {
                         )}
                         style={{ background: colors.bg, color: colors.ink }}
                       >
-                        {h.name.replace(/^chezs+/i, "").charAt(0).toUpperCase()}
+                        {h.name.replace(/^chez\s+/i, "").charAt(0).toUpperCase()}
                       </span>
                       <span className={cx("w-full truncate text-center text-sm", on ? "font-bold" : "text-neutral-700")}>{h.name}</span>
                     </button>

@@ -406,6 +406,14 @@ export async function setPassword(password: string) {
   await getRepository().updatePassword(password);
 }
 
+export async function setMyName(name: string) {
+  requireOnline();
+  const clean = name.trim();
+  await getRepository().updateMyName(clean);
+  const profile = await getMeta("profile");
+  if (profile) await setMeta("profile", { ...profile, displayName: clean });
+}
+
 export async function sendPasswordReset(email: string) {
   await getRepository().sendPasswordReset(email.trim(), `${location.origin}/bienvenue`);
 }

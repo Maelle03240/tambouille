@@ -165,3 +165,10 @@ Remplace « ouverture à la famille en écriture » (spec V3). Deux étapes : **
 - Gratuite par défaut. Interrupteur « IA payante » dans Réglages, visible seulement par l'admin et si `GEMINI_API_KEY_PAID` existe dans Vercel. Vaut pour la lecture de recettes, les étiquettes, le recalcul des valeurs et la description des illustrations (l'image elle-même reste chez Cloudflare, avec son quota). Rappel « IA payante activée » dans la feuille Ajouter.
 - Même fournisseur (Gemini) et même modèle : la clé payante donne plus de quota, pas une autre IA. Aucune dépendance ajoutée.
 - Le serveur décide (rôle et interrupteur lus en base, migration 0015) : le navigateur ne choisit pas la clé, un membre ne peut pas utiliser la clé payante.
+
+## 2026-11-05 — Gestion des comptes
+
+- **Mon compte** (Réglages) : changer son prénom et son mot de passe. Prénom par la fonction `set_my_name` (migration 0016) : la ligne du profil reste modifiable par l'admin seul, sinon on pourrait se donner le rôle admin. Changer d'e-mail : pas fait (rare, à ajouter si besoin).
+- **Admin → Comptes** : e-mail de chacun, « Invitation en attente » avec « Renvoyer », suppression d'un compte (ni soi-même, ni un admin). Route `/api/admin/accounts`.
+- **Compte supprimé** : ses recettes perso repassent toutes « en attente » dans Propositions (auteur : « Compte supprimé »), l'admin décide ; ses foyers où il était seul sont supprimés avec leur menu et leurs courses.
+- **Sans foyer** : l'admin est prévenue avant de retirer quelqu'un de son dernier foyer ; Menu et Courses affichent « Aucun foyer » au lieu d'échouer.

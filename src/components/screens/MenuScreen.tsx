@@ -7,6 +7,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { useApp } from "@/components/app/AppProvider";
+import { NoHouseholdNotice, useNoHousehold } from "@/components/app/NoHousehold";
 import { OfflineBanner } from "@/components/app/OfflineBanner";
 import { TabBar } from "@/components/app/TabBar";
 import { GoalsSheet } from "@/components/planning/GoalsSheet";
@@ -39,6 +40,7 @@ export function MenuScreen() {
   const [applyTpl, setApplyTpl] = useState(false);
   const [busy, setBusy] = useState(false);
 
+  const noHousehold = useNoHousehold();
   const w = usePlanningWeek(monday);
   const current = w.days.find((d) => d.day === day) ?? w.days[0];
   const lockCount = w.days.reduce((n, d) => n + d.slots.filter((s) => s.locked).length, 0);
@@ -60,6 +62,16 @@ export function MenuScreen() {
   const recipesOf = (slots: MealPlanEntry[]) => slots.map((s) => (s.recipeId ? w.byId.get(s.recipeId) : undefined)).filter(Boolean) as Recipe[];
   const liveSlot = (s: MealPlanEntry | null) => (s ? (w.days.flatMap((d) => [...d.slots, ...d.extras]).find((x) => x.key === s.key) ?? s) : null);
   const sheetSlot = liveSlot(openSlot);
+
+  if (noHousehold) {
+    return (
+      <div className="pt-safe mx-auto flex max-w-3xl flex-col gap-3 px-5 pb-32">
+        <h1 className="pt-3 font-heading text-[34px] leading-[1.1]">Menu</h1>
+        <NoHouseholdNotice />
+        <TabBar />
+      </div>
+    );
+  }
 
   if (w.loading) {
     return (

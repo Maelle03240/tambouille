@@ -47,6 +47,8 @@ export interface Repository {
   /** Mot de passe choisi après une invitation ou un « mot de passe oublié ». */
   updatePassword(password: string): Promise<void>;
   sendPasswordReset(email: string, redirectTo: string): Promise<void>;
+  /** Mon prénom (rien d'autre de mon profil). */
+  updateMyName(name: string): Promise<void>;
 
   /** Foyer affiché : les lectures et écritures du foyer s'y rapportent. */
   setHousehold(id: string | null): void;

@@ -77,6 +77,7 @@ export class LocalRepository implements Repository {
   }
   async deleteImage() {}
   async deleteCustomIngredient() {}
+  async updateMyName() {}
   async saveIdea() {}
   async deleteIdea() {}
 }

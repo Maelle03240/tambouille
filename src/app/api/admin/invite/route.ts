@@ -5,8 +5,8 @@
  * « Chez <prénom> ». Réservé à l'admin. Utilise la clé « service role »
  * (SUPABASE_SERVICE_ROLE_KEY), côté serveur uniquement.
  */
-import { createClient } from "@supabase/supabase-js";
 import { z } from "zod";
+import { mailError, requireAdmin } from "@/lib/data/admin-server";
 
 export const dynamic = "force-dynamic";
 
@@ -18,18 +18,10 @@ const body = z.object({
 });
 
 export async function POST(req: Request) {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!url || !serviceKey) {
-    return Response.json({ error: "Invitations pas configurées (clé SUPABASE_SERVICE_ROLE_KEY manquante)." }, { status: 503 });
-  }
-  const admin = createClient(url, serviceKey, { auth: { persistSession: false, autoRefreshToken: false } });
-
   // l'appelante doit être admin
-  const token = req.headers.get("authorization")?.replace(/^Bearer\s+/i, "");
-  const caller = token ? (await admin.auth.getUser(token)).data.user : null;
-  const role = caller ? (await admin.from("profiles").select("role").eq("id", caller.id).maybeSingle()).data?.role : null;
-  if (role !== "admin") return Response.json({ error: "Réservé à l'admin." }, { status: 403 });
+  const ctx = await requireAdmin(req);
+  if (ctx instanceof Response) return ctx;
+  const { admin } = ctx;
 
   const parsed = body.safeParse(await req.json().catch(() => null));
   if (!parsed.success) return Response.json({ error: "E-mail ou prénom invalide." }, { status: 400 });
@@ -43,7 +35,7 @@ export async function POST(req: Request) {
   if (error || !data.user) {
     const msg = error?.message ?? "";
     return Response.json(
-      { error: /already been registered|already exists/i.test(msg) ? "Cette adresse a déjà un compte." : `Invitation impossible : ${msg}` },
+      { error: /already been registered|already exists/i.test(msg) ? "Cette adresse a déjà un compte." : mailError(msg) },
       { status: 400 },
     );
   }

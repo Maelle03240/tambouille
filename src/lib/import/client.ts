@@ -86,3 +86,20 @@ export interface InviteRequest {
 }
 
 export const requestInvite = (body: InviteRequest) => postJson<{ userId: string }>("/api/admin/invite", body);
+
+export interface AccountInfo {
+  id: string;
+  email: string;
+  /** Invitation pas encore acceptée. */
+  pending: boolean;
+}
+
+export async function requestAccounts(): Promise<AccountInfo[]> {
+  const session = await getRepository().getSession();
+  const res = await fetch("/api/admin/accounts", { headers: session?.accessToken ? { Authorization: `Bearer ${session.accessToken}` } : {} });
+  const json = await res.json().catch(() => ({ error: errorFor(res.status) }));
+  if (!res.ok || !json.data) throw new Error(json.error ?? "Lecture impossible.");
+  return json.data;
+}
+
+export const requestAccountAction = (action: "resend" | "delete", userId: string) => postJson<{ ok: boolean }>("/api/admin/accounts", { action, userId });
