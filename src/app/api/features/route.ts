@@ -13,5 +13,7 @@ export function GET() {
     ai: isRecipeParsingEnabled(),
     illustrations: isIllustrationEnabled(),
     invites: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
+    // seulement « la clé existe » : la clé elle-même ne sort jamais du serveur
+    paidAi: !!process.env.GEMINI_API_KEY_PAID,
   });
 }

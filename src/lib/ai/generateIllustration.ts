@@ -77,9 +77,9 @@ const MEAL_PREP = "in a clear transparent glass meal prep container with the lid
  * cités : Gemini (s'il est configuré) traduit donc la recette en une courte
  * description visuelle du plat servi, en anglais. Sinon : le nom seul.
  */
-export async function describeDish(dish: DishInfo): Promise<string> {
+export async function describeDish(dish: DishInfo, paidKey?: string): Promise<string> {
   const plain = plainSubject(dish);
-  const apiKey = process.env.GEMINI_API_KEY;
+  const apiKey = paidKey || process.env.GEMINI_API_KEY;
   if (!apiKey) return plain;
   try {
     const out = (await geminiJson({
@@ -103,8 +103,8 @@ export async function describeDish(dish: DishInfo): Promise<string> {
 }
 
 /** Génère l'illustration d'une recette ; si le filtre refuse, réessaie, puis avec le nom seul. */
-export async function illustrateRecipe(gen: IllustrationGenerator, dish: DishInfo) {
-  const subject = await describeDish(dish);
+export async function illustrateRecipe(gen: IllustrationGenerator, dish: DishInfo, paidKey?: string) {
+  const subject = await describeDish(dish, paidKey);
   const attempts = [subject, subject, plainSubject(dish)];
   for (let i = 0; ; i++) {
     try {

@@ -48,8 +48,8 @@ const PORTION_SCHEMA = {
   },
 };
 
-function key() {
-  const k = process.env.GEMINI_API_KEY;
+function key(apiKey?: string) {
+  const k = apiKey || process.env.GEMINI_API_KEY;
   if (!k) throw new Error("La lecture automatique n'est pas configurée (clé GEMINI_API_KEY absente).");
   return k;
 }
@@ -62,7 +62,7 @@ async function withRetry<T>(call: () => Promise<unknown>, schema: z.ZodType<T>):
   throw new Error("La lecture a échoué deux fois. Réessaie ou saisis les valeurs à la main.");
 }
 
-export function readLabel(image: { mimeType: string; base64: string }): Promise<LabelValues> {
+export function readLabel(image: { mimeType: string; base64: string }, apiKey?: string): Promise<LabelValues> {
   const parts: GeminiPart[] = [
     { text: "Voici l'étiquette." },
     { inline_data: { mime_type: image.mimeType, data: image.base64 } },
@@ -70,7 +70,7 @@ export function readLabel(image: { mimeType: string; base64: string }): Promise<
   return withRetry(
     () =>
       geminiJson({
-        apiKey: key(),
+        apiKey: key(apiKey),
         system:
           "Tu lis une étiquette nutritionnelle (emballage alimentaire) et renvoies en JSON les valeurs POUR 100 g (ou 100 ml) : énergie en kcal, protéines, lipides, glucides, fibres (g). name = nom court du produit en français (marque comprise si visible). Mets null pour une valeur absente, n'invente rien.",
         schema: LABEL_SCHEMA,
@@ -93,7 +93,7 @@ export interface NutritionRequest {
   }[];
 }
 
-export function computePerPortion(req: NutritionRequest): Promise<PerPortion> {
+export function computePerPortion(req: NutritionRequest, apiKey?: string): Promise<PerPortion> {
   const lines = req.ingredients.map((i) => {
     const grams = i.gramsEstimate ? ` (≈ ${i.gramsEstimate} g)` : "";
     const label = i.label
@@ -107,7 +107,7 @@ export function computePerPortion(req: NutritionRequest): Promise<PerPortion> {
   return withRetry(
     () =>
       geminiJson({
-        apiKey: key(),
+        apiKey: key(apiKey),
         system:
           "Tu calcules les valeurs nutritionnelles PAR PORTION d'une recette. Pour les ingrédients marqués VALEURS RÉELLES, utilise exactement ces valeurs (multipliées par leur poids). Pour les autres, utilise des valeurs moyennes usuelles. Renvoie kcal, protein_g, fat_g, carbs_g, fiber_g par portion, arrondis à l'unité.",
         schema: PORTION_SCHEMA,

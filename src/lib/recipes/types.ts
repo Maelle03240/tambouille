@@ -109,6 +109,8 @@ export interface ReviewItem {
 
 export interface UserSettings {
   autoIllustrations: boolean;
+  /** Admin : utiliser la clé Gemini payante (import en masse). Absent = gratuite. */
+  aiPaid?: boolean;
   proteinRichThresholdG: number;
   dailyTargets: {
     kcal: number | null;

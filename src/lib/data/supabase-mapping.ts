@@ -161,6 +161,7 @@ export function profileFromRow(p: Row): Profile {
 export function settingsFromRow(s: Row): UserSettings {
   return {
     autoIllustrations: s.auto_illustrations ?? false,
+    aiPaid: s.ai_paid ?? false,
     proteinRichThresholdG: s.protein_rich_threshold_g ?? 20,
     dailyTargets: s.daily_targets ?? { kcal: null, proteinMinG: null },
     planning: { ...PLANNING_DEFAULTS, ...(s.planning ?? {}) },
@@ -170,6 +171,7 @@ export function settingsFromRow(s: Row): UserSettings {
 export function settingsToRow(s: UserSettings): Row {
   return {
     auto_illustrations: s.autoIllustrations,
+    ai_paid: s.aiPaid ?? false,
     protein_rich_threshold_g: s.proteinRichThresholdG,
     daily_targets: s.dailyTargets,
     planning: s.planning,

@@ -29,7 +29,7 @@ export type MetaValue = {
   lastSyncAt: string;
   profile: Profile;
   settings: UserSettings;
-  features: { ai: boolean; illustrations: boolean; invites?: boolean };
+  features: { ai: boolean; illustrations: boolean; invites?: boolean; paidAi?: boolean };
   shopping: ShoppingState;
   /** Mode frigo vide : ce que j'ai sous la main (sur cet appareil). */
   fridge: string[];

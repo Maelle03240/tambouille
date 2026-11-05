@@ -28,6 +28,8 @@ Ouvre http://localhost:3000. Sans configuration, l'appli tourne en **mode local*
 
 Crée une clé sur https://aistudio.google.com/apikey (niveau gratuit). Sans clé, l'appli marche quand même : saisie à la main et « coller du JSON ».
 
+**IA payante (facultatif)** : pour importer beaucoup de recettes d'un coup. Crée une clé dans un projet Google **avec facturation**, mets un plafond d'alerte dans Google Cloud (Billing → Budgets), ajoute-la dans Vercel sous le nom `GEMINI_API_KEY_PAID`, puis redéploie. L'interrupteur « IA payante » apparaît alors dans Réglages, pour l'admin seulement.
+
 ### 2 bis. Cloudflare — illustrations IA (facultatif)
 
 1. Crée un compte gratuit sur https://dash.cloudflare.com/sign-up.

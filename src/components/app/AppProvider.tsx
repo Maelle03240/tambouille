@@ -31,7 +31,7 @@ interface AppState {
   online: boolean;
   syncing: boolean;
   syncError: string | null;
-  features: { ai: boolean; illustrations: boolean; invites?: boolean };
+  features: { ai: boolean; illustrations: boolean; invites?: boolean; paidAi?: boolean };
   canEdit: boolean;
   isAdmin: boolean;
   sync: () => Promise<void>;

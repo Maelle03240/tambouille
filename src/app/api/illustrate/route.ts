@@ -3,7 +3,7 @@
  * Illustration façon vieux livre de cuisine (style imposé dans
  * src/lib/ai/generateIllustration.ts). Désactivée sans les variables Cloudflare.
  */
-import { errorResponse, isAuthorized, unauthorized } from "@/lib/ai/auth";
+import { errorResponse, isAuthorized, paidKeyFor, unauthorized } from "@/lib/ai/auth";
 import { getIllustrationGenerator, illustrateRecipe } from "@/lib/ai/generateIllustration";
 
 export const maxDuration = 90;
@@ -15,7 +15,7 @@ export async function POST(req: Request) {
   try {
     const { title, ingredients, mealPrep } = (await req.json()) as { title?: string; ingredients?: string[]; mealPrep?: boolean };
     if (!title) return Response.json({ error: "Titre manquant." }, { status: 400 });
-    const bytes = await illustrateRecipe(generator, { title, ingredients, mealPrep });
+    const bytes = await illustrateRecipe(generator, { title, ingredients, mealPrep }, await paidKeyFor(req));
     return Response.json({ data: { base64: Buffer.from(bytes).toString("base64"), mimeType: "image/jpeg" } });
   } catch (e) {
     return errorResponse(e);

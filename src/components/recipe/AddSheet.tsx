@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 import { useRef, type ReactNode } from "react";
 import { useApp } from "@/components/app/AppProvider";
 import { IconBraces, IconCamera, IconImage, IconLightbulb, IconPencil, IconText } from "@/components/ui/icons";
-import { useIdeas } from "@/lib/data/hooks";
+import { useIdeas, useSettings } from "@/lib/data/hooks";
 import { Sheet } from "@/components/ui/primitives";
 import { setPendingImport } from "@/lib/import/pending";
 
@@ -44,7 +44,8 @@ function Option({
 
 export function AddSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
   const router = useRouter();
-  const { features, online } = useApp();
+  const { features, online, isAdmin } = useApp();
+  const settings = useSettings();
   const photoInput = useRef<HTMLInputElement>(null);
   const captureInput = useRef<HTMLInputElement>(null);
   const aiOff = !features.ai;
@@ -70,6 +71,9 @@ export function AddSheet({ open, onClose }: { open: boolean; onClose: () => void
         <p className="rounded-field bg-neutral-200 px-4 py-3">Pas de réseau.</p>
       ) : (
         <>
+          {isAdmin && features.paidAi && settings.aiPaid && (
+            <p className="rounded-field bg-accent-100 px-4 py-2 text-sm font-bold text-accent-800">IA payante activée</p>
+          )}
           <Option
             icon={<IconCamera />}
             iconClass="bg-accent-300 text-accent-900"

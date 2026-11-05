@@ -20,8 +20,9 @@ export interface RecipeParser {
   parse(input: ParseInput): Promise<unknown>;
 }
 
-export function getRecipeParser(): RecipeParser | null {
-  const key = process.env.GEMINI_API_KEY;
+/** `apiKey` : clé payante si activée (voir paidKeyFor), sinon la clé gratuite. */
+export function getRecipeParser(apiKey?: string): RecipeParser | null {
+  const key = apiKey || process.env.GEMINI_API_KEY;
   if (key) return new GeminiParser(key, process.env.GEMINI_MODEL || undefined);
   return null;
 }
@@ -31,8 +32,8 @@ export const isRecipeParsingEnabled = () => getRecipeParser() !== null;
 export class ParseError extends Error {}
 
 /** Lit la recette, valide le JSON (zod) ; un nouvel essai si invalide. */
-export async function parseRecipe(input: ParseInput | { kind: "url"; url: string }): Promise<ImportData> {
-  const parser = getRecipeParser();
+export async function parseRecipe(input: ParseInput | { kind: "url"; url: string }, apiKey?: string): Promise<ImportData> {
+  const parser = getRecipeParser(apiKey);
   if (!parser) throw new ParseError("La lecture automatique n'est pas configurée (clé GEMINI_API_KEY absente).");
 
   const resolved: ParseInput =

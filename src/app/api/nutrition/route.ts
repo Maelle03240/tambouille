@@ -1,5 +1,5 @@
 /** POST /api/nutrition — recette + valeurs des ingrédients perso → valeurs par portion. */
-import { errorResponse, isAuthorized, unauthorized } from "@/lib/ai/auth";
+import { errorResponse, isAuthorized, paidKeyFor, unauthorized } from "@/lib/ai/auth";
 import { computePerPortion, type NutritionRequest } from "@/lib/ai/nutrition";
 
 export const maxDuration = 90;
@@ -9,7 +9,7 @@ export async function POST(req: Request) {
   try {
     const body = (await req.json()) as NutritionRequest;
     if (!body?.ingredients?.length) return Response.json({ error: "Aucun ingrédient." }, { status: 400 });
-    return Response.json({ data: await computePerPortion(body) });
+    return Response.json({ data: await computePerPortion(body, await paidKeyFor(req)) });
   } catch (e) {
     return errorResponse(e);
   }

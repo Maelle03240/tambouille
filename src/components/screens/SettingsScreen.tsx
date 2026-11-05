@@ -168,6 +168,22 @@ export function SettingsScreen() {
           </label>
         )}
 
+        {app.isAdmin && app.features.paidAi && (
+          <label className="flex min-h-14 items-center justify-between gap-3 rounded-[28px] bg-surface px-5 py-3 font-bold">
+            <span className="flex flex-col">
+              IA payante
+              <span className="text-sm font-normal text-neutral-700">Facturée par Google. À couper après usage.</span>
+            </span>
+            <input
+              type="checkbox"
+              checked={!!settings.aiPaid}
+              disabled={!app.online}
+              onChange={(e) => saveSettings({ ...settings, aiPaid: e.target.checked }).catch((err) => app.toast(err.message))}
+              className="size-6 flex-none accent-[var(--color-accent-600)]"
+            />
+          </label>
+        )}
+
         {app.isAdmin && (
           <section className="flex flex-col gap-3">
             <SectionTitle>Tags automatiques</SectionTitle>

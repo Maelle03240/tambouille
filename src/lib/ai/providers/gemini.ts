@@ -56,7 +56,7 @@ export async function geminiJson(opts: {
   }
 
   if (!res) throw new Error("L'IA met trop de temps à répondre aujourd'hui. Réessaie dans un moment.");
-  if (res.status === 429) throw new Error("Quota gratuit de Gemini atteint pour l'instant. Réessaie dans quelques minutes.");
+  if (res.status === 429) throw new Error(`Quota ${opts.apiKey === process.env.GEMINI_API_KEY_PAID ? "" : "gratuit "}de Gemini atteint pour l'instant. Réessaie dans quelques minutes.`);
   if (res.status === 503 || res.status === 500) throw new Error("Gemini est surchargé en ce moment (côté Google). Réessaie dans quelques minutes.");
   if (!res.ok) throw new Error(`Gemini a répondu ${res.status} : ${(await res.text()).slice(0, 300)}`);
 
