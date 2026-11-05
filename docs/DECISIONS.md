@@ -168,7 +168,7 @@ Remplace « ouverture à la famille en écriture » (spec V3). Deux étapes : **
 
 ## 2026-11-05 — Gestion des comptes
 
-- **Mon compte** (Réglages) : changer son prénom et son mot de passe. Prénom par la fonction `set_my_name` (migration 0016) : la ligne du profil reste modifiable par l'admin seul, sinon on pourrait se donner le rôle admin. Changer d'e-mail : pas fait (rare, à ajouter si besoin).
+- **Mon compte** (Réglages) : changer son prénom et son mot de passe. Prénom par la fonction `set_my_name` (migration 0016) : la ligne du profil reste modifiable par l'admin seul, sinon on pourrait se donner le rôle admin. Changer d'e-mail : pas voulu.
 - **Admin → Comptes** : e-mail de chacun, « Invitation en attente » avec « Renvoyer », suppression d'un compte (ni soi-même, ni un admin). Route `/api/admin/accounts`.
-- **Compte supprimé** : ses recettes perso repassent toutes « en attente » dans Propositions (auteur : « Compte supprimé »), l'admin décide ; ses foyers où il était seul sont supprimés avec leur menu et leurs courses.
+- **Compte supprimé** (précisé par l'utilisatrice) : rien ne change pour le reste. Accepté : déjà dans la bibliothèque, ça reste. En attente : la proposition reste, l'admin décide (auteur « Compte supprimé » s'il n'y a plus personne dans son foyer). Refusé : part, sauf une création s'il reste quelqu'un dans son foyer ; elle passe alors à un membre de ce foyer (pour rester visible, les règles de lecture passent par l'auteur). Version refusée d'une recette de la bibliothèque : part toujours, l'originale reste. Foyers où il était seul : supprimés avec menu et courses. Logique : `src/lib/recipes/deleted-account.ts` (testée).
 - **Sans foyer** : l'admin est prévenue avant de retirer quelqu'un de son dernier foyer ; Menu et Courses affichent « Aucun foyer » au lieu d'échouer.

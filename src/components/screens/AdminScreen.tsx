@@ -186,7 +186,7 @@ export function AdminScreen() {
                           disabled={!online}
                           onClick={() =>
                             confirm(
-                              `Supprimer le compte de ${p.displayName} ? C'est définitif. Ses recettes perso restent dans Propositions ; son foyer est supprimé si personne d'autre n'y est.`,
+                              `Supprimer le compte de ${p.displayName} ? C'est définitif. Ce que tu as accepté reste. Ses recettes refusées disparaissent, sauf dans son foyer s'il y a quelqu'un d'autre ; son foyer est supprimé s'il y est seul.`,
                             ) && act(() => requestAccountAction("delete", p.id), "Compte supprimé")
                           }
                           className="flex size-10 flex-none items-center justify-center rounded-full text-neutral-700 disabled:opacity-45"
