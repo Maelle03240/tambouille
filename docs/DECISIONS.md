@@ -188,8 +188,13 @@ Remplace « ouverture à la famille en écriture » (spec V3). Deux étapes : **
 - « Renvoyer » devient **« Nouveau lien »** (comptes en attente), même affichage.
 - Le lien pointe vers `/bienvenue?token_hash=…&type=invite` (notre page, pas Supabase) : un aperçu de lien dans une messagerie ne le consomme pas. La page valide le jeton (`verifyOtp`, dans `AppProvider`) puis on choisit son mot de passe comme avant. Un lien ne sert qu'une fois ; sa durée = « Email OTP expiration » dans les réglages Auth de Supabase.
 - Logique : `makeInviteLink` dans `src/lib/data/admin-server.ts`, routes `invite` et `accounts`, écran `AdminScreen.tsx` (`LinkToSend`).
-- « Mot de passe oublié » passe encore par l'e-mail intégré de Supabase, qui n'envoie qu'aux membres de l'équipe Supabase (2 e-mails/heure) : il ne marche pas pour la famille. À décider : lien de connexion donné par l'admin, ou SMTP gratuit (Brevo, Resend).
+- **Mot de passe oublié** : l'e-mail intégré de Supabase n'envoie qu'aux membres de l'équipe Supabase, donc jamais à la famille. Le bouton de l'écran de connexion dit d'envoyer un message à l'admin (`BRAND.adminName`) ; dans Admin → Comptes, « Lien mot de passe » donne un lien à envoyer (même page /bienvenue). Pas de SMTP pour l'instant.
+- Le message annonce la durée du lien (`BRAND.linkValidHours`, 24 h) : à garder égal à « Email OTP Expiration » dans Supabase (86400 s, le maximum).
 
 ## 2026-11-17 — Supabase ne se met plus en pause
 
 - L'offre gratuite de Supabase met le projet en pause après 7 jours sans activité. Vercel appelle `/api/keepalive` le lundi et le jeudi (`vercel.json`, vers 6 h : jamais plus de 4 jours d'écart) : une petite lecture de la base. Variable `CRON_SECRET` dans Vercel conseillée (sinon la route reste ouverte, mais elle ne fait que lire une ligne vide).
+
+## 2026-11-17 — Les recettes ne se synchronisaient plus
+
+- Depuis 0014, `ingredients` a deux liens vers `recipes` (`recipe_id`, `linked_recipe_id`) : la lecture `recipes?select=*,ingredients(*)` était ambiguë (réponse 300) et la synchro des recettes échouait ; chaque appareil gardait son ancien cache (recettes d'un autre appareil absentes, images dont le fichier avait été remplacé introuvables). Corrigé : `ingredients!ingredients_recipe_id_fkey(*)` dans `supabase-repository.ts`.

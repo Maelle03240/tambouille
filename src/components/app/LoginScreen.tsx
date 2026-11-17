@@ -2,14 +2,14 @@
 import { useState } from "react";
 import { BRAND } from "@/config/brand";
 import { getRepository } from "@/lib/data";
-import { sendPasswordReset } from "@/lib/data/actions";
 import { Button, Field, Spinner, TextInput } from "@/components/ui/primitives";
 
 /**
  * Connexion par e-mail + mot de passe (fonctionne dans l'appli installée,
  * contrairement aux liens magiques qui s'ouvrent dans Safari).
  * Les comptes sont créés par invitation de l'admin (pas d'inscription libre).
- * « Mot de passe oublié » envoie un lien vers /bienvenue.
+ * « Mot de passe oublié » : on demande un lien à l'admin (l'e-mail intégré de
+ * Supabase n'envoie qu'aux membres de l'équipe Supabase), voir Admin → Comptes.
  */
 export function LoginScreen() {
   const [email, setEmail] = useState("");
@@ -18,15 +18,9 @@ export function LoginScreen() {
   const [busy, setBusy] = useState(false);
   const [info, setInfo] = useState<string | null>(null);
 
-  async function forgot() {
+  function forgot() {
     setError(null);
-    if (!email.trim()) return setError("Écris d'abord ton e-mail.");
-    try {
-      await sendPasswordReset(email);
-      setInfo("E-mail envoyé : clique sur le lien pour choisir un nouveau mot de passe.");
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Envoi impossible");
-    }
+    setInfo(`Envoie un message à ${BRAND.adminName} : elle t'enverra un lien pour choisir un nouveau mot de passe.`);
   }
 
   async function submit(e: React.FormEvent) {

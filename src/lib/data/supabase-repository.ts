@@ -118,7 +118,8 @@ export class SupabaseRepository implements Repository {
 
     const myHouseholds = rows.map((h) => h.id);
     const [recipes, review, profile, settings, plans, templates, pantry, customs, shopRecipes, shopChecks, shopItems, mates, people, ideas] = await Promise.all([
-      this.client.from("recipes").select("*, ingredients(*), steps(*)"),
+      // deux liens ingredients → recipes (recipe_id, et linked_recipe_id depuis 0014) : on précise lequel
+      this.client.from("recipes").select("*, ingredients!ingredients_recipe_id_fkey(*), steps(*)"),
       this.client.from("review_items").select("*"),
       uid ? this.client.from("profiles").select("*").eq("id", uid).maybeSingle() : null,
       uid ? this.client.from("settings").select("*").eq("user_id", uid).maybeSingle() : null,

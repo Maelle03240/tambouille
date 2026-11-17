@@ -24,7 +24,7 @@ export function AdminScreen() {
   const [newHousehold, setNewHousehold] = useState("");
   const [accounts, setAccounts] = useState<AccountInfo[]>([]);
   /** Dernier lien créé, à envoyer à la personne. */
-  const [shared, setShared] = useState<{ name: string; link: string } | null>(null);
+  const [shared, setShared] = useState<{ name: string; link: string; kind: LinkKind } | null>(null);
 
   // incrémenté après chaque action pour relire
   const [version, setVersion] = useState(0);
@@ -85,7 +85,7 @@ export function AdminScreen() {
               households={data?.households ?? []}
               enabled={!!features.invites && online}
               onDone={(name, link) => {
-                setShared({ name, link });
+                setShared({ name, link, kind: "invite" });
                 void act(async () => {}, "Compte créé : envoie-lui le lien");
               }}
             />
@@ -203,9 +203,11 @@ export function AdminScreen() {
                         </button>
                       )}
                     </div>
-                    {account?.pending && (
+                    {account && p.id !== profile?.id && (
                       <div className="flex flex-wrap items-center gap-2">
-                        <span className="rounded-full bg-accent-100 px-3 py-1 text-[13px] font-bold text-accent-800">Invitation en attente</span>
+                        {account.pending && (
+                          <span className="rounded-full bg-accent-100 px-3 py-1 text-[13px] font-bold text-accent-800">Invitation en attente</span>
+                        )}
                         <button
                           type="button"
                           disabled={!online}
@@ -213,14 +215,14 @@ export function AdminScreen() {
                             act(async () => {
                               const { link } = await requestAccountAction("resend", p.id);
                               if (link) {
-                                setShared({ name: p.displayName || "", link });
+                                setShared({ name: p.displayName || "", link, kind: account.pending ? "invite" : "password" });
                                 window.scrollTo({ top: 0, behavior: "smooth" });
                               }
                             }, "Nouveau lien prêt")
                           }
                           className="h-9 rounded-full border-[1.5px] border-divider px-3 text-sm font-bold disabled:opacity-45"
                         >
-                          Nouveau lien
+                          {account.pending ? "Nouveau lien" : "Lien mot de passe"}
                         </button>
                       </div>
                     )}
@@ -248,10 +250,17 @@ export function AdminScreen() {
   );
 }
 
-/** Le lien d'invitation à envoyer soi-même (Messages, Snap, WhatsApp…). */
-function LinkToSend({ name, link, onClose }: { name: string; link: string; onClose: () => void }) {
+type LinkKind = "invite" | "password";
+
+/** Le lien d'invitation (ou de mot de passe) à envoyer soi-même (Messages, Snap, WhatsApp…). */
+function LinkToSend({ name, link, kind, onClose }: { name: string; link: string; kind: LinkKind; onClose: () => void }) {
   const { toast } = useApp();
-  const text = `Coucou${name ? ` ${name}` : ""} ! Voilà ton lien pour créer ton mot de passe sur ${BRAND.name} : ${link}`;
+  const hello = `Coucou${name ? ` ${name}` : ""} !`;
+  const what =
+    kind === "invite"
+      ? `Voilà ton lien pour créer ton compte sur ${BRAND.name} et choisir ton mot de passe`
+      : `Voilà ton lien pour choisir un nouveau mot de passe sur ${BRAND.name}`;
+  const text = `${hello} ${what} (valable ${BRAND.linkValidHours} h, il ne marche qu'une fois) : ${link}`;
   const canShare = typeof navigator !== "undefined" && !!navigator.share;
 
   async function share() {
@@ -289,7 +298,9 @@ function LinkToSend({ name, link, onClose }: { name: string; link: string; onClo
           Copier le message
         </Button>
       </div>
-      <p className="text-sm">Il ne sert qu&apos;une fois et expire vite : envoie-le maintenant. Expiré ? « Nouveau lien » dans Comptes.</p>
+      <p className="text-sm">
+        Valable {BRAND.linkValidHours} h, une seule fois. Expiré ? Redemande un lien dans Comptes.
+      </p>
     </section>
   );
 }

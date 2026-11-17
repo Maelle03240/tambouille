@@ -1,7 +1,8 @@
 /**
  * Comptes (admin) :
  * GET → e-mail de chacun et invitation en attente ou non ;
- * POST { action: "resend", userId } → nouveau lien d'invitation (renvoyé, pas envoyé par e-mail) ;
+ * POST { action: "resend", userId } → nouveau lien (renvoyé, pas envoyé par e-mail) :
+ *   invitation si le compte est en attente, sinon lien pour changer de mot de passe ;
  * POST { action: "delete", userId } → supprime le compte. Ses recettes perso :
  * voir src/lib/recipes/deleted-account.ts ; son foyer disparaît s'il y était
  * seul. On ne supprime ni soi-même ni un autre admin.
@@ -36,7 +37,7 @@ export async function POST(req: Request) {
   if (findError || !found.user) return Response.json({ error: "Compte introuvable." }, { status: 404 });
 
   if (action === "resend") {
-    if (found.user.last_sign_in_at) return Response.json({ error: "Ce compte a déjà accepté son invitation." }, { status: 400 });
+    if (userId === callerId) return Response.json({ error: "Pour ton propre compte : Réglages → Mon compte." }, { status: 400 });
     const made = await makeInviteLink(admin, found.user.email!, new URL(req.url).origin, { existing: true });
     if ("error" in made) return Response.json({ error: `Lien impossible : ${made.error}` }, { status: 400 });
     return Response.json({ data: { ok: true, link: made.link } });
