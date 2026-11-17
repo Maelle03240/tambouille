@@ -12,7 +12,7 @@ import type { CustomIngredient, Recipe, ReviewItem, UserSettings } from "@/lib/r
 import { getRepository } from ".";
 import { base64ToBlob, compressForStorage } from "@/lib/import/image";
 import { requestIllustration } from "@/lib/import/client";
-import { diffShopping, EMPTY_SHOPPING } from "@/lib/shopping/state";
+import { diffShopping, EMPTY_SHOPPING, newlyPlaced } from "@/lib/shopping/state";
 import { db, getMeta, setMeta, type ShoppingState } from "./db";
 
 export class OfflineError extends Error {
@@ -250,12 +250,18 @@ export async function loadSettings(): Promise<UserSettings> {
 
 export async function savePlanEntries(entries: MealPlanEntry[]) {
   requireOnline();
+  const before = await db.mealPlans.bulkGet(entries.map((e) => e.key));
   await getRepository().upsertMealPlans(entries);
   await db.mealPlans.bulkPut(entries);
   // une recette remise au menu revient dans la liste de courses (si on l'en avait retirée)
-  const ids = new Set(entries.map((e) => e.recipeId).filter(Boolean));
+  const ids = newlyPlaced(before, entries) as Set<string>;
   const excluded = (await getMeta("shopping"))?.excluded ?? [];
   if (excluded.some((id) => ids.has(id))) await updateShopping((sh) => ({ ...sh, excluded: sh.excluded.filter((id) => !ids.has(id)) }));
+}
+
+/** Décoche toute la liste de courses. */
+export async function clearShoppingChecks() {
+  if ((await getMeta("shopping"))?.checked.length) await updateShopping((s) => ({ ...s, checked: [] }));
 }
 
 export async function removePlanEntries(entries: MealPlanEntry[]) {
@@ -416,6 +422,13 @@ export async function setMyName(name: string) {
 
 export async function sendPasswordReset(email: string) {
   await getRepository().sendPasswordReset(email.trim(), `${location.origin}/bienvenue`);
+}
+
+/** Dernier essai d'envoi ; renvoie ce qui n'a pas pu partir (déconnexion). */
+export async function unsentChanges() {
+  const { flushOutbox } = await import("./sync");
+  await flushOutbox().catch(() => {});
+  return db.outbox.count();
 }
 
 /** Vide le cache de l'appareil (déconnexion). */

@@ -1,13 +1,13 @@
 /**
  * Comptes (admin) :
  * GET → e-mail de chacun et invitation en attente ou non ;
- * POST { action: "resend", userId } → renvoie l'invitation ;
+ * POST { action: "resend", userId } → nouveau lien d'invitation (renvoyé, pas envoyé par e-mail) ;
  * POST { action: "delete", userId } → supprime le compte. Ses recettes perso :
  * voir src/lib/recipes/deleted-account.ts ; son foyer disparaît s'il y était
  * seul. On ne supprime ni soi-même ni un autre admin.
  */
 import { z } from "zod";
-import { mailError, requireAdmin } from "@/lib/data/admin-server";
+import { makeInviteLink, requireAdmin } from "@/lib/data/admin-server";
 import { fateOfRecipe } from "@/lib/recipes/deleted-account";
 
 export const dynamic = "force-dynamic";
@@ -37,9 +37,9 @@ export async function POST(req: Request) {
 
   if (action === "resend") {
     if (found.user.last_sign_in_at) return Response.json({ error: "Ce compte a déjà accepté son invitation." }, { status: 400 });
-    const { error } = await admin.auth.admin.inviteUserByEmail(found.user.email!, { redirectTo: `${new URL(req.url).origin}/bienvenue` });
-    if (error) return Response.json({ error: mailError(error.message) }, { status: 400 });
-    return Response.json({ data: { ok: true } });
+    const made = await makeInviteLink(admin, found.user.email!, new URL(req.url).origin, { existing: true });
+    if ("error" in made) return Response.json({ error: `Lien impossible : ${made.error}` }, { status: 400 });
+    return Response.json({ data: { ok: true, link: made.link } });
   }
 
   if (userId === callerId) return Response.json({ error: "Tu ne peux pas supprimer ton propre compte." }, { status: 400 });

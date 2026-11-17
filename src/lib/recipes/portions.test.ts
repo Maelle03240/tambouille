@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { per100g, portionCount, portionGrams, portionLabel, portionTitle, rescaleNutrition, unitFor } from "./portions";
+import { per100g, portionCount, portionGrams, portionLabel, portionTitle, rescaleNutrition, unitFor, isPortionTooBig } from "./portions";
 
 const cookies = {
   yieldQuantity: 25,
@@ -35,5 +35,21 @@ describe("portions", () => {
     expect(rescaleNutrition(cookies, { ...cookies, portionSize: 2 }).kcal).toBe(320);
     expect(rescaleNutrition(cookies, { ...cookies, yieldQuantity: 20 }).kcal).toBe(200);
     expect(rescaleNutrition(cookies, { ...cookies, title: "x" } as typeof cookies).kcal).toBe(160);
+  });
+});
+
+describe("garde-fous des portions", () => {
+  const ing = (g: number) => [{ gramsEstimate: g }] as never;
+  const base = { yieldQuantity: 4, yieldUnit: "personnes", portionSize: 1, totalWeightG: null, ingredients: ing(2736) };
+  it("« portions » = par personne", () => expect(portionTitle({ ...base, yieldUnit: "portions" })).toBe("Pour 1 portion"));
+  it("poids total sous la moitié des ingrédients : ignoré", () => {
+    expect(portionGrams({ ...base, totalWeightG: 515 })).toBe(684);
+    expect(portionGrams({ ...base, totalWeightG: 2000 })).toBe(500);
+  });
+  it("portion plus grande que la recette : pas de valeur pour 100 g, et à revoir", () => {
+    const pot = { ...base, yieldQuantity: 1, yieldUnit: "pot", portionSize: 30, kcal: 180, proteinG: 12, fatG: null, carbsG: null, fiberG: null };
+    expect(per100g(pot)).toBeNull();
+    expect(isPortionTooBig(pot)).toBe(true);
+    expect(isPortionTooBig({ yieldQuantity: 25, yieldUnit: "cookies", portionSize: 2 })).toBe(false);
   });
 });

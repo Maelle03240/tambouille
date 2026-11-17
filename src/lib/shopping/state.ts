@@ -110,3 +110,8 @@ export function applyShoppingOps(state: ShoppingState, ops: ShoppingOp[]): Shopp
   }
   return s;
 }
+
+/** Recettes vraiment remises au menu (pas un repas juste verrouillé ou changé de portions). */
+export function newlyPlaced(before: ({ recipeId: string | null } | undefined)[], after: { recipeId: string | null }[]): Set<string> {
+  return new Set(after.flatMap((e, i) => (e.recipeId && before[i]?.recipeId !== e.recipeId ? [e.recipeId] : [])));
+}

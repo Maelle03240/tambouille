@@ -46,4 +46,4 @@ export const PROTEIN_SOURCES = [
  */
 
 /** Libellés des rôles (id stockés en base : admin, editor, reader). */
-export const ROLE_LABELS = { admin: "Admin", editor: "Membre", reader: "Lecture seule" } as const;
+export const ROLE_LABELS = { admin: "Admin", editor: "Membre", reader: "Recettes en lecture seule" } as const;

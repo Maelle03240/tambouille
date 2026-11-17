@@ -30,7 +30,7 @@ import { StepsEditor, toSteps, type EditableStep } from "./StepsEditor";
 
 export type EditorMode = "create" | "review" | "edit";
 
-const MANUAL_TAGS = TAGS.filter((t) => t.kind === "manual");
+const MANUAL_TAGS = TAGS.filter((t) => t.kind === "manual" && t.id !== "fetes");
 
 /** Champs du rendement seulement (pour comparer deux rendements). */
 const pick = (r: Recipe) => ({ yieldQuantity: r.yieldQuantity, yieldUnit: r.yieldUnit, portionSize: r.portionSize });
@@ -160,6 +160,7 @@ export function RecipeEditor({
     try {
       const recipe: Recipe = {
         ...draft,
+        yieldUnit: draft.yieldUnit.trim(),
         ingredients: draft.ingredients.filter((i) => i.name.trim()).map((i) => ({ ...i, section: cleanSection(i.section) })),
         steps: toSteps(steps, draft.ingredients),
       };
@@ -169,7 +170,7 @@ export function RecipeEditor({
       toast(mode === "edit" ? "Modifications enregistrées" : "Recette enregistrée");
       // Illustration en arrière-plan, sans bloquer (réglage « Illustrations automatiques »)
       if (mode !== "edit" && settings.autoIllustrations && features.illustrations && !saved.imagePath) {
-        illustrateRecipe(saved.id).catch(() => {});
+        illustrateRecipe(saved.id).catch((e) => toast(`Pas d'image pour « ${saved.title} ». ${e instanceof Error ? e.message : ""}`));
       }
       onSaved(saved);
     } catch (e) {
@@ -290,7 +291,7 @@ export function RecipeEditor({
             </datalist>
           </Field>
           {!isPerPerson(draft.yieldUnit) && (
-            <Field label="1 portion =" className="col-span-2">
+            <Field id="field-portionSize" label="1 portion =" className="col-span-2 scroll-mt-24">
               <span className="flex items-center gap-2.5">
                 <span className="w-28 flex-none">
                   <NumberInput value={draft.portionSize} onChange={(v) => set("portionSize", v)} placeholder="1" />
@@ -398,16 +399,12 @@ export function RecipeEditor({
           <SectionTitle>Tags</SectionTitle>
           <div className="flex flex-wrap gap-2">
             {MANUAL_TAGS.map((t) => {
-              const on = t.id === "fetes" ? draft.isOccasion : draft.tags.includes(t.id);
+              const on = draft.tags.includes(t.id);
               return (
                 <Chip
                   key={t.id}
                   selected={on}
-                  onClick={() =>
-                    t.id === "fetes"
-                      ? set("isOccasion", !on)
-                      : set("tags", on ? draft.tags.filter((x) => x !== t.id) : [...draft.tags, t.id])
-                  }
+                  onClick={() => set("tags", on ? draft.tags.filter((x) => x !== t.id) : [...draft.tags, t.id])}
                 >
                   {t.label}
                 </Chip>

@@ -2,7 +2,7 @@
  * Tags de recettes.
  * - `manual` : choisis à la main dans l'éditeur, stockés dans `recipes.tags`.
  * - `auto`   : calculés à l'affichage (jamais stockés), voir src/lib/recipes/tags.ts.
- * Le tag « fêtes » correspond à la colonne `is_occasion` (exclu du suivi kcal).
+ * Le tag « fêtes » (colonne `is_occasion`) n'est plus proposé : sans moment, une recette n'est jamais tirée.
  * Ajouter un tag manuel = ajouter une ligne ici. Ne pas renommer un `id` existant.
  */
 export const TAGS = [

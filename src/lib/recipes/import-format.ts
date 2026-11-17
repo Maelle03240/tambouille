@@ -165,7 +165,7 @@ export function importToRecipe(data: ImportData, sourceType: SourceType): { reci
     hasVegetables: data.has_vegetables ?? null,
     proteinSource: data.protein_source ?? null,
     totalWeightG: data.total_weight_g,
-    isOccasion: data.is_occasion ?? false,
+    isOccasion: false,
     personalNotes: data.personal_notes ?? "",
     sourceType,
     ingredients,

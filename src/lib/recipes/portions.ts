@@ -12,7 +12,7 @@ type Nutri = Pick<Recipe, "kcal" | "proteinG" | "fatG" | "carbsG" | "fiberG">;
 const NUTRI_KEYS = ["kcal", "proteinG", "fatG", "carbsG", "fiberG"] as const;
 
 /** Unité « par personne » : une portion = une unité. */
-export const isPerPerson = (unit: string) => !unit || /^(pers|part)/i.test(unit.trim());
+export const isPerPerson = (unit: string) => !unit || /^(pers|part|portion)/i.test(unit.trim());
 
 /** « cookies » → « cookie » pour 1 (mots simples seulement : « c. à soupe » ne change pas). */
 export function unitFor(qty: number, unit: string): string {
@@ -39,11 +39,22 @@ export function portionTitle(r: Yield): string {
   return `Pour 1 portion = ${portionLabel(r)}`;
 }
 
-/** Poids d'une portion (poids total, sinon somme des grammes estimés des ingrédients). */
+/** Une portion plus grande que la recette entière (« 1 tarte, 1 portion = 8 tartes ») : donnée à revoir. */
+export function isPortionTooBig(r: Yield): boolean {
+  return !isPerPerson(r.yieldUnit) && !!r.yieldQuantity && (r.portionSize || 1) > 1 && (r.portionSize || 1) >= r.yieldQuantity;
+}
+
+/**
+ * Poids d'une portion (poids total, sinon somme des grammes estimés).
+ * Garde-fous : un poids total sous la moitié des ingrédients est sans doute
+ * celui d'une portion, on l'ignore ; portion plus grande que la recette : inconnu.
+ */
 export function portionGrams(r: Yield & Pick<Recipe, "totalWeightG" | "ingredients">): number | null {
   const n = portionCount(r);
-  const total = r.totalWeightG || r.ingredients.reduce((s, i) => s + (i.gramsEstimate ?? 0), 0);
-  return n && total ? total / n : null;
+  if (!n || n < 1) return null;
+  const sum = r.ingredients.reduce((s, i) => s + (i.gramsEstimate ?? 0), 0);
+  const total = r.totalWeightG && r.totalWeightG >= sum / 2 ? r.totalWeightG : sum;
+  return total ? total / n : null;
 }
 
 /** Valeurs pour 100 g (null si le poids d'une portion est inconnu). */

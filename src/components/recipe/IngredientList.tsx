@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { formatIngredient } from "@/lib/recipes/quantities";
 import type { Ingredient } from "@/lib/recipes/types";
-import { IconCheck } from "@/components/ui/icons";
+import { IconCheck, IconChevronRight } from "@/components/ui/icons";
 import { cx } from "@/components/ui/primitives";
 
 /** Regroupe les ingrédients consécutifs par section (« Vinaigrette »…). */
@@ -34,7 +34,10 @@ export function IngredientList({ ingredients, factor = 1 }: { ingredients: Ingre
                 <span>
                   {amount && <strong className="font-bold">{amount}</strong>}{" "}
                   {ing.linkedRecipeId ? (
-                    <Link href={`/recette?id=${ing.linkedRecipeId}`} className="font-bold text-accent-700 underline decoration-accent-300 underline-offset-4">
+                    <Link
+                      href={`/recette?id=${ing.linkedRecipeId}`}
+                      className="font-bold text-accent-700 underline decoration-accent-300 underline-offset-4"
+                    >
                       {rest} →
                     </Link>
                   ) : (
@@ -71,25 +74,35 @@ export function CheckableIngredients({
             const on = checked.has(ing.id);
             const { amount, rest } = formatIngredient(ing, factor);
             return (
-              <button
-                key={ing.id}
-                type="button"
-                onClick={() => onToggle(ing.id)}
-                aria-pressed={on}
-                className="flex min-h-[54px] w-full items-center gap-3.5 rounded-[18px] px-3 py-1.5 text-left active:bg-neutral-300/50"
-              >
-                <span
-                  className={cx(
-                    "flex size-[30px] flex-none items-center justify-center rounded-full border-2 text-neutral-100",
-                    on ? "border-leaf-600 bg-leaf-600" : "border-neutral-500",
-                  )}
+              <div key={ing.id} className="flex items-center">
+                <button
+                  type="button"
+                  onClick={() => onToggle(ing.id)}
+                  aria-pressed={on}
+                  className="flex min-h-[54px] min-w-0 flex-1 items-center gap-3.5 rounded-[18px] px-3 py-1.5 text-left active:bg-neutral-300/50"
                 >
-                  {on && <IconCheck size={16} stroke={3.5} />}
-                </span>
-                <span className={cx("text-lg leading-snug", on && "text-neutral-600 line-through")}>
-                  {amount && <strong className="font-bold">{amount}</strong>} {rest}
-                </span>
-              </button>
+                  <span
+                    className={cx(
+                      "flex size-[30px] flex-none items-center justify-center rounded-full border-2 text-neutral-100",
+                      on ? "border-leaf-600 bg-leaf-600" : "border-neutral-500",
+                    )}
+                  >
+                    {on && <IconCheck size={16} stroke={3.5} />}
+                  </span>
+                  <span className={cx("text-lg leading-snug", on && "text-neutral-600 line-through")}>
+                    {amount && <strong className="font-bold">{amount}</strong>} {rest}
+                  </span>
+                </button>
+                {ing.linkedRecipeId && (
+                  <Link
+                    href={`/recette?id=${ing.linkedRecipeId}`}
+                    aria-label={`Voir la recette : ${rest}`}
+                    className="flex size-11 flex-none items-center justify-center rounded-full bg-surface text-accent-700"
+                  >
+                    <IconChevronRight size={20} />
+                  </Link>
+                )}
+              </div>
             );
           })}
         </div>

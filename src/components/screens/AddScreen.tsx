@@ -19,6 +19,8 @@ import { linkCustomIngredients } from "@/lib/recipes/custom";
 import { db } from "@/lib/data/db";
 import type { Recipe, SourceType } from "@/lib/recipes/types";
 import { deleteIdea } from "@/lib/data/actions";
+import { useIdeas } from "@/lib/data/hooks";
+import { ideasDoneBy } from "@/lib/recipes/ideas";
 import { IdeasList } from "@/components/recipe/IdeasList";
 
 type Phase =
@@ -51,6 +53,7 @@ export function AddScreen() {
   const router = useRouter();
   const params = useSearchParams();
   const { toast } = useApp();
+  const ideas = useIdeas();
   const mode = params.get("mode");
   const [pending] = useState(() => (mode === "image" ? peekPendingImport() : null));
   const [phase, setPhase] = useState<Phase>(() => initialPhase(mode, pending));
@@ -124,7 +127,11 @@ export function AddScreen() {
         doubts={phase.doubts}
         sourceLabel={phase.sourceLabel}
         onSaved={(r) => {
-          if (phase.ideaId) void deleteIdea(phase.ideaId).catch(() => {});
+          // l'idée d'où on part, ou une idée au même nom ajoutée par photo, texte…
+          const done = new Set([...(phase.ideaId ? [phase.ideaId] : []), ...ideasDoneBy(ideas ?? [], r.title).map((i) => i.id)]);
+          void (async () => {
+            for (const id of done) await deleteIdea(id);
+          })().catch(() => {});
           router.replace(`/recette?id=${r.id}`);
         }}
         headerLeft={cancel}

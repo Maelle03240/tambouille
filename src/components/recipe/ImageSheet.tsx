@@ -1,5 +1,6 @@
 "use client";
 /** Image d'une recette : ma photo, illustration IA (si configurée), retirer. */
+import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 import { useApp } from "@/components/app/AppProvider";
 import { IconCamera, IconImage, IconTrash } from "@/components/ui/icons";
@@ -9,14 +10,17 @@ import type { Recipe } from "@/lib/recipes/types";
 
 export function ImageSheet({ recipe, open, onClose }: { recipe: Recipe; open: boolean; onClose: () => void }) {
   const { features, online, toast } = useApp();
+  const router = useRouter();
   const [busy, setBusy] = useState<string | null>(null);
   const input = useRef<HTMLInputElement>(null);
 
-  async function run(label: string, fn: () => Promise<unknown>) {
+  async function run(label: string, fn: () => Promise<Recipe | undefined>) {
     setBusy(label);
     try {
-      await fn();
+      const saved = await fn();
       onClose();
+      // un membre : l'image est allée dans sa version de la recette, on l'affiche
+      if (saved && saved.id !== recipe.id) router.replace(`/recette?id=${saved.id}`);
     } catch (e) {
       toast(e instanceof Error ? e.message : "Impossible");
     } finally {

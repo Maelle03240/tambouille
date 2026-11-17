@@ -48,6 +48,30 @@ export function moveRow<T extends Sectioned>(items: T[], from: number, to: numbe
   return fromRows(rows);
 }
 
+/**
+ * Monte (-1) ou descend (+1) toute une partie, en passant la partie voisine.
+ * Impossible (mêmes éléments renvoyés) au bord, ou face aux éléments sans partie du haut.
+ */
+export function movePart<T extends Sectioned>(items: T[], firstId: string, dir: -1 | 1): T[] {
+  const start = items.findIndex((x) => x.id === firstId);
+  if (start < 0) return items;
+  const section = items[start].section;
+  let end = start;
+  while (end < items.length && items[end].section === section) end++;
+  if (dir < 0) {
+    const above = items[start - 1]?.section;
+    if (above == null) return items;
+    let from = start;
+    while (from > 0 && items[from - 1].section === above) from--;
+    return [...items.slice(0, from), ...items.slice(start, end), ...items.slice(from, start), ...items.slice(end)];
+  }
+  const below = items[end]?.section;
+  if (below == null) return items;
+  let to = end;
+  while (to < items.length && items[to].section === below) to++;
+  return [...items.slice(0, start), ...items.slice(end, to), ...items.slice(start, end), ...items.slice(to)];
+}
+
 /** Renomme la partie qui commence à `firstId`. */
 export function renameSection<T extends Sectioned>(items: T[], firstId: string, name: string | null): T[] {
   const start = items.findIndex((x) => x.id === firstId);

@@ -47,6 +47,8 @@ export interface Repository {
   /** Mot de passe choisi après une invitation ou un « mot de passe oublié ». */
   updatePassword(password: string): Promise<void>;
   sendPasswordReset(email: string, redirectTo: string): Promise<void>;
+  /** Ouvre la session à partir d'un lien d'invitation (?token_hash=…&type=…). */
+  acceptInviteLink(tokenHash: string, type: "invite" | "magiclink"): Promise<void>;
   /** Mon prénom (rien d'autre de mon profil). */
   updateMyName(name: string): Promise<void>;
 

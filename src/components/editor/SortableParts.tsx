@@ -4,7 +4,7 @@
  * glisser une ligne, titre de partie modifiable, boutons d'ajout.
  * Logique des parties : src/lib/recipes/sections.ts (testée).
  */
-import { IconClose, IconGrip, IconPlus } from "@/components/ui/icons";
+import { IconChevronDown, IconClose, IconGrip, IconPlus } from "@/components/ui/icons";
 import { cx } from "@/components/ui/primitives";
 
 export function DragHandle(props: { style: React.CSSProperties; onPointerDown: (e: React.PointerEvent) => void }) {
@@ -25,12 +25,18 @@ export function SectionHeader({
   name,
   onRename,
   onRemove,
+  onUp,
+  onDown,
 }: {
   id: string;
   name: string;
   onRename: (name: string) => void;
   onRemove: () => void;
+  /** Déplacer toute la partie ; absent quand c'est impossible. */
+  onUp?: () => void;
+  onDown?: () => void;
 }) {
+  const arrow = "flex size-9 flex-none items-center justify-center rounded-full text-neutral-700";
   return (
     <div className="flex items-center gap-1.5 pt-3">
       <input
@@ -40,6 +46,16 @@ export function SectionHeader({
         placeholder="Nom de la partie (ex. Biscuit)"
         className="min-h-10 min-w-0 flex-1 rounded-field border-b-[1.5px] border-divider bg-transparent px-1 text-[15px] font-bold tracking-[.04em] text-accent-700 uppercase placeholder:font-normal placeholder:tracking-normal placeholder:text-neutral-500 placeholder:normal-case focus:border-accent focus:outline-none"
       />
+      {onUp && (
+        <button type="button" aria-label="Monter la partie" onClick={onUp} className={arrow}>
+          <IconChevronDown size={18} className="rotate-180" />
+        </button>
+      )}
+      {onDown && (
+        <button type="button" aria-label="Descendre la partie" onClick={onDown} className={arrow}>
+          <IconChevronDown size={18} />
+        </button>
+      )}
       <button
         type="button"
         aria-label="Retirer la partie"

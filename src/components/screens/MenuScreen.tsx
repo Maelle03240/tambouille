@@ -333,7 +333,7 @@ export function MenuScreen() {
         >
           {busy ? <Spinner /> : <IconShuffle size={20} />}
           Tirer la semaine au sort
-          {lockCount > 0 && <span className="font-sans text-sm font-bold opacity-85">· {lockCount} gardés</span>}
+          {lockCount > 0 && <span className="font-sans text-sm font-bold opacity-85">· {lockCount} gardé{lockCount > 1 ? "s" : ""}</span>}
         </button>
       )}
 

@@ -3,6 +3,7 @@
  * des champs manquants. Remplir le champ fait disparaître le point au
  * prochain enregistrement. Ajouter une règle = ajouter une ligne à RULES.
  */
+import { isPortionTooBig } from "./portions";
 import type { Recipe, ReviewItem } from "./types";
 
 export interface AutoReviewRule {
@@ -14,6 +15,7 @@ export interface AutoReviewRule {
 export const AUTO_REVIEW_RULES: AutoReviewRule[] = [
   { field: "category", note: "Catégorie à choisir", missing: (r) => !r.category },
   { field: "yieldQuantity", note: "Nombre de portions manquant", missing: (r) => !r.yieldQuantity },
+  { field: "portionSize", note: "Une portion fait toute la recette ou plus", missing: isPortionTooBig },
   { field: "prepMinutes", note: "Temps de préparation manquant", missing: (r) => r.prepMinutes == null },
   { field: "cookMinutes", note: "Temps de cuisson manquant (0 si pas de cuisson)", missing: (r) => r.cookMinutes == null },
   { field: "kcal", note: "Kcal par portion manquantes", missing: (r) => r.kcal == null },
@@ -32,6 +34,7 @@ export const FIELD_LABELS: Record<string, string> = {
   category: "Catégorie",
   yieldQuantity: "Portions",
   yieldUnit: "Unité de rendement",
+  portionSize: "Taille d'une portion",
   prepMinutes: "Préparation",
   cookMinutes: "Cuisson",
   kcal: "Kcal",

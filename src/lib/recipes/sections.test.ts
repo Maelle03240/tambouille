@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { addSection, fromRows, moveRow, removeSection, renameSection, toRows } from "./sections";
+import { addSection, fromRows, movePart, moveRow, removeSection, renameSection, toRows } from "./sections";
 
 const it_ = (id: string, section: string | null) => ({ id, section });
 const ids = (xs: { id: string; section: string | null }[]) => xs.map((x) => `${x.id}:${x.section ?? "-"}`).join(" ");
@@ -23,6 +23,14 @@ describe("parties", () => {
     expect(ids(renameSection(items, "b", "Pâte"))).toBe("a:- b:Pâte c:Pâte d:Crème");
     expect(ids(removeSection(items, "d"))).toBe("a:- b:Biscuit c:Biscuit d:Biscuit");
     expect(ids(removeSection([it_("x", "P"), it_("y", "P")], "x"))).toBe("x:- y:-");
+  });
+
+  it("déplacer une partie entière", () => {
+    expect(ids(movePart(items, "d", -1))).toBe("a:- d:Crème b:Biscuit c:Biscuit");
+    expect(ids(movePart(items, "b", 1))).toBe("a:- d:Crème b:Biscuit c:Biscuit");
+    // pas au-dessus des éléments sans partie, ni après la fin
+    expect(movePart(items, "b", -1)).toBe(items);
+    expect(movePart(items, "d", 1)).toBe(items);
   });
 
   it("ajouter une partie", () => {

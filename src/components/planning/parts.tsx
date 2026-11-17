@@ -1,6 +1,7 @@
 "use client";
 /** Briques du planning : carré de recette, barres d'objectifs, ligne de repas. */
 import { IconClose, IconLock, IconShuffle, IconUnlock } from "@/components/ui/icons";
+import { isPerPerson } from "@/lib/recipes/portions";
 import { cx } from "@/components/ui/primitives";
 import { categoryColors } from "@/config/categories";
 import { momentLabel } from "@/config/moments";
@@ -33,7 +34,7 @@ export function RecipeSquare({ recipe, size = 48 }: { recipe?: Recipe; size?: nu
 export function portionLabel(recipe: Recipe | undefined, portions: number) {
   if (!recipe) return "";
   const unit = recipe.yieldUnit || "portions";
-  if (/^(pers|part|portion)/.test(unit)) return `${formatDecimal(portions)} portion${portions > 1 ? "s" : ""}`;
+  if (isPerPerson(unit)) return `${formatDecimal(portions)} portion${portions > 1 ? "s" : ""}`;
   return `${formatDecimal(portions * (recipe.portionSize || 1))} ${unit}`;
 }
 

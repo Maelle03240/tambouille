@@ -24,6 +24,7 @@ export class LocalRepository implements Repository {
   async signOut() {}
   async updatePassword() {}
   async sendPasswordReset() {}
+  async acceptInviteLink() {}
   readonly admin = null;
   setHousehold() {}
   async renameHousehold(_id: string, name: string) {

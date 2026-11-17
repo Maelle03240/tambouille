@@ -13,7 +13,7 @@ import { useSortable } from "@/components/ui/useSortable";
 import { emptyStep } from "@/lib/recipes/factory";
 import type { Doubt } from "@/lib/recipes/import-format";
 import { tokensToMarkers } from "@/lib/recipes/markers";
-import { addSection, cleanSection, moveRow, removeSection, renameSection, toRows } from "@/lib/recipes/sections";
+import { addSection, cleanSection, movePart, moveRow, removeSection, renameSection, toRows } from "@/lib/recipes/sections";
 import type { Ingredient, Step } from "@/lib/recipes/types";
 import { DoubtBox } from "./DoubtBox";
 import { AddButtons, DragHandle, SectionHeader, focusSoon } from "./SortableParts";
@@ -181,6 +181,8 @@ export function StepsEditor({
                 name={row.name}
                 onRename={(name) => onChange(renameSection(steps, row.firstId, name))}
                 onRemove={() => onChange(removeSection(steps, row.firstId))}
+                onUp={movePart(steps, row.firstId, -1) !== steps ? () => onChange(movePart(steps, row.firstId, -1)) : undefined}
+                onDown={movePart(steps, row.firstId, 1) !== steps ? () => onChange(movePart(steps, row.firstId, 1)) : undefined}
               />
             </div>
           ) : (

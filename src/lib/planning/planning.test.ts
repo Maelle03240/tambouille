@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { emptyRecipe } from "@/lib/recipes/factory";
 import type { Recipe } from "@/lib/recipes/types";
 import { addDays, weekDays, weekStart } from "./dates";
-import { candidatesFor, drawDay, drawWeek, isEligible, rerollSlot, scoreDay, type DrawContext } from "./draw";
+import { candidatesFor, drawDay, drawWeek, isDrawable, isEligible, rerollSlot, scoreDay, type DrawContext } from "./draw";
 import { distance, targetFor } from "./nutrition";
 import { entryKey, type MealPlanEntry } from "./types";
 
@@ -105,5 +105,36 @@ describe("dates", () => {
     expect(weekStart("2026-10-08")).toBe("2026-10-05");
     expect(weekStart("2026-10-11")).toBe("2026-10-05");
     expect(addDays("2026-09-30", 1)).toBe("2026-10-01");
+  });
+});
+
+describe("dessert et plats ajoutés", () => {
+  const d = "2026-11-02";
+  const plats = [
+    recipe("gros1", { proteinG: 40, kcal: 700, hasVegetables: true }),
+    recipe("gros2", { proteinG: 40, kcal: 720, hasVegetables: true }),
+    recipe("leger1", { proteinG: 40, kcal: 300, hasVegetables: true }),
+    recipe("leger2", { proteinG: 40, kcal: 320, hasVegetables: true }),
+  ];
+  const tarte = recipe("tarte", { category: "dessert", proteinG: 5, kcal: 500, moments: ["gouter", "diner"] });
+  const c: DrawContext = { recipes: [...plats, tarte], targets: { kcal: 1200, proteinMinG: 60 }, priority: "protein", proteinRichThresholdG: 20, rng: seeded(3) };
+  const repas = () => [slot(d, "dejeuner"), slot(d, "diner")];
+  const kcalDe = (out: MealPlanEntry[]) => out.reduce((s, e) => s + (c.recipes.find((r) => r.id === e.recipeId)?.kcal ?? 0), 0);
+
+  it("un dessert n'est pas tiré comme plat, mais reste au goûter et dans la liste à la main", () => {
+    expect(isDrawable(tarte, "diner")).toBe(false);
+    expect(isDrawable(tarte, "gouter")).toBe(true);
+    expect(candidatesFor("diner", c.recipes)).toContain(tarte);
+    expect(drawDay(repas(), c).some((e) => e.recipeId === "tarte")).toBe(false);
+    expect(rerollSlot([slot(d, "diner", { recipeId: "gros1" })], 0, { ...c, recipes: [plats[0], tarte] })).toBe("gros1");
+  });
+
+  it("le dessert ajouté reste, et le tirage choisit des plats plus légers", () => {
+    const ajout = { ...slot(d, "diner"), key: entryKey(d, "diner", 1), slot: 1, recipeId: "tarte", locked: true };
+    const sans = drawDay(repas(), c);
+    const avec = drawDay([...repas(), ajout], c);
+    expect(avec[2].recipeId).toBe("tarte");
+    expect(kcalDe(sans)).toBeGreaterThan(900);
+    expect(avec.slice(0, 2).every((e) => e.recipeId?.startsWith("leger"))).toBe(true);
   });
 });

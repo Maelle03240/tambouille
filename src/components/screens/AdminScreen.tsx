@@ -1,6 +1,7 @@
 "use client";
 /**
- * ADMIN (Réglages → Admin) : inviter quelqu'un, gérer les foyers et leurs
+ * ADMIN (Réglages → Admin) : inviter quelqu'un (l'appli donne un lien à lui
+ * envoyer soi-même, pas d'e-mail), gérer les foyers et leurs
  * membres, les rôles. Les droits sont vérifiés par la base (RLS) : cet écran
  * n'est qu'un raccourci. Les propositions de recettes sont dans Réglages → Propositions.
  */
@@ -8,6 +9,7 @@ import { useEffect, useState } from "react";
 import { useApp } from "@/components/app/AppProvider";
 import { IconClose, IconPlus, IconTrash } from "@/components/ui/icons";
 import { BackLink, Button, Chip, Field, SectionTitle, Spinner, TextInput, cx } from "@/components/ui/primitives";
+import { BRAND } from "@/config/brand";
 import { ROLE_LABELS } from "@/config/ui";
 import { getRepository } from "@/lib/data";
 import type { AdminOverview } from "@/lib/data/repository";
@@ -21,6 +23,8 @@ export function AdminScreen() {
   const [data, setData] = useState<AdminOverview | null>(null);
   const [newHousehold, setNewHousehold] = useState("");
   const [accounts, setAccounts] = useState<AccountInfo[]>([]);
+  /** Dernier lien créé, à envoyer à la personne. */
+  const [shared, setShared] = useState<{ name: string; link: string } | null>(null);
 
   // incrémenté après chaque action pour relire
   const [version, setVersion] = useState(0);
@@ -80,8 +84,12 @@ export function AdminScreen() {
             <InviteForm
               households={data?.households ?? []}
               enabled={!!features.invites && online}
-              onDone={() => act(async () => {}, "Invitation envoyée")}
+              onDone={(name, link) => {
+                setShared({ name, link });
+                void act(async () => {}, "Compte créé : envoie-lui le lien");
+              }}
             />
+            {shared && <LinkToSend {...shared} onClose={() => setShared(null)} />}
 
             <section className="flex flex-col gap-3">
               <SectionTitle>Foyers</SectionTitle>
@@ -201,10 +209,18 @@ export function AdminScreen() {
                         <button
                           type="button"
                           disabled={!online}
-                          onClick={() => act(() => requestAccountAction("resend", p.id), "Invitation renvoyée")}
+                          onClick={() =>
+                            act(async () => {
+                              const { link } = await requestAccountAction("resend", p.id);
+                              if (link) {
+                                setShared({ name: p.displayName || "", link });
+                                window.scrollTo({ top: 0, behavior: "smooth" });
+                              }
+                            }, "Nouveau lien prêt")
+                          }
                           className="h-9 rounded-full border-[1.5px] border-divider px-3 text-sm font-bold disabled:opacity-45"
                         >
-                          Renvoyer
+                          Nouveau lien
                         </button>
                       </div>
                     )}
@@ -232,7 +248,61 @@ export function AdminScreen() {
   );
 }
 
-function InviteForm({ households, enabled, onDone }: { households: AdminOverview["households"]; enabled: boolean; onDone: () => void }) {
+/** Le lien d'invitation à envoyer soi-même (Messages, Snap, WhatsApp…). */
+function LinkToSend({ name, link, onClose }: { name: string; link: string; onClose: () => void }) {
+  const { toast } = useApp();
+  const text = `Coucou${name ? ` ${name}` : ""} ! Voilà ton lien pour créer ton mot de passe sur ${BRAND.name} : ${link}`;
+  const canShare = typeof navigator !== "undefined" && !!navigator.share;
+
+  async function share() {
+    try {
+      await navigator.share({ text });
+    } catch {
+      /* partage annulé */
+    }
+  }
+  async function copy() {
+    try {
+      await navigator.clipboard.writeText(text);
+      toast("Copié");
+    } catch {
+      toast("Copie impossible : sélectionne le lien à la main");
+    }
+  }
+
+  return (
+    <section className="flex flex-col gap-3 rounded-[26px] bg-accent-100 p-4 text-accent-800">
+      <div className="flex items-start gap-2">
+        <p className="flex-1 font-bold">Lien pour {name || "cette personne"} — à lui envoyer toi-même</p>
+        <button type="button" aria-label="Fermer" onClick={onClose} className="flex size-8 flex-none items-center justify-center rounded-full">
+          <IconClose size={15} />
+        </button>
+      </div>
+      <p className="break-all rounded-field bg-surface px-3 py-2 text-sm text-neutral-700 select-all">{link}</p>
+      <div className="flex flex-wrap gap-2">
+        {canShare && (
+          <Button type="button" variant="primary" onClick={share}>
+            Partager
+          </Button>
+        )}
+        <Button type="button" onClick={copy}>
+          Copier le message
+        </Button>
+      </div>
+      <p className="text-sm">Il ne sert qu&apos;une fois et expire vite : envoie-le maintenant. Expiré ? « Nouveau lien » dans Comptes.</p>
+    </section>
+  );
+}
+
+function InviteForm({
+  households,
+  enabled,
+  onDone,
+}: {
+  households: AdminOverview["households"];
+  enabled: boolean;
+  onDone: (name: string, link: string) => void;
+}) {
   const { toast, features } = useApp();
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
@@ -244,10 +314,10 @@ function InviteForm({ households, enabled, onDone }: { households: AdminOverview
     e.preventDefault();
     setBusy(true);
     try {
-      await requestInvite({ email: email.trim(), name: name.trim(), role, householdId });
+      const { link } = await requestInvite({ email: email.trim(), name: name.trim(), role, householdId });
+      onDone(name.trim(), link);
       setEmail("");
       setName("");
-      onDone();
     } catch (err) {
       toast(err instanceof Error ? err.message : "Invitation impossible");
     } finally {
@@ -286,7 +356,7 @@ function InviteForm({ households, enabled, onDone }: { households: AdminOverview
           ))}
         </div>
         <Button type="submit" variant="primary" disabled={!enabled || busy} className={cx(busy && "opacity-70")}>
-          {busy ? <Spinner /> : "Envoyer l'invitation"}
+          {busy ? <Spinner /> : "Créer le compte et le lien"}
         </Button>
       </form>
     </section>

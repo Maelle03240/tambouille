@@ -3,13 +3,14 @@
  * Règles fermes, chaque jour : au moins un repas riche en protéines et des
  * légumes à au moins un repas. Ensuite, l'objectif prioritaire (réglable)
  * est visé en premier ; kcal et fourchettes comptent un peu ; on évite de
- * répéter un plat. Les repas verrouillés ne bougent pas. Recettes « fêtes »
- * exclues.
+ * répéter un plat. Les repas verrouillés et les plats ajoutés à côté ne
+ * bougent pas, et comptent dans le score : avec un dessert, le tirage choisit
+ * des plats plus légers. Au déjeuner et au dîner, pas de dessert ni de boisson.
  * Méthode : on essaie beaucoup de combinaisons au hasard et on garde la
  * meilleure (simple, rapide pour quelques centaines de recettes).
  * Poids et nombre d'essais : src/config/planning.ts.
  */
-import { DRAW_WEIGHTS, NUTRIENTS, type NutrientKey } from "@/config/planning";
+import { DRAW_WEIGHTS, MAIN_MEALS, NOT_A_MAIN_DISH, NUTRIENTS, type NutrientKey } from "@/config/planning";
 import { isProteinRich } from "@/lib/recipes/tags";
 import type { Recipe, UserSettings } from "@/lib/recipes/types";
 import { addNutrition, distance, recipeNutrition, targetFor, ZERO } from "./nutrition";
@@ -30,6 +31,11 @@ export function isEligible(r: Recipe, meal: string): boolean {
   if (r.isOccasion) return false;
   // sans moment : jamais tirée (pâtisserie de fête, base, sauce, boisson…)
   return (r.moments ?? []).includes(meal);
+}
+
+/** Le tirage peut-il la choisir comme plat de ce repas ? */
+export function isDrawable(r: Recipe, meal: string): boolean {
+  return isEligible(r, meal) && !(MAIN_MEALS.includes(meal) && NOT_A_MAIN_DISH.includes(r.category ?? ""));
 }
 
 export function candidatesFor(meal: string, recipes: Recipe[]) {
@@ -83,7 +89,7 @@ export function drawDay(
 ): MealPlanEntry[] {
   const rng = ctx.rng ?? Math.random;
   const byId = new Map(ctx.recipes.map((r) => [r.id, r]));
-  const pools = slots.map((s) => (s.locked ? null : candidatesFor(s.meal, ctx.recipes)));
+  const pools = slots.map((s) => (s.locked ? null : ctx.recipes.filter((r) => isDrawable(r, s.meal))));
   if (pools.every((p) => !p || !p.length)) return slots;
 
   let best: { picks: (string | null)[]; score: number } | null = null;
@@ -126,7 +132,7 @@ export function rerollSlot(dayEntries: MealPlanEntry[], index: number, ctx: Draw
   const rng = ctx.rng ?? Math.random;
   const byId = new Map(ctx.recipes.map((r) => [r.id, r]));
   const slot = dayEntries[index];
-  const pool = candidatesFor(slot.meal, ctx.recipes).filter((r) => r.id !== slot.recipeId);
+  const pool = ctx.recipes.filter((r) => isDrawable(r, slot.meal) && r.id !== slot.recipeId);
   if (!pool.length) return slot.recipeId;
   const ranked = pool
     .map((r) => ({

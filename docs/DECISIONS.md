@@ -172,3 +172,24 @@ Remplace « ouverture à la famille en écriture » (spec V3). Deux étapes : **
 - **Admin → Comptes** : e-mail de chacun, « Invitation en attente » avec « Renvoyer », suppression d'un compte (ni soi-même, ni un admin). Route `/api/admin/accounts`.
 - **Compte supprimé** (précisé par l'utilisatrice) : rien ne change pour le reste. Accepté : déjà dans la bibliothèque, ça reste. En attente : la proposition reste, l'admin décide (auteur « Compte supprimé » s'il n'y a plus personne dans son foyer). Refusé : part, sauf une création s'il reste quelqu'un dans son foyer ; elle passe alors à un membre de ce foyer (pour rester visible, les règles de lecture passent par l'auteur). Version refusée d'une recette de la bibliothèque : part toujours, l'originale reste. Foyers où il était seul : supprimés avec menu et courses. Logique : `src/lib/recipes/deleted-account.ts` (testée).
 - **Sans foyer** : l'admin est prévenue avant de retirer quelqu'un de son dernier foyer ; Menu et Courses affichent « Aucun foyer » au lieu d'échouer.
+
+## 2026-11-05 — Relecture des parcours (validé par l'utilisatrice)
+
+- **Tirage** : au déjeuner et au dîner, il ne choisit plus de dessert ni de boisson (`NOT_A_MAIN_DISH`, `src/config/planning.ts`), même si la recette a ce moment ; ils s'ajoutent à la main. Les plats ajoutés restent au recalcul et comptent : le tirage choisit des plats plus légers. Poids des kcal passé de 2 à 10.
+- **Plat choisi à la main** (« Choisir moi-même ») : gardé automatiquement au prochain tirage, déverrouillable.
+- **Courses** : tirer toute la semaine, ou appliquer un modèle aux 7 jours, décoche la liste. Une recette retirée de la liste ne revient que si elle est vraiment remise au menu.
+- **Rôle** `reader` renommé « Recettes en lecture seule » : menu, courses et réglages du foyer restent modifiables.
+- **Tag « Fêtes »** : retiré de l'éditeur et de l'import (écart à la spec) ; une recette sans moment n'est déjà jamais tirée. La colonne `is_occasion` reste, inutilisée.
+- **Valeurs pour 100 g** : pas de valeur si une portion dépasse la recette (point « à revoir ») ; un poids total sous la moitié des ingrédients est ignoré.
+
+## 2026-11-17 — Invitations par lien, sans e-mail (validé par l'utilisatrice)
+
+- L'e-mail d'invitation de Supabase (envoi intégré) était bloqué par sa limite (« email rate limit exceeded ») : aucune invitation n'arrivait. Désormais **aucun e-mail n'est envoyé** : « Créer le compte et le lien » crée le compte et affiche un lien que l'admin envoie elle-même (bouton « Partager » → Messages, Snap, WhatsApp… ; ou « Copier le message »).
+- « Renvoyer » devient **« Nouveau lien »** (comptes en attente), même affichage.
+- Le lien pointe vers `/bienvenue?token_hash=…&type=invite` (notre page, pas Supabase) : un aperçu de lien dans une messagerie ne le consomme pas. La page valide le jeton (`verifyOtp`, dans `AppProvider`) puis on choisit son mot de passe comme avant. Un lien ne sert qu'une fois ; sa durée = « Email OTP expiration » dans les réglages Auth de Supabase.
+- Logique : `makeInviteLink` dans `src/lib/data/admin-server.ts`, routes `invite` et `accounts`, écran `AdminScreen.tsx` (`LinkToSend`).
+- « Mot de passe oublié » passe encore par l'e-mail intégré de Supabase, qui n'envoie qu'aux membres de l'équipe Supabase (2 e-mails/heure) : il ne marche pas pour la famille. À décider : lien de connexion donné par l'admin, ou SMTP gratuit (Brevo, Resend).
+
+## 2026-11-17 — Supabase ne se met plus en pause
+
+- L'offre gratuite de Supabase met le projet en pause après 7 jours sans activité. Vercel appelle `/api/keepalive` le lundi et le jeudi (`vercel.json`, vers 6 h : jamais plus de 4 jours d'écart) : une petite lecture de la base. Variable `CRON_SECRET` dans Vercel conseillée (sinon la route reste ouverte, mais elle ne fait que lire une ligne vide).

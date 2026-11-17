@@ -17,7 +17,7 @@ import {
   type ReactNode,
 } from "react";
 import { getRepository } from "@/lib/data";
-import { clearLocalData } from "@/lib/data/actions";
+import { clearLocalData, unsentChanges } from "@/lib/data/actions";
 import { getMeta, requestPersistentStorage, setMeta } from "@/lib/data/db";
 import type { Session } from "@/lib/data/repository";
 import { getSyncStatus, subscribeSync, syncNow } from "@/lib/data/sync";
@@ -90,13 +90,23 @@ export function AppProvider({ children }: { children: ReactNode }) {
     requestPersistentStorage();
     // hors ligne, Supabase peut mettre longtemps (ou échouer) à rafraîchir une
     // session expirée : on ne bloque pas l'affichage dessus (voir plus bas)
-    repo
-      .getSession()
+    // arrivée par un lien d'invitation (/bienvenue?token_hash=…) : on ouvre la session d'abord
+    const params = new URLSearchParams(location.search);
+    const tokenHash = params.get("token_hash");
+    const type = params.get("type") === "magiclink" ? "magiclink" : "invite";
+    const fromLink = tokenHash
+      ? repo
+          .acceptInviteLink(tokenHash, type)
+          .catch((e) => toast(e instanceof Error ? e.message : "Lien invalide"))
+          .finally(() => history.replaceState(null, "", location.pathname))
+      : Promise.resolve();
+    fromLink
+      .then(() => repo.getSession())
       .then(setSession)
       .catch(() => {})
       .finally(() => setAuthReady(true));
     return repo.onAuthChange(setSession);
-  }, [repo]);
+  }, [repo, toast]);
 
   // Molette sur les rangées de pastilles (ordi)
   useEffect(() => installWheelHScroll(), []);
@@ -149,6 +159,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, [online]);
 
   const signOut = useCallback(async () => {
+    const unsent = await unsentChanges();
+    if (unsent && !confirm(`${unsent} modification${unsent > 1 ? "s" : ""} pas encore envoyée${unsent > 1 ? "s" : ""} (réseau) ser${unsent > 1 ? "ont perdues" : "a perdue"}. Se déconnecter ?`)) return;
     await repo.signOut();
     await clearLocalData();
     setSession(null);

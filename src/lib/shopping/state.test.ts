@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { EMPTY_SHOPPING, applyShoppingOps, diffShopping, shoppingFromRows, type ShoppingState } from "./state";
+import { EMPTY_SHOPPING, applyShoppingOps, diffShopping, shoppingFromRows, type ShoppingState, newlyPlaced } from "./state";
 
 const base: ShoppingState = {
   ...EMPTY_SHOPPING,
@@ -44,5 +44,13 @@ describe("liste de courses du foyer : opérations", () => {
     expect(replayed).toEqual(after);
     const rows = diffShopping(EMPTY_SHOPPING, after).flatMap((o) => (o.kind === "recipe" && o.row ? [o.row] : []));
     expect(shoppingFromRows(rows, after.checked, after.mine)).toEqual(after);
+  });
+});
+
+describe("remis au menu", () => {
+  it("seulement si la recette du repas change", () => {
+    const before = [{ recipeId: "a" }, { recipeId: "b" }, undefined];
+    const after = [{ recipeId: "a" }, { recipeId: "c" }, { recipeId: "d" }];
+    expect([...newlyPlaced(before, after)]).toEqual(["c", "d"]);
   });
 });

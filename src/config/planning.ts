@@ -26,6 +26,10 @@ export const PLANNING_DEFAULTS = {
   priority: "protein" as NutrientKey,
 };
 
+/** Au déjeuner et au dîner, le tirage choisit le plat : ces catégories s'ajoutent à la main. */
+export const MAIN_MEALS: readonly string[] = ["dejeuner", "diner"];
+export const NOT_A_MAIN_DISH: readonly string[] = ["dessert", "cocktail"];
+
 /** Poids du score du tirage (plus = plus important). */
 export const DRAW_WEIGHTS = {
   /** Règle ferme : au moins un repas riche en protéines par jour. */
@@ -35,7 +39,7 @@ export const DRAW_WEIGHTS = {
   /** Objectif prioritaire. */
   priority: 20,
   /** Kcal, si ce n'est pas la priorité et qu'un objectif est fixé. */
-  kcal: 2,
+  kcal: 10,
   /** Autres fourchettes (lipides, glucides, fibres). */
   others: 0.5,
   /** Même plat deux fois le même jour. */

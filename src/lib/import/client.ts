@@ -85,7 +85,7 @@ export interface InviteRequest {
   householdId: string | null;
 }
 
-export const requestInvite = (body: InviteRequest) => postJson<{ userId: string }>("/api/admin/invite", body);
+export const requestInvite = (body: InviteRequest) => postJson<{ userId: string; link: string }>("/api/admin/invite", body);
 
 export interface AccountInfo {
   id: string;
@@ -102,4 +102,5 @@ export async function requestAccounts(): Promise<AccountInfo[]> {
   return json.data;
 }
 
-export const requestAccountAction = (action: "resend" | "delete", userId: string) => postJson<{ ok: boolean }>("/api/admin/accounts", { action, userId });
+export const requestAccountAction = (action: "resend" | "delete", userId: string) =>
+  postJson<{ ok: boolean; link?: string }>("/api/admin/accounts", { action, userId });

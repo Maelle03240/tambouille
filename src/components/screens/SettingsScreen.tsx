@@ -190,6 +190,9 @@ export function SettingsScreen() {
             Propositions <span className="text-accent-700">{proposals?.length ?? 0}</span>
           </Link>
         )}
+        <Link href="/a-revoir" className="flex h-14 items-center justify-between rounded-[28px] bg-surface px-5 font-bold">
+          À revoir <span className="text-accent-700">→</span>
+        </Link>
         <Link href="/ingredients" className="flex h-14 items-center justify-between rounded-[28px] bg-surface px-5 font-bold">
           Étiquettes nutritionnelles <span className="text-accent-700">→</span>
         </Link>

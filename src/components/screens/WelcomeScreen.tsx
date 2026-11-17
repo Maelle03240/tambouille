@@ -1,8 +1,8 @@
 "use client";
 /**
- * BIENVENUE : on arrive ici depuis l'e-mail d'invitation (ou « mot de passe
- * oublié »), déjà connecté·e par le lien : on choisit son mot de passe, une
- * fois. Ensuite on se connecte avec, sur chaque appareil.
+ * BIENVENUE : on arrive ici par le lien d'invitation envoyé par l'admin (validé
+ * dans AppProvider) ou par l'e-mail « mot de passe oublié », déjà connecté·e :
+ * on choisit son mot de passe, une fois. Ensuite on se connecte avec, sur chaque appareil.
  */
 import { useRouter } from "next/navigation";
 import { useState } from "react";

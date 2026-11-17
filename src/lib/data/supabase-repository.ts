@@ -74,6 +74,11 @@ export class SupabaseRepository implements Repository {
     fail(error, "E-mail");
   }
 
+  async acceptInviteLink(tokenHash: string, type: "invite" | "magiclink") {
+    const { error } = await this.client.auth.verifyOtp({ token_hash: tokenHash, type });
+    if (error) throw new Error("Ce lien a expiré ou a déjà servi : demande un nouveau lien.");
+  }
+
   async updateMyName(name: string) {
     const { error } = await this.client.rpc("set_my_name", { new_name: name });
     fail(error, "Prénom");

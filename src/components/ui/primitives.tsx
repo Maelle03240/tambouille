@@ -90,9 +90,9 @@ export function Chip({
 
 /* ───────────── Champs ───────────── */
 
-export function Field({ label, hint, children, className }: { label: string; hint?: ReactNode; children: ReactNode; className?: string }) {
+export function Field({ id, label, hint, children, className }: { id?: string; label: string; hint?: ReactNode; children: ReactNode; className?: string }) {
   return (
-    <label className={cx("flex flex-col gap-1.5", className)}>
+    <label id={id} className={cx("flex flex-col gap-1.5", className)}>
       <span className="text-[13px] font-bold text-neutral-700">{label}</span>
       {children}
       {hint && <span className="text-[13px] text-neutral-700">{hint}</span>}

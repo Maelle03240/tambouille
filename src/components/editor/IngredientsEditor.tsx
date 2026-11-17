@@ -17,7 +17,7 @@ import { formatDecimal, parseIngredientLine, withDe } from "@/lib/recipes/quanti
 import type { Ingredient } from "@/lib/recipes/types";
 import { useCustomIngredients, useRecipes } from "@/lib/data/hooks";
 import { useSortable } from "@/components/ui/useSortable";
-import { addSection, moveRow, removeSection, renameSection, toRows } from "@/lib/recipes/sections";
+import { addSection, movePart, moveRow, removeSection, renameSection, toRows } from "@/lib/recipes/sections";
 import { AddButtons, DragHandle, SectionHeader, focusSoon } from "./SortableParts";
 import { DoubtBox } from "./DoubtBox";
 
@@ -141,6 +141,8 @@ export function IngredientsEditor({
                   name={row.name}
                   onRename={(name) => onChange(renameSection(ingredients, row.firstId, name))}
                   onRemove={() => onChange(removeSection(ingredients, row.firstId))}
+                  onUp={movePart(ingredients, row.firstId, -1) !== ingredients ? () => onChange(movePart(ingredients, row.firstId, -1)) : undefined}
+                  onDown={movePart(ingredients, row.firstId, 1) !== ingredients ? () => onChange(movePart(ingredients, row.firstId, 1)) : undefined}
                 />
               </div>
             );
@@ -232,20 +234,20 @@ export function IngredientsEditor({
                     </Field>
                   )}
                   <Field label="Recette de cet ingrédient (ex. pâte à crêpes)" className="col-span-2">
-                  <select
-                    value={ing.linkedRecipeId ?? ""}
-                    onChange={(e) => update(ing.id, { linkedRecipeId: e.target.value || null })}
-                    className="min-h-12 rounded-field border-[1.5px] border-divider bg-neutral-100 px-3 text-base"
-                  >
-                    <option value="">— aucune —</option>
-                    {linkable(ing.name).map(({ r }) => (
-                      <option key={r.id} value={r.id}>
-                        {r.title}
-                      </option>
-                    ))}
-                  </select>
-                </Field>
-                <label className="col-span-2 flex items-center gap-2.5 text-[15px]">
+                    <select
+                      value={ing.linkedRecipeId ?? ""}
+                      onChange={(e) => update(ing.id, { linkedRecipeId: e.target.value || null })}
+                      className="min-h-12 rounded-field border-[1.5px] border-divider bg-neutral-100 px-3 text-base"
+                    >
+                      <option value="">— aucune —</option>
+                      {linkable(ing.name).map(({ r }) => (
+                        <option key={r.id} value={r.id}>
+                          {r.title}
+                        </option>
+                      ))}
+                    </select>
+                  </Field>
+                  <label className="col-span-2 flex items-center gap-2.5 text-[15px]">
                     <input
                       type="checkbox"
                       checked={ing.scalable}
