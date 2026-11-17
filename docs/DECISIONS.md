@@ -198,3 +198,8 @@ Remplace « ouverture à la famille en écriture » (spec V3). Deux étapes : **
 ## 2026-11-17 — Les recettes ne se synchronisaient plus
 
 - Depuis 0014, `ingredients` a deux liens vers `recipes` (`recipe_id`, `linked_recipe_id`) : la lecture `recipes?select=*,ingredients(*)` était ambiguë (réponse 300) et la synchro des recettes échouait ; chaque appareil gardait son ancien cache (recettes d'un autre appareil absentes, images dont le fichier avait été remplacé introuvables). Corrigé : `ingredients!ingredients_recipe_id_fkey(*)` dans `supabase-repository.ts`.
+
+## 2026-11-17 — L'admin peut changer un e-mail (validé par l'utilisatrice)
+
+- Revient sur « changer d'e-mail : pas voulu » (05/11), pour l'admin seulement : Admin → Comptes → « Modifier » sous l'e-mail. Change l'identifiant de connexion sans confirmation par e-mail (`updateUserById`, `email_confirm`), le mot de passe reste. Route `/api/admin/accounts`, action `email`.
+- Pas pour chacun dans Réglages : Supabase demanderait une confirmation par e-mail, qui n'arrive pas.

@@ -14,7 +14,7 @@ import { ROLE_LABELS } from "@/config/ui";
 import { getRepository } from "@/lib/data";
 import type { AdminOverview } from "@/lib/data/repository";
 import { syncNow } from "@/lib/data/sync";
-import { requestAccountAction, requestAccounts, requestInvite, type AccountInfo } from "@/lib/import/client";
+import { requestAccountAction, requestAccounts, requestEmailChange, requestInvite, type AccountInfo } from "@/lib/import/client";
 import type { Role } from "@/lib/recipes/types";
 
 export function AdminScreen() {
@@ -46,14 +46,16 @@ export function AdminScreen() {
   }, [online, admin, toast, version, features.invites]);
 
   /** Une action admin, puis on relit (et on resynchronise : mes foyers ont pu changer). */
-  async function act(fn: () => Promise<unknown>, done?: string) {
+  async function act(fn: () => Promise<unknown>, done?: string): Promise<boolean> {
     try {
       await fn();
       if (done) toast(done);
       setVersion((v) => v + 1);
       void syncNow();
+      return true;
     } catch (e) {
       toast(e instanceof Error ? e.message : "Impossible");
+      return false;
     }
   }
 
@@ -185,7 +187,13 @@ export function AdminScreen() {
                     <div className="flex items-start gap-2">
                       <span className="flex min-w-0 flex-1 flex-col">
                         <span className="font-bold">{p.displayName || "?"}</span>
-                        {account && <span className="truncate text-sm text-neutral-700">{account.email}</span>}
+                        {account && (
+                          <EmailEdit
+                            email={account.email}
+                            disabled={!online}
+                            onSave={(email) => act(() => requestEmailChange(p.id, email), "E-mail modifié")}
+                          />
+                        )}
                       </span>
                       {account && p.id !== profile?.id && p.role !== "admin" && (
                         <button
@@ -247,6 +255,52 @@ export function AdminScreen() {
         )}
       </main>
     </div>
+  );
+}
+
+/** E-mail d'un compte, modifiable par l'admin (c'est son identifiant de connexion). */
+function EmailEdit({ email, disabled, onSave }: { email: string; disabled: boolean; onSave: (email: string) => Promise<boolean> }) {
+  const [editing, setEditing] = useState(false);
+  const [value, setValue] = useState(email);
+
+  if (!editing) {
+    return (
+      <span className="flex min-w-0 items-center gap-2 text-sm text-neutral-700">
+        <span className="truncate">{email}</span>
+        <button
+          type="button"
+          disabled={disabled}
+          onClick={() => {
+            setValue(email);
+            setEditing(true);
+          }}
+          className="flex-none font-bold text-accent-700 disabled:opacity-45"
+        >
+          Modifier
+        </button>
+      </span>
+    );
+  }
+  return (
+    <form
+      className="mt-1 flex flex-col gap-2"
+      onSubmit={async (e) => {
+        e.preventDefault();
+        // en cas d'erreur (adresse déjà prise…), on reste sur le champ
+        if (await onSave(value.trim())) setEditing(false);
+      }}
+    >
+      <TextInput type="email" value={value} onChange={(e) => setValue(e.target.value)} required autoComplete="off" autoFocus />
+      <p className="text-[13px] text-neutral-700">C&apos;est avec cette adresse qu&apos;on se connecte. Le mot de passe ne change pas. Préviens la personne.</p>
+      <div className="flex gap-2">
+        <Button type="submit" variant="primary" disabled={disabled || !value.trim() || value.trim() === email}>
+          Enregistrer
+        </Button>
+        <Button type="button" onClick={() => setEditing(false)}>
+          Annuler
+        </Button>
+      </div>
+    </form>
   );
 }
 

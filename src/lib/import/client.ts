@@ -104,3 +104,7 @@ export async function requestAccounts(): Promise<AccountInfo[]> {
 
 export const requestAccountAction = (action: "resend" | "delete", userId: string) =>
   postJson<{ ok: boolean; link?: string }>("/api/admin/accounts", { action, userId });
+
+/** L'admin change l'e-mail (identifiant de connexion) d'un compte. */
+export const requestEmailChange = (userId: string, email: string) =>
+  postJson<{ ok: boolean }>("/api/admin/accounts", { action: "email", userId, email });

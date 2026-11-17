@@ -3,6 +3,8 @@
  * GET → e-mail de chacun et invitation en attente ou non ;
  * POST { action: "resend", userId } → nouveau lien (renvoyé, pas envoyé par e-mail) :
  *   invitation si le compte est en attente, sinon lien pour changer de mot de passe ;
+ * POST { action: "email", userId, email } → change l'e-mail (= l'identifiant de
+ *   connexion), sans confirmation par e-mail ; le mot de passe ne change pas ;
  * POST { action: "delete", userId } → supprime le compte. Ses recettes perso :
  * voir src/lib/recipes/deleted-account.ts ; son foyer disparaît s'il y était
  * seul. On ne supprime ni soi-même ni un autre admin.
@@ -13,7 +15,11 @@ import { fateOfRecipe } from "@/lib/recipes/deleted-account";
 
 export const dynamic = "force-dynamic";
 
-const body = z.object({ action: z.enum(["resend", "delete"]), userId: z.string().uuid() });
+const body = z.object({
+  action: z.enum(["resend", "email", "delete"]),
+  userId: z.string().uuid(),
+  email: z.string().trim().toLowerCase().email().optional(),
+});
 
 export async function GET(req: Request) {
   const ctx = await requireAdmin(req);
@@ -35,6 +41,18 @@ export async function POST(req: Request) {
 
   const { data: found, error: findError } = await admin.auth.admin.getUserById(userId);
   if (findError || !found.user) return Response.json({ error: "Compte introuvable." }, { status: 404 });
+
+  if (action === "email") {
+    const email = parsed.data.email;
+    if (!email) return Response.json({ error: "E-mail invalide." }, { status: 400 });
+    if (email === found.user.email) return Response.json({ data: { ok: true } });
+    const { error } = await admin.auth.admin.updateUserById(userId, { email, email_confirm: true });
+    if (error) {
+      const taken = /already been registered|already exists|email_exists/i.test(error.message);
+      return Response.json({ error: taken ? "Cette adresse a déjà un compte." : `Changement impossible : ${error.message}` }, { status: 400 });
+    }
+    return Response.json({ data: { ok: true } });
+  }
 
   if (action === "resend") {
     if (userId === callerId) return Response.json({ error: "Pour ton propre compte : Réglages → Mon compte." }, { status: 400 });
